@@ -79,8 +79,15 @@ export type Evaluation = z.infer<typeof evaluationSchema>;
 /* ------------------------------------------------------------------ */
 
 export class ContentError extends Error {
-  constructor(readonly path: string, readonly issues: z.ZodIssue[]) {
+  // Parametre özellikleri `erasableSyntaxOnly` ile derlenmiyor; alanlar
+  // açıkça bildirilip constructor içinde atanır.
+  readonly path: string;
+  readonly issues: z.ZodIssue[];
+
+  constructor(path: string, issues: z.ZodIssue[]) {
     super(`${path}: ${issues.length} doğrulama hatası`);
+    this.path = path;
+    this.issues = issues;
   }
 }
 

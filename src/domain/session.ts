@@ -149,7 +149,12 @@ export function sessionReducer(
 
       return {
         ...state,
+        // Tur kapandı: idle'a dönerken ekranda da state'te de soru kalmamalı,
+        // yoksa "makara duruyor ama elimde soru var" gibi tutarsız bir an olur.
         phase: "idle",
+        current: null,
+        evaluation: null,
+        passed: false,
         progress: {
           ...state.progress,
           [question.id]: applyAttempt(existing, attempt),

@@ -287,6 +287,45 @@ describe("RATE", () => {
     expect(created.attempts[0].totalConcepts).toBe(2);
   });
 
+  it("tur kapanınca oturumu temizler", () => {
+    const state = makeState({
+      phase: "evaluated",
+      current: makeQuestion("q1"),
+      evaluation: makeEvaluation(),
+      passed: true,
+    });
+
+    const next = sessionReducer(state, {
+      type: "RATE",
+      rating: 0,
+      answer: "",
+      now: NOW,
+    });
+
+    expect(next.phase).toBe("idle");
+    expect(next.current).toBeNull();
+    expect(next.evaluation).toBeNull();
+    expect(next.passed).toBe(false);
+    // Temizlik denemeyi yutmamalı; kayıt yine de düşmüş olmalı.
+    expect(next.progress.q1.attempts).toHaveLength(1);
+    expect(next.recentIds).toEqual(["q1"]);
+  });
+
+  it("temizlik sonrası kota tekrar harcanabilir", () => {
+    // passed sıfırlanmazsa bir sonraki turda SPEND_QUOTA sessizce engellenirdi.
+    const rated = sessionReducer(
+      makeState({
+        phase: "evaluated",
+        current: makeQuestion("q1"),
+        passed: true,
+        quotaRemaining: 2,
+      }),
+      { type: "RATE", rating: 0, answer: "", now: NOW },
+    );
+
+    expect(sessionReducer(rated, { type: "SPEND_QUOTA" }).quotaRemaining).toBe(1);
+  });
+
   it("recentIds 10'da sabitlenir ve en eskisi düşer", () => {
     const seeded = Array.from({ length: MAX_RECENT_IDS }, (_, i) => `q${i}`);
     const state = makeState({

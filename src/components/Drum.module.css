@@ -1,0 +1,103 @@
+/*
+  Tek satırlık bir pencereden bakılan 16 yüzlü prizma.
+  Burada yalnızca 3B yerleşim var; ölçü ve renk dışarıdan gelir.
+
+  Bileşenin kendi yazdığı değişkenler:
+    --step    yüzler arası açı, FACES sabitinden türetilir
+    --radius  prizma yarıçapı, satır yüksekliğinden hesaplanır
+
+  Temadan beklenen değişkenler (tanımlı değilse bileşen sade görünür,
+  ama kırılmaz — renk sabitlemek yerine devralmayı tercih ediyoruz):
+    --row                tek satır yüksekliği; pencere bunun üç katı olur
+    --drum-perspective   bakış mesafesi
+    --drum-window-bg     pencere zemini
+    --drum-face-fg       yüz metni
+    --drum-face-bg       yüz zemini
+    --drum-mid-fg        ortaya oturan yüzün metni
+    --drum-mid-bg        ortaya oturan yüzün zemini
+    --drum-shade-top     üst komşu satırın karartması
+    --drum-shade-bottom  alt komşu satırın karartması
+*/
+
+.window {
+  /* --row'un yedeği tek yerde dursun; yüzler bunu devralır. */
+  --row-h: var(--row, 3.5rem);
+
+  position: relative;
+  /* Üç satır görünür: ortadaki seçili, üst ve alt komşular karartılır. */
+  height: calc(var(--row-h) * 3);
+  overflow: hidden;
+  /* Yüzler pencere dışına taşar; boyamayı buraya hapsetmek kaydırmada
+     bütün sayfanın yeniden boyanmasını önler. */
+  contain: paint;
+  perspective: var(--drum-perspective, 34rem);
+  background: var(--drum-window-bg, transparent);
+  border-radius: var(--drum-window-radius, 0.5rem);
+}
+
+/*
+  Komşu satırların karartması. Işık yukarıdan geldiği için üst satır alt
+  satırdan daha koyu; ortadaki şerit tamamen açık kalır.
+  Koyuluklar temadan gelir (üstte %78, altta %44 olacak şekilde ayarlı),
+  duraklar burada çünkü geometriyle birlikte okunmaları gerekiyor.
+*/
+.window::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    var(--drum-shade-top, transparent) 0%,
+    transparent 33.33%,
+    transparent 66.67%,
+    var(--drum-shade-bottom, transparent) 100%
+  );
+}
+
+.drum {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  transform-style: preserve-3d;
+  /* Dinlenme duruşu. Dönüş sırasında bu transform'u Web Animations API
+     devralır, o yüzden burada yalnızca derinlik kaydırması var. */
+  transform: translateZ(calc(-1 * var(--radius, 0px)));
+  will-change: transform;
+}
+
+.face {
+  position: absolute;
+  left: 0;
+  right: 0;
+  /* Yüzler pencerenin dikey ortasına oturur; prizma bu eksen etrafında
+     döndüğü için yarıçap hesabı da tek satır yüksekliğine bakar. */
+  top: 50%;
+  height: var(--row-h);
+  margin-top: calc(var(--row-h) / -2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.75rem;
+  /* Prizmanın arka yüzleri öne sızmasın. */
+  backface-visibility: hidden;
+  color: var(--drum-face-fg, currentColor);
+  background: var(--drum-face-bg, transparent);
+  transform: rotateX(calc(var(--i) * var(--step))) translateZ(var(--radius, 0px));
+}
+
+/* Üç nokta yalnızca blok bir kutuda çalışır, esnek kutuda değil. */
+.label {
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Dönüş bittikten sonra ortaya oturan yüz. */
+.mid {
+  color: var(--drum-mid-fg, currentColor);
+  background: var(--drum-mid-bg, transparent);
+  font-weight: 600;
+}

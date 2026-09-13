@@ -1,0 +1,127 @@
+/*
+  Slot makinesinin kolu. Yalnızca görünüm ve tutamak burada;
+  ne yaptığını bilmez.
+
+  Temadan beklenen değişkenler (tanımsızsa bileşen sade görünür ama
+  kırılmaz — renk sabitlemek yerine devralmayı tercih ediyoruz):
+    --lever-plate             montaj plakası
+    --lever-arm               konik gövdenin ana yüzü
+    --lever-arm-light         gövdenin ışık alan kenarı
+    --lever-arm-shadow        gövdenin gölge kenarı
+    --lever-collar            mafsal bileziği
+    --lever-collar-highlight  bileziğin üstündeki ince şerit
+    --lever-knob              topuz, dinlenme rengi
+    --lever-knob-armed        topuz, eşik geçildiğinde
+    --lever-knob-shade        topuzun sağ yarısındaki örtü
+    --lever-knob-glint        sol üstteki parlama
+    --lever-knob-rim          topuzun dış çeperi
+    --lever-pivot             pivot göbeği
+    --lever-pivot-dot         göbekteki koyu nokta
+    --lever-notch             eşik çentiği, dinlenme rengi
+    --lever-accent            eşik geçildiğinde çentik ve odak halkası
+*/
+
+.root {
+  display: block;
+  padding: 0;
+  border: 0;
+  background: none;
+  line-height: 0;
+  cursor: grab;
+  /* Sürükleme sırasında tarayıcı sayfayı kaydırmasın. */
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.root:active:not(:disabled) {
+  cursor: grabbing;
+}
+
+.root:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.root:focus-visible {
+  outline: 2px solid var(--lever-accent, currentColor);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.plate {
+  fill: var(--lever-plate, currentColor);
+}
+
+.armBody {
+  fill: var(--lever-arm, currentColor);
+}
+
+.armLight {
+  fill: var(--lever-arm-light, transparent);
+}
+
+.armShadow {
+  fill: var(--lever-arm-shadow, transparent);
+}
+
+.collar {
+  fill: var(--lever-collar, currentColor);
+}
+
+.collarHighlight {
+  fill: var(--lever-collar-highlight, transparent);
+}
+
+.knob {
+  fill: var(--lever-knob, currentColor);
+  transition: fill 120ms ease;
+}
+
+.knobShade {
+  fill: var(--lever-knob-shade, transparent);
+}
+
+.knobGlint {
+  fill: var(--lever-knob-glint, transparent);
+}
+
+.knobRim {
+  fill: none;
+  stroke: var(--lever-knob-rim, transparent);
+  stroke-width: 1.5;
+}
+
+.pivot {
+  fill: var(--lever-pivot, currentColor);
+}
+
+.pivotDot {
+  fill: var(--lever-pivot-dot, transparent);
+}
+
+.notch {
+  fill: var(--lever-notch, currentColor);
+  transition: fill 120ms ease;
+}
+
+/* Eşik aşıldı: kol bırakılırsa çekiliş sayılacak. */
+.armed .knob {
+  fill: var(--lever-knob-armed, currentColor);
+}
+
+.armed .notch {
+  fill: var(--lever-accent, currentColor);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .knob,
+  .notch {
+    transition: none;
+  }
+}
