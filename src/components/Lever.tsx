@@ -23,8 +23,8 @@ const PULL_MS = 165;
 const RECOVER_MS = 430;
 
 /** Pivot ve topuz merkezleri — SVG geometrisiyle birebir aynı olmalı. */
-const PIVOT = { x: 56, y: 144 };
-const KNOB = { x: 56, y: 28 };
+const PIVOT = { x: 40, y: 144 };
+const KNOB = { x: 40, y: 28 };
 
 export type LeverProps = {
   disabled?: boolean;
@@ -211,20 +211,25 @@ export function Lever({ disabled = false, onPull }: LeverProps) {
       onPointerCancel={handlePointerCancel}
       onKeyDown={handleKeyDown}
     >
-      <svg className={styles.svg} viewBox="0 0 180 168" aria-hidden="true" focusable="false">
-        <rect className={styles.plate} x={26} y={138} width={60} height={26} rx={3} />
+      {/*
+        Genişlik 150: kol MAX_ANGLE'da pivot etrafında sağa savrulur ve
+        topuzun sağ kenarı x=149.2'ye ulaşır. Daha dar bir çerçeve
+        topuzu kırpardı — çözüm açıyı kısmak değil, tuvali genişletmek.
+      */}
+      <svg className={styles.svg} viewBox="0 0 150 168" aria-hidden="true" focusable="false">
+        <rect className={styles.plate} x={10} y={138} width={60} height={26} rx={3} />
 
         <g ref={armGRef} transform={`rotate(0 ${PIVOT.x} ${PIVOT.y})`}>
           {/* Işık kenarı önce çizilir, ana yüz üstünü kapatıp ince bir
               şerit bırakır. */}
-          <path className={styles.armLight} d="M49 146 L53 146 L54 34 L52.5 34 Z" />
-          <path className={styles.armBody} d="M51 146 L61 146 L58.5 34 L53.5 34 Z" />
-          <path className={styles.armShadow} d="M61 146 L63 146 L59.5 34 L58.3 34 Z" />
+          <path className={styles.armLight} d="M33 146 L37 146 L38 34 L36.5 34 Z" />
+          <path className={styles.armBody} d="M35 146 L45 146 L42.5 34 L37.5 34 Z" />
+          <path className={styles.armShadow} d="M45 146 L47 146 L43.5 34 L42.3 34 Z" />
 
-          <rect className={styles.collar} x={47} y={118} width={18} height={8} rx={2} />
+          <rect className={styles.collar} x={31} y={118} width={18} height={8} rx={2} />
           <rect
             className={styles.collarHighlight}
-            x={48}
+            x={32}
             y={119.5}
             width={16}
             height={1.5}
@@ -232,11 +237,11 @@ export function Lever({ disabled = false, onPull }: LeverProps) {
           />
 
           <g ref={knobGRef} transform={`rotate(0 ${KNOB.x} ${KNOB.y})`}>
-            <circle className={styles.knob} cx={KNOB.x} cy={KNOB.y} r={15} />
+            <circle className={styles.knob} cx={KNOB.x} cy={KNOB.y} r={17} />
             {/* Sağ yarıyı karartan örtü. */}
-            <path className={styles.knobShade} d="M56 13 A15 15 0 0 1 56 43 Z" />
-            <ellipse className={styles.knobGlint} cx={50} cy={22} rx={5} ry={3.4} />
-            <circle className={styles.knobRim} cx={KNOB.x} cy={KNOB.y} r={15} />
+            <path className={styles.knobShade} d="M40 11 A17 17 0 0 1 40 45 Z" />
+            <ellipse className={styles.knobGlint} cx={33} cy={21} rx={5.6} ry={3.8} />
+            <circle className={styles.knobRim} cx={KNOB.x} cy={KNOB.y} r={17} />
           </g>
         </g>
 
@@ -244,7 +249,7 @@ export function Lever({ disabled = false, onPull }: LeverProps) {
         <circle className={styles.pivotDot} cx={PIVOT.x} cy={PIVOT.y} r={2.8} />
 
         {/* Eşik göstergesi: kol buraya inince çekiliş sayılır. */}
-        <rect className={styles.notch} x={90} y={104} width={8} height={2} />
+        <rect className={styles.notch} x={62} y={104} width={8} height={2} />
       </svg>
     </button>
   );

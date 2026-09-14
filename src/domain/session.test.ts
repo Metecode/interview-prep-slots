@@ -4,9 +4,12 @@ import {
   MAX_RECENT_IDS,
   initialSessionState,
   sessionReducer,
+  toStore,
 } from "./session";
 import type { SessionState } from "./session";
-import type { QuestionProgress } from "./progress";
+import { SCHEMA_VERSION } from "./progress";
+import type { QuestionProgress, Store } from "./progress";
+import { CATEGORIES } from "./question";
 import type { Category, Evaluation, Question } from "./question";
 
 const NOW = new Date("2026-04-01T10:00:00.000Z");
@@ -456,5 +459,159 @@ describe("tam tur", () => {
     expect(next.phase).toBe("evaluated");
     expect(next.passed).toBe(true);
     expect(next.evaluation).toBeNull();
+  });
+});
+
+describe("HYDRATE", () => {
+  const saved: QuestionProgress = {
+    questionId: "q1",
+    box: 3,
+    lastSeenAt: "2026-03-01T10:00:00.000Z",
+    attempts: [],
+  };
+
+  // initialized: true varsayılanı, "kullanıcı daha önce seçim yaptı"
+  // senaryolarını test eder; ilk açılış davranışı ayrı testlerde.
+  function makeSettings(over: Partial<Store["settings"]> = {}): Store["settings"] {
+    return {
+      fastMode: false,
+      lang: "tr",
+      activeCategories: ["sql"],
+      initialized: true,
+      semanticEnabled: false,
+      ...over,
+    };
+  }
+
+  it("ilerlemeyi ve kategori seçimini doldurur", () => {
+    const next = sessionReducer(makeState(), {
+      type: "HYDRATE",
+      progress: { q1: saved },
+      settings: makeSettings({ activeCategories: ["sql", "react"] }),
+    });
+
+    expect(next.progress).toEqual({ q1: saved });
+    expect(next.activeCategories).toEqual(["sql", "react"]);
+  });
+
+  it("içerikte olmayan kategori adını eler", () => {
+    const next = sessionReducer(makeState(), {
+      type: "HYDRATE",
+      progress: {},
+      // "cobol" şemada string olarak geçerli ama Category değil.
+      settings: makeSettings({ activeCategories: ["sql", "cobol"] }),
+    });
+
+    expect(next.activeCategories).toEqual(["sql"]);
+  });
+
+  it("ilk açılışta (initialized false) tüm kategoriler seçili gelir", () => {
+    const next = sessionReducer(makeState(), {
+      type: "HYDRATE",
+      progress: {},
+      settings: makeSettings({ initialized: false, activeCategories: [] }),
+    });
+
+    expect(next.activeCategories).toEqual([...CATEGORIES]);
+  });
+
+  it("kullanıcı hepsini kapatıp yeniden yüklediğinde boş kalır", () => {
+    // initialized true + boş dizi: bilinçli bir seçim, hepsini açmak onu geri alır.
+    const next = sessionReducer(makeState(), {
+      type: "HYDRATE",
+      progress: {},
+      settings: makeSettings({ initialized: true, activeCategories: [] }),
+    });
+
+    expect(next.activeCategories).toEqual([]);
+  });
+
+  it("kota verilmezse mevcut kotaya dokunmaz", () => {
+    const next = sessionReducer(makeState({ quotaRemaining: 5 }), {
+      type: "HYDRATE",
+      progress: {},
+      settings: makeSettings(),
+    });
+
+    expect(next.quotaRemaining).toBe(5);
+  });
+
+  it("kota verilirse onu yazar", () => {
+    const next = sessionReducer(makeState({ quotaRemaining: 5 }), {
+      type: "HYDRATE",
+      progress: {},
+      settings: makeSettings(),
+      quotaRemaining: 2,
+    });
+
+    expect(next.quotaRemaining).toBe(2);
+  });
+
+  it("idle dışında state'i değiştirmez", () => {
+    // Cevap yazılırken diskten gelen veri ekrandakini ezmemeli.
+    const state = makeState({ phase: "answering", current: makeQuestion("q1") });
+
+    const next = sessionReducer(state, {
+      type: "HYDRATE",
+      progress: { q1: saved },
+      settings: makeSettings(),
+    });
+
+    expect(next).toBe(state);
+  });
+});
+
+describe("toStore", () => {
+  it("yalnızca kalıcı alanları süzer", () => {
+    const progress: Record<string, QuestionProgress> = {
+      q1: { questionId: "q1", box: 2, lastSeenAt: NOW.toISOString(), attempts: [] },
+    };
+    const state = makeState({
+      phase: "evaluated",
+      current: makeQuestion("q1"),
+      evaluation: makeEvaluation(),
+      passed: true,
+      recentIds: ["q1"],
+      quotaRemaining: 7,
+      activeCategories: ["sql"],
+      progress,
+    });
+
+    const store = toStore(state, { fastMode: true, semanticEnabled: true });
+
+    expect(store).toEqual({
+      schemaVersion: SCHEMA_VERSION,
+      progress,
+      settings: {
+        fastMode: true,
+        lang: "tr",
+        activeCategories: ["sql"],
+        initialized: true,
+        semanticEnabled: true,
+      },
+    });
+  });
+
+  it("initialized'ı her zaman true yazar", () => {
+    // toStore'a giren state bir oturumdan geldiği için "ilk açılış" artık geçmişte.
+    const store = toStore(makeState(), { fastMode: false, semanticEnabled: false });
+
+    expect(store.settings.initialized).toBe(true);
+  });
+
+  it("semanticEnabled'ı olduğu gibi taşır", () => {
+    const store = toStore(makeState(), { fastMode: false, semanticEnabled: true });
+
+    expect(store.settings.semanticEnabled).toBe(true);
+  });
+
+  it("kotayı diske yazmaz", () => {
+    const store = toStore(makeState({ quotaRemaining: 9 }), {
+      fastMode: false,
+      semanticEnabled: false,
+    });
+
+    // Kota hesaba bağlı; diskte tutulsa kullanıcı elle artırabilirdi.
+    expect(JSON.stringify(store)).not.toContain("9");
   });
 });

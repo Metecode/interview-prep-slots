@@ -1,142 +1,340 @@
-import { useRef, useState } from "react";
-import type { CSSProperties } from "react";
+import { useEffect, useReducer, useRef, useState } from "react";
 
-import { Drum, FACES } from "./components/Drum";
-import type { DrumHandle } from "./components/Drum";
-import { Lever } from "./components/Lever";
+import styles from "./App.module.css";
+import { CategoryPicker } from "./components/CategoryPicker";
+import { Machine } from "./components/Machine";
+import { QuestionCard } from "./components/QuestionCard";
+import { ResultPanel } from "./components/ResultPanel";
+import { evaluateLexical } from "./domain/evaluate";
+import { embeddingClient } from "./embedding/client";
+import { evaluateSemanticAnswer } from "./embedding/semanticEvaluate";
+import { useEmbeddingStatus } from "./embedding/useEmbeddingStatus";
+import { initialSessionState, sessionReducer, toStore } from "./domain/session";
+import type { SessionState } from "./domain/session";
+import { useStore } from "./storage/useStore";
+import type { SelfRating, Store } from "./domain/progress";
+import type { Category, Question } from "./domain/question";
 
 /* ------------------------------------------------------------------ */
-/* GEÇİCİ deneme sayfası — Machine bileşeni gelince bu dosya silinecek  */
+/* GEÇİCİ deneme sayfası — kart eklenene kadar yalnızca makine ve       */
+/* konsola düşen faz değişimi var.                                     */
 /* ------------------------------------------------------------------ */
 
-const LABELS = [
-  "Index", "Join", "Transaction", "Deadlock",
-  "Hook", "Effect", "Memo", "Context",
-  "Stream", "Consumer", "Partition", "Cache",
-  "Heap", "Graph", "Proxy", "Builder",
+const TEMP_QUESTIONS: Question[] = [
+  {
+    id: "sql-index-nedir",
+    category: "sql",
+    topic: "Index",
+    difficulty: 1,
+    prompt: "Bir veritabanı index'i nedir ve sorgu performansını nasıl etkiler?",
+    modelAnswer:
+      "Index, tabloya ek bir arama yapısı ekleyerek WHERE ve JOIN sorgularının tam tablo taraması yapmadan ilgili satırlara hızlıca ulaşmasını sağlar.",
+    keyConcepts: [
+      {
+        id: "b-tree",
+        label: "B-Tree yapısı",
+        aliases: ["b-tree", "b agaci", "btree"],
+        anchors: ["Çoğu index B-Tree ağacı üzerinde sıralı olarak tutulur."],
+      },
+      {
+        id: "arama-hizi",
+        label: "Arama hızını artırır",
+        aliases: ["hizli arama", "performans"],
+        anchors: ["Index olmadan veritabanı tüm satırları taramak zorunda kalır."],
+      },
+    ],
+  },
+  {
+    id: "react-usememo-ne-zaman",
+    category: "react",
+    topic: "Memo",
+    difficulty: 2,
+    prompt: "useMemo ne zaman kullanılır, ne zaman gereksizdir?",
+    modelAnswer:
+      "useMemo, pahalı bir hesaplamanın her render'da tekrar çalışmasını önlemek için bağımlılıklar değişmediği sürece sonucu önbellekler; ucuz hesaplamalarda gereksiz karmaşıklık katar.",
+    keyConcepts: [
+      {
+        id: "pahali-hesap",
+        label: "Pahalı hesaplama önbellekleme",
+        aliases: ["memoization", "onbellek", "cache"],
+        anchors: ["useMemo yalnızca maliyetli hesaplamaları önbelleğe almak için anlamlıdır."],
+      },
+      {
+        id: "bagimlilik-dizisi",
+        label: "Bağımlılık dizisi",
+        aliases: ["dependency array", "deps"],
+        anchors: ["Bağımlılık dizisindeki değerler değişmedikçe eski sonuç döner."],
+      },
+    ],
+  },
+  {
+    id: "koleksiyon-hashmap-vs-treemap",
+    category: "koleksiyonlar",
+    topic: "HashMap",
+    difficulty: 2,
+    prompt: "HashMap ile TreeMap arasındaki temel fark nedir?",
+    modelAnswer:
+      "HashMap sabit zamanlı erişim sağlar ama sırasızdır; TreeMap anahtarları sıralı tutar, erişim ve ekleme log(n) zaman alır.",
+    keyConcepts: [
+      {
+        id: "siralama",
+        label: "Sıralı anahtar tutma",
+        aliases: ["sirali", "ordered"],
+        anchors: ["TreeMap anahtarları doğal sıraya ya da comparator'a göre tutar."],
+      },
+      {
+        id: "zaman-karmasikligi",
+        label: "Zaman karmaşıklığı farkı",
+        aliases: ["o(1)", "o(log n)", "zaman karmasikligi"],
+        anchors: ["HashMap ortalama O(1), TreeMap O(log n) zaman karmaşıklığına sahiptir."],
+      },
+    ],
+  },
+  {
+    id: "kafka-partition-nedir",
+    category: "kafka-redis",
+    topic: "Partition",
+    difficulty: 3,
+    prompt: "Kafka'da partition kavramı neden vardır ve paralelliği nasıl etkiler?",
+    modelAnswer:
+      "Bir topic birden fazla partition'a bölünerek farklı consumer'ların paralel okuma yapmasına izin verir; partition sayısı paralellik üst sınırını belirler.",
+    keyConcepts: [
+      {
+        id: "paralel-tuketim",
+        label: "Paralel tüketim",
+        aliases: ["paralellik", "concurrent consumer"],
+        anchors: ["Partition sayısı kadar consumer paralel olarak mesaj tüketebilir."],
+      },
+      {
+        id: "sira-garantisi",
+        label: "Partition içi sıra garantisi",
+        aliases: ["mesaj sirasi", "ordering"],
+        anchors: ["Mesaj sırası yalnızca aynı partition içinde garanti edilir."],
+      },
+    ],
+  },
 ];
 
-const page: CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-  gap: "1.25rem",
-  maxWidth: "26rem",
-  margin: "0 auto",
-  padding: "3rem 1.25rem",
-};
+/**
+ * İlk state, diskten geleni HYDRATE ile uygulayarak kurulur.
+ * HYDRATE'i efektte dispatch etmek yerine burada uygulamak sıralama
+ * sorununu tamamen kaldırıyor: efekt sırası yüzünden kayıt, hidrasyondan
+ * önceki boş state'i diske basamıyor.
+ *
+ * İlk açılışta (initialized false) hangi kategorilerin açık geleceğine
+ * reducer kendisi karar veriyor — bkz. session.ts HYDRATE dalı.
+ */
+function initState(store: Store): SessionState {
+  const base: SessionState = {
+    ...initialSessionState(),
+    // GEÇİCİ: kota gerçekte dışarıdan yüklenecek. Sıfır kalırsa yapay zekâ
+    // düğmesinin açık hali denenemiyor.
+    quotaRemaining: 3,
+  };
 
-const machine: CSSProperties = {
-  display: "flex",
-  gap: "1rem",
-  alignItems: "center",
-};
-
-const row: CSSProperties = {
-  display: "flex",
-  gap: "0.75rem",
-  alignItems: "flex-end",
-};
-
-const field: CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-  gap: "0.35rem",
-  flex: 1,
-  fontSize: "0.8rem",
-  color: "var(--page-muted)",
-};
-
-const input: CSSProperties = {
-  background: "transparent",
-  border: "1px solid var(--page-line)",
-  borderRadius: "6px",
-  padding: "0.5rem",
-  color: "inherit",
-  font: "inherit",
-};
-
-const button: CSSProperties = {
-  ...input,
-  cursor: "pointer",
-  padding: "0.55rem 1rem",
-};
+  return sessionReducer(base, {
+    type: "HYDRATE",
+    progress: store.progress,
+    settings: store.settings,
+  });
+}
 
 export default function App() {
-  const drumRef = useRef<DrumHandle>(null);
-  const [spinKey, setSpinKey] = useState(0);
-  const [targetIndex, setTargetIndex] = useState(0);
-  const [turns, setTurns] = useState(3);
-  const [durationMs, setDurationMs] = useState(2600);
+  const { hydrated, recovered, save } = useStore();
 
-  function spin() {
-    const next = Math.floor(Math.random() * FACES);
-    setTargetIndex(next);
-    setSpinKey((key) => key + 1);
-    console.log("spin ->", next, LABELS[next]);
+  // Depo okunmadan oturum kurulmuyor; okuma IndexedDB'den, göz kırpması kadar.
+  if (!hydrated) {
+    return (
+      <main className={styles.app}>
+        <h1 className={styles.title}>Mülakat Slot — makine denemesi</h1>
+      </main>
+    );
   }
 
+  return <Session store={hydrated} recovered={recovered} save={save} />;
+}
+
+type SessionProps = {
+  store: Store;
+  recovered: boolean;
+  save: (store: Store) => void;
+};
+
+function Session({ store, recovered, save }: SessionProps) {
+  const [state, dispatch] = useReducer(sessionReducer, store, initState);
+  const [spinKey, setSpinKey] = useState(0);
+  const [fastMode, setFastMode] = useState(store.settings.fastMode);
+  const [semanticEnabled, setSemanticEnabled] = useState(store.settings.semanticEnabled);
+  const [lastAnswer, setLastAnswer] = useState("");
+  const [warningDismissed, setWarningDismissed] = useState(false);
+  const prevPhaseRef = useRef(state.phase);
+  const embeddingStatus = useEmbeddingStatus();
+
+  // Kaydı RATE'i kovalayarak değil, ilerleme ve ayar değişimini izleyerek
+  // yapıyoruz: hangi eylemin yazdırdığını bilmek gerekmiyor.
+  const { progress, activeCategories } = state;
+  useEffect(() => {
+    save(toStore({ progress, activeCategories }, { fastMode, semanticEnabled }));
+  }, [progress, activeCategories, fastMode, semanticEnabled, save]);
+
+  // spinKey yalnızca gerçek bir dönüş başladığında artar — çekiliş havuzu
+  // boşsa reducer state'i değiştirmez, Machine'e anlamsız bir dönüş gitmez.
+  useEffect(() => {
+    if (state.phase === "spinning" && prevPhaseRef.current !== "spinning") {
+      setSpinKey((key) => key + 1);
+    }
+    prevPhaseRef.current = state.phase;
+
+    console.log("faz ->", state.phase, state.current?.id ?? null);
+  }, [state]);
+
+  function handlePull() {
+    dispatch({ type: "SPIN", questions: TEMP_QUESTIONS, now: new Date(), rng: Math.random });
+  }
+
+  function handleSettle() {
+    dispatch({ type: "SETTLE" });
+  }
+
+  /**
+   * "Daha iyi değerlendirme" kapalıysa ya da model henüz hazır değilse
+   * doğrudan lexical'a gidilir — model hazır değilken yükleme burada
+   * arka planda tetiklenir, bu turu beklettirmeden. Hazırsa embedding
+   * denenir; herhangi bir adım başarısız olursa yine lexical'a düşülür.
+   */
+  function handleSubmit(answer: string) {
+    if (!state.current) return;
+    const question = state.current;
+    // RATE denemeyi kaydederken cevabı istiyor; kart o an sökülmüş olacak.
+    setLastAnswer(answer);
+
+    if (!semanticEnabled || embeddingStatus.state !== "ready") {
+      if (semanticEnabled) embeddingClient.preload();
+      dispatch({ type: "SUBMIT", evaluation: evaluateLexical(question, answer) });
+      return;
+    }
+
+    evaluateSemanticAnswer(question, answer).then((evaluation) => {
+      dispatch({ type: "SUBMIT", evaluation: evaluation ?? evaluateLexical(question, answer) });
+    });
+  }
+
+  function handlePass() {
+    setLastAnswer("");
+    dispatch({ type: "PASS" });
+  }
+
+  function handleRate(rating: SelfRating) {
+    dispatch({ type: "RATE", rating, answer: lastAnswer, now: new Date() });
+  }
+
+  function handleAskAi() {
+    dispatch({ type: "SPEND_QUOTA" });
+    console.log("yapay zekâ turu henüz bağlı değil");
+  }
+
+  function handleToggleCategory(category: Category) {
+    dispatch({ type: "TOGGLE_CATEGORY", category });
+  }
+
+  const canSpin =
+    (state.phase === "idle" || state.phase === "evaluated") &&
+    state.activeCategories.length > 0;
+
   return (
-    <main style={page}>
-      <h1 style={{ fontSize: "1rem", margin: 0, color: "var(--page-muted)" }}>
-        Drum denemesi
-      </h1>
+    <main className={styles.app}>
+      <h1 className={styles.title}>Mülakat Slot — makine denemesi</h1>
 
-      <div style={machine}>
-        <div style={{ flex: 1 }}>
-          <Drum
-            ref={drumRef}
-            labels={LABELS}
-            targetIndex={targetIndex}
-            spinKey={spinKey}
-            durationMs={durationMs}
-            turns={turns}
-            onSettle={() => console.log("settle ->", targetIndex, LABELS[targetIndex])}
-          />
+      <CategoryPicker
+        active={state.activeCategories}
+        disabled={state.phase === "spinning"}
+        onToggle={handleToggleCategory}
+      />
+
+      <Machine
+        question={state.current}
+        allQuestions={TEMP_QUESTIONS}
+        spinKey={spinKey}
+        spinning={state.phase === "spinning"}
+        canSpin={canSpin}
+        quotaRemaining={state.quotaRemaining}
+        fastMode={fastMode}
+        onPull={handlePull}
+        onSettle={handleSettle}
+      />
+
+      {/* Kol zaten disabled ama sebebi görünmüyor; yalnızca seçim boşken çıkar. */}
+      {state.activeCategories.length === 0 && (
+        <p className={styles.spinHint}>Çevirmek için en az bir kategori seç.</p>
+      )}
+
+      {/* Makineye ait bir ayar, soruya değil: yeri makinenin hemen altı. */}
+      <label className={styles.controls}>
+        <input
+          type="checkbox"
+          checked={fastMode}
+          onChange={(e) => setFastMode(e.target.checked)}
+        />
+        Hızlı mod
+      </label>
+
+      <label className={styles.controls}>
+        <input
+          type="checkbox"
+          checked={semanticEnabled}
+          onChange={(e) => setSemanticEnabled(e.target.checked)}
+        />
+        Daha iyi değerlendirme (bir kez ~50 MB indirir)
+      </label>
+
+      {/* Yükleme engelleyici değil: kart açıkken de görünebilir, kullanıcı
+          bu sırada lexical sonuçla devam eder. */}
+      {semanticEnabled && embeddingStatus.state === "loading" && (
+        <div className={styles.embeddingProgress}>
+          <progress value={embeddingStatus.loaded} max={Math.max(embeddingStatus.total, 1)} />
+          <span>Model indiriliyor…</span>
         </div>
-        <div style={{ width: "5.5rem", flexShrink: 0 }}>
-          <Lever onPull={spin} />
+      )}
+
+      {semanticEnabled && embeddingStatus.state === "error" && (
+        <p className={styles.embeddingError}>
+          Model yüklenemedi, kelime eşleşmesi kullanılıyor.
+        </p>
+      )}
+
+      {recovered && !warningDismissed && (
+        <div className={styles.warning} role="alert">
+          <span>Kayıtlı ilerlemen okunamadı, sıfırdan başlıyorsun.</span>
+          <button
+            type="button"
+            className={styles.warningClose}
+            onClick={() => setWarningDismissed(true)}
+            aria-label="Uyarıyı kapat"
+          >
+            ×
+          </button>
         </div>
-      </div>
+      )}
 
-      <div style={row}>
-        <label style={field}>
-          Tur sayısı
-          <input
-            style={input}
-            type="number"
-            min={0}
-            max={12}
-            value={turns}
-            onChange={(e) => setTurns(Number(e.target.value))}
-          />
-        </label>
+      {/* key: soru değişince kart yeniden kurulur, yazılan cevap temizlenir. */}
+      {state.phase === "answering" && state.current && (
+        <QuestionCard
+          key={state.current.id}
+          question={state.current}
+          onSubmit={handleSubmit}
+          onPass={handlePass}
+        />
+      )}
 
-        <label style={field}>
-          Süre (ms)
-          <input
-            style={input}
-            type="number"
-            min={100}
-            step={100}
-            value={durationMs}
-            onChange={(e) => setDurationMs(Number(e.target.value))}
-          />
-        </label>
-      </div>
-
-      <div style={row}>
-        <button style={button} type="button" onClick={spin}>
-          Çevir
-        </button>
-        {/* useImperativeHandle'ı elle denemek için. */}
-        <button
-          style={button}
-          type="button"
-          onClick={() => drumRef.current?.finish()}
-        >
-          Atla
-        </button>
-      </div>
+      {state.phase === "evaluated" && state.current && (
+        <ResultPanel
+          question={state.current}
+          evaluation={state.evaluation}
+          quotaRemaining={state.quotaRemaining}
+          onRate={handleRate}
+          onAskAi={handleAskAi}
+        />
+      )}
     </main>
   );
 }

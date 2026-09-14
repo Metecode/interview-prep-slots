@@ -1,0 +1,91 @@
+/*
+  Deneme sayfasının kabuğu. Makine ve kart aynı kapsayıcının içinde,
+  ikisi de tam genişlikte durur.
+*/
+
+.app {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-width: 620px;
+  margin: 0 auto;
+  padding: 34px 20px 90px;
+}
+
+.title {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--ink-soft);
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+/* Kol neden devre dışı belli olsun diye; yalnızca seçim boşken görünür. */
+.spinHint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+/*
+  Kayıtlı ilerleme okunamadığında bir kez görünür, kapatılabilir.
+  Accent kullanılmıyor: o renk kol topuzu ve ödeme çizgisine ayrılmış durumda.
+*/
+.warning {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.85rem;
+  color: var(--ink);
+  background: color-mix(in srgb, var(--ink) 6%, transparent);
+  border-left: 2px solid var(--enamel-top);
+  border-radius: 0 6px 6px 0;
+}
+
+.warningClose {
+  margin-left: auto;
+  padding: 0 0.25rem;
+  font: inherit;
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--ink-soft);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.warningClose:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+/*
+  Model indirilirken görünür, engelleyici değildir: kullanıcı bu satırı
+  görmezden gelip lexical yolla devam edebilir. Accent kullanılmıyor,
+  bu bir uyarı değil bir bilgi notu.
+*/
+.embeddingProgress {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+
+.embeddingProgress progress {
+  width: 8rem;
+  accent-color: var(--enamel-top);
+}
+
+.embeddingError {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}

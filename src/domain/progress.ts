@@ -52,6 +52,20 @@ export const storeSchema = z.object({
     fastMode: z.boolean().default(false),
     lang: z.enum(["tr", "en"]).default("tr"),
     activeCategories: z.array(z.string()).default([]),
+    /**
+     * İlk açılışta kategori seçimi hiç yapılmamış mı? Eski kayıtlarda alan
+     * yok, default false gelir — bu da "henüz seçim yapılmadı" ile aynı
+     * anlama geliyor, tesadüf değil: schemaVersion artmadan geriye dönük
+     * uyumlu kalması bunun üstüne kurulu.
+     */
+    initialized: z.boolean().default(false),
+    /**
+     * "Daha iyi değerlendirme" anahtarı: kullanıcı tarayıcıda embedding
+     * modelini indirmeyi kabul etti mi? Varsayılan kapalı — model ~50 MB,
+     * isteğe bağlı AI yolundan farklı olsa da aynı gerekçeyle: indirme
+     * kullanıcının açık onayı olmadan başlamaz.
+     */
+    semanticEnabled: z.boolean().default(false),
   }),
 });
 export type Store = z.infer<typeof storeSchema>;
@@ -59,7 +73,13 @@ export type Store = z.infer<typeof storeSchema>;
 export const emptyStore = (): Store => ({
   schemaVersion: SCHEMA_VERSION,
   progress: {},
-  settings: { fastMode: false, lang: "tr", activeCategories: [] },
+  settings: {
+    fastMode: false,
+    lang: "tr",
+    activeCategories: [],
+    initialized: false,
+    semanticEnabled: false,
+  },
 });
 
 /**

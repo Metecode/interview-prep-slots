@@ -1,22 +1,11 @@
 /*
   Tek satırlık bir pencereden bakılan 16 yüzlü prizma.
-  Burada yalnızca 3B yerleşim var; ölçü ve renk dışarıdan gelir.
+  Burada yalnızca 3B yerleşim var; renkler ve satır yüksekliği
+  tokens.css'ten gelir.
 
   Bileşenin kendi yazdığı değişkenler:
     --step    yüzler arası açı, FACES sabitinden türetilir
     --radius  prizma yarıçapı, satır yüksekliğinden hesaplanır
-
-  Temadan beklenen değişkenler (tanımlı değilse bileşen sade görünür,
-  ama kırılmaz — renk sabitlemek yerine devralmayı tercih ediyoruz):
-    --row                tek satır yüksekliği; pencere bunun üç katı olur
-    --drum-perspective   bakış mesafesi
-    --drum-window-bg     pencere zemini
-    --drum-face-fg       yüz metni
-    --drum-face-bg       yüz zemini
-    --drum-mid-fg        ortaya oturan yüzün metni
-    --drum-mid-bg        ortaya oturan yüzün zemini
-    --drum-shade-top     üst komşu satırın karartması
-    --drum-shade-bottom  alt komşu satırın karartması
 */
 
 .window {
@@ -30,16 +19,20 @@
   /* Yüzler pencere dışına taşar; boyamayı buraya hapsetmek kaydırmada
      bütün sayfanın yeniden boyanmasını önler. */
   contain: paint;
-  perspective: var(--drum-perspective, 34rem);
-  background: var(--drum-window-bg, transparent);
-  border-radius: var(--drum-window-radius, 0.5rem);
+  perspective: 34rem;
+  background: var(--well);
+  /* Köşe yuvarlaması bilerek yok: iki tambur tek bir yuvanın içinde
+     görünmeli, yuvarlaklık dıştaki .bay'de. */
 }
 
 /*
   Komşu satırların karartması. Işık yukarıdan geldiği için üst satır alt
   satırdan daha koyu; ortadaki şerit tamamen açık kalır.
-  Koyuluklar temadan gelir (üstte %78, altta %44 olacak şekilde ayarlı),
-  duraklar burada çünkü geometriyle birlikte okunmaları gerekiyor.
+  Duraklar geometriyle birlikte okunmalı, o yüzden oranlar burada.
+
+  Yanlardaki iç gölge de burada: tambur yüzleri dönüşümlü çocuklar
+  olduğu için .window'un kendi box-shadow'u onların altında kalır ve
+  hiç görünmez. Aynı katman hem üstü hem yanı karartıyor.
 */
 .window::after {
   content: "";
@@ -49,11 +42,13 @@
   pointer-events: none;
   background: linear-gradient(
     to bottom,
-    var(--drum-shade-top, transparent) 0%,
+    rgb(var(--drum-shade), 0.34) 0%,
     transparent 33.33%,
     transparent 66.67%,
-    var(--drum-shade-bottom, transparent) 100%
+    rgb(var(--drum-shade), 0.18) 100%
   );
+  box-shadow: inset 6px 0 10px -6px rgb(var(--drum-shade), 0.5),
+    inset -6px 0 10px -6px rgb(var(--drum-shade), 0.5);
 }
 
 .drum {
@@ -79,25 +74,40 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 0.75rem;
+  padding: 0 0.5rem;
   /* Prizmanın arka yüzleri öne sızmasın. */
   backface-visibility: hidden;
-  color: var(--drum-face-fg, currentColor);
-  background: var(--drum-face-bg, transparent);
+  color: var(--drum-text);
+  background: linear-gradient(
+    to bottom,
+    var(--drum-face-top),
+    var(--drum-face-bottom)
+  );
+  /* Makara şeridindeki dikiş. Kenarlık yerine iç gölge: kenarlık yüzün
+     ölçülen yüksekliğini değiştirir ve yarıçap hesabını kaydırırdı. */
+  box-shadow: inset 0 -1px 0 var(--drum-face-border);
   transform: rotateX(calc(var(--i) * var(--step))) translateZ(var(--radius, 0px));
 }
 
 /* Üç nokta yalnızca blok bir kutuda çalışır, esnek kutuda değil. */
 .label {
   max-width: 100%;
+  /* İki tambur yan yana dar bir yere sığıyor; "Koleksiyonlar" gibi uzun
+     etiketler arayüz ölçüsünde kırpılmasın. */
+  font-size: 0.9rem;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 
-/* Dönüş bittikten sonra ortaya oturan yüz. */
+/* Dönüş bittikten sonra ortaya oturan yüz: gradyan yerine düz ve en açık ton. */
 .mid {
-  color: var(--drum-mid-fg, currentColor);
-  background: var(--drum-mid-bg, transparent);
+  background: var(--drum-face-top);
   font-weight: 600;
+}
+
+@media (max-width: 560px) {
+  .label {
+    font-size: 0.8rem;
+  }
 }

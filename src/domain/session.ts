@@ -1,6 +1,8 @@
 import { drawQuestion } from "./draw";
 import { applyAttempt } from "./leitner";
-import type { Attempt, QuestionProgress, SelfRating } from "./progress";
+import { SCHEMA_VERSION } from "./progress";
+import type { Attempt, QuestionProgress, SelfRating, Store } from "./progress";
+import { CATEGORIES } from "./question";
 import type { Category, Evaluation, Question } from "./question";
 
 /* ------------------------------------------------------------------ */
@@ -28,6 +30,16 @@ export type SessionState = {
 };
 
 export type SessionAction =
+  | {
+      type: "HYDRATE";
+      progress: Record<string, QuestionProgress>;
+      settings: Store["settings"];
+      /**
+       * Kota diske yazılmaz — hesaba bağlı, sunucudan gelir. Yükleyen taraf
+       * elinde bir değer varsa buradan verir, yoksa mevcut kota korunur.
+       */
+      quotaRemaining?: number;
+    }
   | { type: "TOGGLE_CATEGORY"; category: Category }
   | {
       type: "SPIN";
@@ -73,6 +85,31 @@ export function sessionReducer(
   action: SessionAction,
 ): SessionState {
   switch (action.type) {
+    case "HYDRATE": {
+      // Yalnızca açılışta anlamlı. Tur başladıktan sonra diskten gelen veri
+      // ekrandakini ezerse kullanıcı yazdığı cevabı kaybeder.
+      if (state.phase !== "idle") return state;
+
+      // İlk açılışta (initialized false) kullanıcı henüz hiçbir seçim
+      // yapmadı — hepsi açık gelsin. Sonraki açılışlarda dizi ne ise o
+      // kalır: kullanıcı hepsini kapatmışsa bu bilinçli bir seçim,
+      // boş diye tekrar hepsini açmak o seçimi geri alır.
+      const activeCategories = !action.settings.initialized
+        ? [...CATEGORIES]
+        : // Diskteki kategori adı içerikten kalkmış ya da yeniden adlandırılmış
+          // olabilir; tanınmayan ad çekiliş havuzunu sessizce boşaltmasın.
+          action.settings.activeCategories.filter(
+            (name): name is Category => (CATEGORIES as readonly string[]).includes(name),
+          );
+
+      return {
+        ...state,
+        progress: action.progress,
+        activeCategories,
+        quotaRemaining: action.quotaRemaining ?? state.quotaRemaining,
+      };
+    }
+
     case "TOGGLE_CATEGORY": {
       // Makara dönerken filtre değişirse ekrandaki kazanan havuz dışı kalır.
       if (state.phase === "spinning") return state;
@@ -173,4 +210,38 @@ export function sessionReducer(
     default:
       return state;
   }
+}
+
+/* ------------------------------------------------------------------ */
+/* Diske yazılacak biçim                                               */
+/* ------------------------------------------------------------------ */
+
+/**
+ * State'in kalıcı kısmını süzer. Parametre tipi `Pick`: phase, current,
+ * evaluation gibi oturuma özel alanlar diske hiç ulaşmasın diye imza
+ * bunlara bakmadığını kendi söylüyor.
+ *
+ * fastMode ve semanticEnabled state'te tutulmuyor (HYDRATE de doldurmuyor),
+ * o yüzden dışarıdan geliyor — ikisi de App'te düz React state, reducer'ın
+ * işi değil. Kota bilerek yok: hesaba bağlı, kullanıcı diskte
+ * düzenleyebilseydi AI hakkı sınırsız olurdu.
+ */
+export function toStore(
+  state: Pick<SessionState, "progress" | "activeCategories">,
+  settings: { fastMode: boolean; semanticEnabled: boolean },
+): Store {
+  return {
+    schemaVersion: SCHEMA_VERSION,
+    progress: state.progress,
+    settings: {
+      fastMode: settings.fastMode,
+      // Dil seçimi henüz hiçbir yerde tutulmuyor; şema varsayılanı kalıyor.
+      lang: "tr",
+      activeCategories: state.activeCategories,
+      // Oturum bir kez HYDRATE olduysa artık "ilk açılış" değildir; boş
+      // seçim de dahil, kullanıcının seçimi olduğu gibi diske yazılır.
+      initialized: true,
+      semanticEnabled: settings.semanticEnabled,
+    },
+  };
 }

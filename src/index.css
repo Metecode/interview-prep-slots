@@ -1,45 +1,18 @@
+@import url("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..700&family=Source+Serif+4:opsz,wght@8..60,400..600&display=swap");
+@import "./styles/tokens.css";
+
 /*
-  Geçici tema. Tasarım katmanı gelene kadar yalnızca tamburun ihtiyaç
-  duyduğu değişkenler tanımlı — renkler burada, bileşende değil.
+  Sayfa kabuğu. Renkler tokens.css'ten gelir; burada yalnızca tipografi
+  ve gövde kuralları var.
 */
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
-  /* Bir makara satırının yüksekliği. Tambur yarıçapını buradan hesaplar. */
-  --row: 62px;
-
-  --drum-perspective: 34rem;
-  --drum-window-bg: #12151d;
-  --drum-window-radius: 10px;
-  --drum-face-fg: #7c869c;
-  --drum-face-bg: transparent;
-  --drum-mid-fg: #eef2ff;
-  --drum-mid-bg: #1c2130;
-  /* Işık yukarıdan: üst satır alt satırdan belirgin biçimde koyu. */
-  --drum-shade-top: rgb(0 0 0 / 0.78);
-  --drum-shade-bottom: rgb(0 0 0 / 0.44);
-
-  --lever-plate: #232936;
-  --lever-arm: #9aa3b7;
-  --lever-arm-light: #cfd6e6;
-  --lever-arm-shadow: #5d6577;
-  --lever-collar: #495164;
-  --lever-collar-highlight: #7b8497;
-  --lever-knob: #c2402f;
-  --lever-knob-armed: #f2583f;
-  --lever-knob-shade: rgb(0 0 0 / 0.2);
-  --lever-knob-glint: rgb(255 255 255 / 0.55);
-  --lever-knob-rim: rgb(0 0 0 / 0.32);
-  --lever-pivot: #4a5265;
-  --lever-pivot-dot: #1a1e28;
-  --lever-notch: #3a4152;
-  --lever-accent: #f2583f;
-
-  --page-bg: #0b0d12;
-  --page-fg: #dfe4f0;
-  --page-muted: #8b93a7;
-  --page-line: #262c3a;
+  /* Arayüz: başlıklar, etiketler, makara yüzleri. */
+  --sans: "Bricolage Grotesque", system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* Soru metni; kart geldiğinde kullanılacak. */
+  --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
 }
 
 * {
@@ -48,7 +21,7 @@
 
 body {
   margin: 0;
-  background: var(--page-bg);
-  color: var(--page-fg);
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: var(--desk);
+  color: var(--ink);
+  font-family: var(--sans);
 }

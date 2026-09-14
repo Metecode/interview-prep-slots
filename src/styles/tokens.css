@@ -1,0 +1,55 @@
+/*
+  Palet ve ölçü token'ları — tek kaynak.
+  Bileşen CSS'leri yalnızca bu değişkenleri okur, ham renk yazmaz.
+  Saydamlık gereken yerlerde token'lar color-mix ile seyreltilir;
+  tek istisna --drum-shade, çünkü gradyan duraklarında alpha ile
+  tekrar tekrar kullanılıyor.
+*/
+
+:root {
+  /* yüzey */
+  --desk: #cec7b6;
+  --card: #f7f3ea;
+  --ink: #1a2220;
+  --ink-soft: #5c6864;
+
+  /* makine gövdesi */
+  --enamel-top: #313d3a;      /* ön yüz üst */
+  --enamel-bottom: #28322f;   /* ön yüz alt */
+  --enamel-face-top: #5c6964; /* üst yüzey, ışığı en çok alan */
+  --enamel-face-bottom: #47534f;
+  --rule: #4a5754;
+  --well: #121a19;            /* yuva içi */
+
+  /* kol paneli */
+  --plate-top: #45524e;
+  --plate-bottom: #374340;
+
+  /* tambur */
+  --drum-face-top: #fffcf5;
+  --drum-face-bottom: #f0eadc;
+  --drum-face-border: #ded7c7;
+  --drum-text: #1a2220;
+  --drum-shade: 12, 18, 17;   /* rgb bileşenleri, gradyanlarda alpha ile */
+
+  /* kol */
+  --arm-body: #8f9995;
+  --arm-light: #c7cfcb;
+  --arm-shadow: #59635f;
+  --arm-collar: #6e7975;
+  --pivot: #6e7975;
+  --knob: #c4442e;
+  --knob-armed: #e05a41;
+
+  /* vurgu */
+  --signal: #c4442e;
+
+  --row: 62px;
+}
+
+/* Dar ekranda satır kısalır; tambur yarıçapı bunu her dönüşte yeniden okur. */
+@media (max-width: 560px) {
+  :root {
+    --row: 54px;
+  }
+}
