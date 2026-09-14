@@ -221,14 +221,14 @@ export function sessionReducer(
  * evaluation gibi oturuma özel alanlar diske hiç ulaşmasın diye imza
  * bunlara bakmadığını kendi söylüyor.
  *
- * fastMode ve disableModelDownload state'te tutulmuyor (HYDRATE de
- * doldurmuyor), o yüzden dışarıdan geliyor — ikisi de App'te düz React
- * state, reducer'ın işi değil. Kota bilerek yok: hesaba bağlı, kullanıcı
- * diskte düzenleyebilseydi AI hakkı sınırsız olurdu.
+ * fastMode state'te tutulmuyor (HYDRATE de doldurmuyor), o yüzden
+ * dışarıdan geliyor — App'te düz React state, reducer'ın işi değil.
+ * Kota bilerek yok: hesaba bağlı, kullanıcı diskte düzenleyebilseydi
+ * AI hakkı sınırsız olurdu.
  */
 export function toStore(
   state: Pick<SessionState, "progress" | "activeCategories">,
-  settings: { fastMode: boolean; disableModelDownload: boolean },
+  settings: { fastMode: boolean },
 ): Store {
   return {
     schemaVersion: SCHEMA_VERSION,
@@ -241,7 +241,6 @@ export function toStore(
       // Oturum bir kez HYDRATE olduysa artık "ilk açılış" değildir; boş
       // seçim de dahil, kullanıcının seçimi olduğu gibi diske yazılır.
       initialized: true,
-      disableModelDownload: settings.disableModelDownload,
     },
   };
 }

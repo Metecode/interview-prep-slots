@@ -197,6 +197,12 @@
   border-color: var(--enamel-top);
 }
 
+/* Yalnızca geliştirme aracı: ham benzerlik skoru, çip metninden ayrışsın. */
+.chipScore {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.7;
+}
+
 .model {
   font-size: 0.95rem;
   color: var(--ink);

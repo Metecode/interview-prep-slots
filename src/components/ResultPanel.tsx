@@ -72,6 +72,15 @@ export function ResultPanel({
             }
           >
             {concept.label}
+            {/* Geliştirme aracı: ham skor ve yem havuzu baseline'ı (B).
+                Karşılaştırmalı eşik ayarı bunsuz yapılamaz. Üretimde derlenmez. */}
+            {import.meta.env.DEV && evaluation?.scores?.[concept.id] !== undefined && (
+              <span className={styles.chipScore}>
+                {" "}
+                {evaluation.scores[concept.id].toFixed(2)}
+                {evaluation.baseline !== undefined && ` (B ${evaluation.baseline.toFixed(2)})`}
+              </span>
+            )}
           </li>
         ))}
       </ul>

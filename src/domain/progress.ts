@@ -59,13 +59,6 @@ export const storeSchema = z.object({
      * uyumlu kalması bunun üstüne kurulu.
      */
     initialized: z.boolean().default(false),
-    /**
-     * Embedding modeli varsayılan olarak ilk çekilişte sessizce indirilir
-     * (bkz. App.tsx). Bu anahtar bunu bir opt-out'a çevirir — true olursa
-     * otomatik indirme hiç denenmez. Varsayılan false: kullanıcı özellikle
-     * kapatmadıkça indirme akışın normal parçasıdır.
-     */
-    disableModelDownload: z.boolean().default(false),
   }),
 });
 export type Store = z.infer<typeof storeSchema>;
@@ -78,7 +71,6 @@ export const emptyStore = (): Store => ({
     lang: "tr",
     activeCategories: [],
     initialized: false,
-    disableModelDownload: false,
   },
 });
 

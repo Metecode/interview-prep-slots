@@ -79,6 +79,17 @@ export const evaluationSchema = z.object({
   missing: z.array(z.string()),
   /** 0-1. Kutu geçişine doğrudan etki etmez, sadece gösterilir. */
   confidence: z.number().min(0).max(1).optional(),
+  /**
+   * keyConcept.id -> ham kosinüs benzerliği [0,1]. Yalnızca semantic yolda
+   * dolar; geliştirme aracı içindir, üretim arayüzünde gösterilmez.
+   */
+  scores: z.record(z.string(), z.number()).optional(),
+  /**
+   * Cevabın yem havuzuna (aynı kategorideki diğer soruların çapaları) olan
+   * en yüksek benzerliği — karşılaştırmalı eşiğin B'si. Yem havuzu boşsa
+   * yok. Yalnızca geliştirme aracı içindir.
+   */
+  baseline: z.number().min(0).max(1).optional(),
   feedback: z.string().optional(),
   followUp: z.string().optional(),
 });

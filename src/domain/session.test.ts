@@ -479,7 +479,6 @@ describe("HYDRATE", () => {
       lang: "tr",
       activeCategories: ["sql"],
       initialized: true,
-      disableModelDownload: false,
       ...over,
     };
   }
@@ -578,7 +577,7 @@ describe("toStore", () => {
       progress,
     });
 
-    const store = toStore(state, { fastMode: true, disableModelDownload: true });
+    const store = toStore(state, { fastMode: true });
 
     expect(store).toEqual({
       schemaVersion: SCHEMA_VERSION,
@@ -588,29 +587,19 @@ describe("toStore", () => {
         lang: "tr",
         activeCategories: ["sql"],
         initialized: true,
-        disableModelDownload: true,
       },
     });
   });
 
   it("initialized'ı her zaman true yazar", () => {
     // toStore'a giren state bir oturumdan geldiği için "ilk açılış" artık geçmişte.
-    const store = toStore(makeState(), { fastMode: false, disableModelDownload: false });
+    const store = toStore(makeState(), { fastMode: false });
 
     expect(store.settings.initialized).toBe(true);
   });
 
-  it("disableModelDownload'ı olduğu gibi taşır", () => {
-    const store = toStore(makeState(), { fastMode: false, disableModelDownload: true });
-
-    expect(store.settings.disableModelDownload).toBe(true);
-  });
-
   it("kotayı diske yazmaz", () => {
-    const store = toStore(makeState({ quotaRemaining: 9 }), {
-      fastMode: false,
-      disableModelDownload: false,
-    });
+    const store = toStore(makeState({ quotaRemaining: 9 }), { fastMode: false });
 
     // Kota hesaba bağlı; diskte tutulsa kullanıcı elle artırabilirdi.
     expect(JSON.stringify(store)).not.toContain("9");

@@ -8,9 +8,14 @@ cevabını yazar, kavram bazlı geri bildirim alır.
 
 - **Local-first.** Uygulama hesapsız ve backend'siz tam çalışır. Giriş
   yalnızca senkron ve AI kotası için. Faz 1'de backend yok.
-- **Değerlendirme katmanlı.** Varsayılan: tarayıcıda embedding ile kavram
-  eşleştirme. Yedek: alias kelime eşleşmesi. İsteğe bağlı: AI.
+- **Değerlendirme katmanlı.** v1: alias kelime eşleşmesi + kullanıcının
+  öz-değerlendirmesi. İsteğe bağlı: AI (Faz 3, henüz yok).
   AI hiçbir zaman zorunlu yol değil.
+  Tarayıcıda embedding ile kavram eşleştirme denendi ve çıkarıldı:
+  e5-small ile alakasız çapalar 0.88, doğru kavramlar 0.88-0.91 skor
+  alıyordu — Türkçede eşik koyacak kadar ayrışmıyor. Kod silinmedi,
+  `domain/evaluate.ts`'te kullanılmıyor olarak duruyor; Faz 3'te AI
+  rubriği için benzer bir skorlama/eşikleme yapısı gerekecek.
 - **Kutuyu kullanıcı belirler.** Leitner kutusu öz-değerlendirmeyle
   güncellenir, AI skoruyla değil.
 - **Kazanan animasyondan önce belirlenir.** Soru ağırlıklı çekilişle

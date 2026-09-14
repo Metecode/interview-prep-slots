@@ -7,9 +7,6 @@ import { QuestionCard } from "./components/QuestionCard";
 import { ResultPanel } from "./components/ResultPanel";
 import { QUESTIONS } from "./content";
 import { evaluateLexical } from "./domain/evaluate";
-import { embeddingClient, shouldAutoDownloadModel } from "./embedding/client";
-import { evaluateSemanticAnswer } from "./embedding/semanticEvaluate";
-import { useEmbeddingStatus } from "./embedding/useEmbeddingStatus";
 import { initialSessionState, sessionReducer, toStore } from "./domain/session";
 import type { SessionState } from "./domain/session";
 import { useStore } from "./storage/useStore";
@@ -65,23 +62,16 @@ function Session({ store, recovered, save }: SessionProps) {
   const [state, dispatch] = useReducer(sessionReducer, store, initState);
   const [spinKey, setSpinKey] = useState(0);
   const [fastMode, setFastMode] = useState(store.settings.fastMode);
-  const [disableModelDownload, setDisableModelDownload] = useState(
-    store.settings.disableModelDownload,
-  );
   const [lastAnswer, setLastAnswer] = useState("");
   const [warningDismissed, setWarningDismissed] = useState(false);
   const prevPhaseRef = useRef(state.phase);
-  // İlk çekilişte indirme yalnızca bir kez tetiklenir; sonraki çekilişler
-  // ayar değişse bile bunu tekrar sormaz.
-  const hasTriggeredDownloadRef = useRef(false);
-  const embeddingStatus = useEmbeddingStatus();
 
   // Kaydı RATE'i kovalayarak değil, ilerleme ve ayar değişimini izleyerek
   // yapıyoruz: hangi eylemin yazdırdığını bilmek gerekmiyor.
   const { progress, activeCategories } = state;
   useEffect(() => {
-    save(toStore({ progress, activeCategories }, { fastMode, disableModelDownload }));
-  }, [progress, activeCategories, fastMode, disableModelDownload, save]);
+    save(toStore({ progress, activeCategories }, { fastMode }));
+  }, [progress, activeCategories, fastMode, save]);
 
   // spinKey yalnızca gerçek bir dönüş başladığında artar — çekiliş havuzu
   // boşsa reducer state'i değiştirmez, Machine'e anlamsız bir dönüş gitmez.
@@ -94,16 +84,7 @@ function Session({ store, recovered, save }: SessionProps) {
     console.log("faz ->", state.phase, state.current?.id ?? null);
   }, [state]);
 
-  /**
-   * Model indirme yalnızca ilk çekilişte, sessizce tetiklenir — kullanıcı
-   * bir şey işaretlemek zorunda kalmaz. Ayarlardan kapatılmışsa ya da ağ
-   * buna uygun değilse (veri tasarrufu, yavaş bağlantı) hiç denenmez.
-   */
   function handlePull() {
-    if (!hasTriggeredDownloadRef.current) {
-      hasTriggeredDownloadRef.current = true;
-      if (shouldAutoDownloadModel(disableModelDownload)) embeddingClient.preload();
-    }
     dispatch({ type: "SPIN", questions: QUESTIONS, now: new Date(), rng: Math.random });
   }
 
@@ -111,25 +92,12 @@ function Session({ store, recovered, save }: SessionProps) {
     dispatch({ type: "SETTLE" });
   }
 
-  /**
-   * Model hazır değilse doğrudan lexical'a gidilir — burada yeniden
-   * indirme denenmez, bu yalnızca ilk çekilişin işi. Hazırsa embedding
-   * denenir; herhangi bir adım başarısız olursa yine lexical'a düşülür.
-   */
   function handleSubmit(answer: string) {
     if (!state.current) return;
     const question = state.current;
     // RATE denemeyi kaydederken cevabı istiyor; kart o an sökülmüş olacak.
     setLastAnswer(answer);
-
-    if (embeddingStatus.state !== "ready") {
-      dispatch({ type: "SUBMIT", evaluation: evaluateLexical(question, answer) });
-      return;
-    }
-
-    evaluateSemanticAnswer(question, answer).then((evaluation) => {
-      dispatch({ type: "SUBMIT", evaluation: evaluation ?? evaluateLexical(question, answer) });
-    });
+    dispatch({ type: "SUBMIT", evaluation: evaluateLexical(question, answer) });
   }
 
   function handlePass() {
@@ -194,15 +162,6 @@ function Session({ store, recovered, save }: SessionProps) {
             onChange={(e) => setFastMode(e.target.checked)}
           />
           Hızlı mod
-        </label>
-
-        <label className={styles.controls}>
-          <input
-            type="checkbox"
-            checked={!disableModelDownload}
-            onChange={(e) => setDisableModelDownload(!e.target.checked)}
-          />
-          Gelişmiş değerlendirme modelini indirme (~50 MB)
         </label>
       </details>
 
