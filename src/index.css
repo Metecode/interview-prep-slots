@@ -1,0 +1,27 @@
+@import url("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..700&family=Source+Serif+4:opsz,wght@8..60,400..600&display=swap");
+@import "./styles/tokens.css";
+
+/*
+  Sayfa kabuğu. Renkler tokens.css'ten gelir; burada yalnızca tipografi
+  ve gövde kuralları var.
+*/
+
+:root {
+  color-scheme: light;
+
+  /* Arayüz: başlıklar, etiketler, makara yüzleri. */
+  --sans: "Bricolage Grotesque", system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* Soru metni; kart geldiğinde kullanılacak. */
+  --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--desk);
+  color: var(--ink);
+  font-family: var(--sans);
+}

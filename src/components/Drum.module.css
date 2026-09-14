@@ -1,0 +1,113 @@
+/*
+  Tek satırlık bir pencereden bakılan 16 yüzlü prizma.
+  Burada yalnızca 3B yerleşim var; renkler ve satır yüksekliği
+  tokens.css'ten gelir.
+
+  Bileşenin kendi yazdığı değişkenler:
+    --step    yüzler arası açı, FACES sabitinden türetilir
+    --radius  prizma yarıçapı, satır yüksekliğinden hesaplanır
+*/
+
+.window {
+  /* --row'un yedeği tek yerde dursun; yüzler bunu devralır. */
+  --row-h: var(--row, 3.5rem);
+
+  position: relative;
+  /* Üç satır görünür: ortadaki seçili, üst ve alt komşular karartılır. */
+  height: calc(var(--row-h) * 3);
+  overflow: hidden;
+  /* Yüzler pencere dışına taşar; boyamayı buraya hapsetmek kaydırmada
+     bütün sayfanın yeniden boyanmasını önler. */
+  contain: paint;
+  perspective: 34rem;
+  background: var(--well);
+  /* Köşe yuvarlaması bilerek yok: iki tambur tek bir yuvanın içinde
+     görünmeli, yuvarlaklık dıştaki .bay'de. */
+}
+
+/*
+  Komşu satırların karartması. Işık yukarıdan geldiği için üst satır alt
+  satırdan daha koyu; ortadaki şerit tamamen açık kalır.
+  Duraklar geometriyle birlikte okunmalı, o yüzden oranlar burada.
+
+  Yanlardaki iç gölge de burada: tambur yüzleri dönüşümlü çocuklar
+  olduğu için .window'un kendi box-shadow'u onların altında kalır ve
+  hiç görünmez. Aynı katman hem üstü hem yanı karartıyor.
+*/
+.window::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    rgb(var(--drum-shade), 0.34) 0%,
+    transparent 33.33%,
+    transparent 66.67%,
+    rgb(var(--drum-shade), 0.18) 100%
+  );
+  box-shadow: inset 6px 0 10px -6px rgb(var(--drum-shade), 0.5),
+    inset -6px 0 10px -6px rgb(var(--drum-shade), 0.5);
+}
+
+.drum {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  transform-style: preserve-3d;
+  /* Dinlenme duruşu. Dönüş sırasında bu transform'u Web Animations API
+     devralır, o yüzden burada yalnızca derinlik kaydırması var. */
+  transform: translateZ(calc(-1 * var(--radius, 0px)));
+  will-change: transform;
+}
+
+.face {
+  position: absolute;
+  left: 0;
+  right: 0;
+  /* Yüzler pencerenin dikey ortasına oturur; prizma bu eksen etrafında
+     döndüğü için yarıçap hesabı da tek satır yüksekliğine bakar. */
+  top: 50%;
+  height: var(--row-h);
+  margin-top: calc(var(--row-h) / -2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.5rem;
+  /* Prizmanın arka yüzleri öne sızmasın. */
+  backface-visibility: hidden;
+  color: var(--drum-text);
+  background: linear-gradient(
+    to bottom,
+    var(--drum-face-top),
+    var(--drum-face-bottom)
+  );
+  /* Makara şeridindeki dikiş. Kenarlık yerine iç gölge: kenarlık yüzün
+     ölçülen yüksekliğini değiştirir ve yarıçap hesabını kaydırırdı. */
+  box-shadow: inset 0 -1px 0 var(--drum-face-border);
+  transform: rotateX(calc(var(--i) * var(--step))) translateZ(var(--radius, 0px));
+}
+
+/* Üç nokta yalnızca blok bir kutuda çalışır, esnek kutuda değil. */
+.label {
+  max-width: 100%;
+  /* İki tambur yan yana dar bir yere sığıyor; "Koleksiyonlar" gibi uzun
+     etiketler arayüz ölçüsünde kırpılmasın. */
+  font-size: 0.9rem;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Dönüş bittikten sonra ortaya oturan yüz: gradyan yerine düz ve en açık ton. */
+.mid {
+  background: var(--drum-face-top);
+  font-weight: 600;
+}
+
+@media (max-width: 560px) {
+  .label {
+    font-size: 0.8rem;
+  }
+}

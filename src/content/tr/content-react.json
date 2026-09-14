@@ -1,0 +1,92 @@
+{
+  "lang": "tr",
+  "category": "react",
+  "questions": [
+    {
+      "id": "react-props-children",
+      "category": "react",
+      "kind": "applied",
+      "topic": "props.children",
+      "difficulty": 1,
+      "prompt": "React'te props.children nedir ve kompozisyon desenindeki rolü nedir?",
+      "modelAnswer": "Bir bileşenin açılış ve kapanış etiketleri arasına yazılan JSX, o bileşene children prop'u olarak geçer. Özel bir sözdizimi değil, sıradan bir prop'un JSX ile yazılmış hali.\n\n```jsx\nconst Card = ({ children }) => (\n  <div className='card'>{children}</div>\n);\n\n<Card>\n  <h2>Başlık</h2>\n  <p>İçerik</p>\n</Card>\n```\n\nBu, React'te kalıtım yerine kompozisyon kullanmayı mümkün kılan mekanizma. Card içeriğinin ne olacağını bilmeden yazılır; bilmesi de gerekmez.\n\nchildren'ın tipi sabit değildir: tek eleman, dizi, metin ya da hiçbir şey olabilir. Bu yüzden üzerinde doğrudan map çalıştırmak güvenli değildir; React.Children.map bu durumları normalize eder.",
+      "keyConcepts": [
+        {
+          "id": "children-is-a-prop",
+          "label": "Etiket arası içerik prop olarak gelir",
+          "aliases": ["children", "etiket arası", "jsx içeriği", "prop olarak geçer"],
+          "anchors": [
+            "Açılış ve kapanış etiketleri arasına yazılan JSX children prop'u olarak bileşene geçer.",
+            "children sıradan bir prop'tur, JSX ile yazılmış halidir."
+          ]
+        },
+        {
+          "id": "composition-over-inheritance",
+          "label": "Kalıtım yerine kompozisyon",
+          "aliases": ["composition", "kompozisyon", "kalıtım yerine", "wrapper", "sarmalayıcı"],
+          "anchors": [
+            "İçeriğini bilmeyen sarmalayıcı bileşenler yazmayı sağlar, kalıtıma gerek kalmaz.",
+            "React'te bileşenleri birleştirerek yeniden kullanım kompozisyonla yapılır."
+          ]
+        },
+        {
+          "id": "children-shape-varies",
+          "label": "children'ın tipi sabit değil",
+          "aliases": ["dizi olmayabilir", "tek eleman", "React.Children", "map güvenli değil"],
+          "anchors": [
+            "children tek eleman, dizi, metin ya da undefined olabilir; her zaman dizi değildir.",
+            "Doğrudan map çalıştırmak yerine React.Children.map kullanmak gerekir."
+          ]
+        }
+      ],
+      "followUps": [
+        "children yerine bir fonksiyon geçirilirse (render props) ne değişir?",
+        "Sarmalayıcı bileşen children'a ekstra prop eklemek isterse ne yapar?"
+      ],
+      "source": "Frontend mülakat notları"
+    },
+    {
+      "id": "react-virtual-dom",
+      "category": "react",
+      "kind": "definition",
+      "topic": "Virtual DOM",
+      "difficulty": 1,
+      "prompt": "Virtual DOM nedir ve React güncelleme sırasında bunu nasıl kullanır?",
+      "modelAnswer": "Virtual DOM, arayüzün bellekteki hafif temsilidir: düz JavaScript nesnelerinden oluşan bir ağaç. State değiştiğinde React yeni ağacı öncekiyle karşılaştırır ve yalnızca farklı olan düğümleri gerçek DOM'a yazar.\n\nAmaç DOM işlemini hızlandırmak değil, sayısını azaltmak. Gerçek DOM'a dokunmak yeniden yerleşim ve boyama tetikler; bellekteki nesneleri karşılaştırmak ucuzdur.\n\nSık atlanan nokta: bu karşılaştırma tam bir ağaç karşılaştırması değil. Genel çözüm çok pahalı olduğu için React iki varsayımla kestirme yapar — farklı tipteki elemanlar farklı ağaç üretir, ve listelerdeki elemanların kimliği key ile belirtilir.",
+      "keyConcepts": [
+        {
+          "id": "memory-tree",
+          "label": "Bellekteki ağaç",
+          "aliases": ["bellek", "javascript nesnesi", "hafıza", "temsil"],
+          "anchors": [
+            "Arayüzün bellekte tutulan hafif bir kopyasıdır, düz JavaScript nesnelerinden oluşur.",
+            "Gerçek DOM yerine bellekte bir ağaç yapısı tutulur."
+          ]
+        },
+        {
+          "id": "diff-then-minimal-write",
+          "label": "Karşılaştırıp yalnızca değişeni yazma",
+          "aliases": ["diff", "karşılaştır", "reconciliation", "sadece değişen", "minimum"],
+          "anchors": [
+            "Yeni ağaç öncekiyle karşılaştırılır ve sadece farklı düğümler gerçek DOM'a yazılır.",
+            "React iki sürümü kıyaslayıp en az sayıda DOM işlemi yapar."
+          ]
+        },
+        {
+          "id": "heuristic-not-full-diff",
+          "label": "Tam karşılaştırma değil, kestirme",
+          "aliases": ["varsayım", "heuristic", "kestirme", "key", "farklı tip"],
+          "anchors": [
+            "Karşılaştırma tam bir ağaç karşılaştırması değildir, iki varsayıma dayanan bir kestirmedir.",
+            "Farklı tipteki elemanlar baştan farklı sayılır, listelerde kimlik key ile verilir."
+          ]
+        }
+      ],
+      "followUps": [
+        "Listede index'i key olarak vermek ne zaman soruna yol açar?",
+        "Virtual DOM olmayan bir kütüphane aynı işi nasıl yapıyor olabilir?"
+      ],
+      "source": "Vakıfbank teknik mülakatı, Eylül 2026"
+    }
+  ]
+}

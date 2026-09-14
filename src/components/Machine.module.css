@@ -1,0 +1,253 @@
+/*
+  Kasa, iki tamburu tutan gömme yuva ve kolu birleştiren dış kabuk.
+  3B yerleşim burada; renkler tokens.css'ten gelir.
+
+  Bileşenin kendi yazdığı değişkenler (token'lardan seyreltilmiş gölgeler):
+    --contact-shadow  zemindeki temas gölgesi
+    --well-shadow     gömme yuvaların iç gölgesi
+*/
+
+.stage {
+  --contact-shadow: color-mix(in srgb, var(--ink) 42%, transparent);
+  --well-shadow: color-mix(in srgb, var(--ink) 55%, transparent);
+
+  width: 100%;
+  perspective: 1600px;
+  perspective-origin: 50% 26%;
+  /*
+    Yanlardaki birkaç piksel boşluk süs değil: rotateX perspektif altında
+    kasanın öne bakan kenarını yaklaşık %0,85 büyütüyor, yani boyanan kutu
+    yerleşim kutusundan geniş. Pay olmazsa kasa kapsayıcıdan taşar.
+    Dikeydeki pay gölge için.
+  */
+  padding: 0.5rem 4px;
+}
+
+.machine {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 8px;
+  transform-style: preserve-3d;
+  transform: rotateX(7deg);
+  background: linear-gradient(to bottom, var(--enamel-top), var(--enamel-bottom));
+  border: 1px solid var(--rule);
+}
+
+/* Üst yüzey: gövdeden 90 derece katlanarak ışığı en çok alan düzlemi oluşturur. */
+.machine::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 30px;
+  transform-origin: 50% 0;
+  transform: rotateX(90deg);
+  background: linear-gradient(
+    to bottom,
+    var(--enamel-face-top),
+    var(--enamel-face-bottom)
+  );
+  border-radius: 8px 8px 0 0;
+}
+
+/* Zemindeki bulanık temas gölgesi; kasanın altına doğru iter. */
+.contact {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  bottom: -14px;
+  height: 22px;
+  transform: translateZ(-40px);
+  background: var(--contact-shadow);
+  filter: blur(9px);
+  border-radius: 50%;
+}
+
+/*
+  Tek bir yuva: iki tambur bitişik durur, aralarındaki 1px'lik boşluktan
+  yuvanın zemini ayırıcı çizgi olarak görünür. Yuvarlaklık burada,
+  tamburlarda değil.
+*/
+.bay {
+  --bay-pad: 1px;
+
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  gap: 1px;
+  padding: var(--bay-pad);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--rule);
+}
+
+/*
+  Gömme his: karartma tamburların üstüne düşer, yoksa altında kalırdı.
+  Üst-alt gölgeye ek olarak yan duvarlar; yuva kenarlarından
+  aydınlanmamalı, tamburlar içeride oturmalı.
+*/
+.bay::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(to right, var(--well), transparent 10px),
+    linear-gradient(to left, var(--well), transparent 10px);
+  box-shadow: inset 0 3px 8px var(--well-shadow);
+}
+
+.drumSlot {
+  flex: 1;
+  min-width: 0;
+}
+
+@keyframes tick {
+  0% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(2.5px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.tick {
+  animation: tick 140ms ease-out;
+}
+
+/*
+  Orta satırı vurgulayan hat; yalnızca duruşta görünür.
+  Ortalamak yerine yuvanın üstünden tam bir satır aşağı sabitlenir:
+  .bay esnek bir öğe, kol paneli uzarsa yüksekliği büyür ve %50 hizası
+  tamburlarla birlikte kaymaz.
+*/
+.payline {
+  position: absolute;
+  left: var(--bay-pad);
+  right: var(--bay-pad);
+  top: calc(var(--bay-pad) + var(--row));
+  height: var(--row);
+  z-index: 2;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+
+.paylineSettled {
+  opacity: 1;
+}
+
+/* Dolgu yalnızca satırı işaretleyecek kadar; asıl vurgu kenar çizgileri. */
+.paylineFill {
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--signal) 7%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--signal) 50%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--signal) 50%, transparent);
+}
+
+.paylineTriangle {
+  position: relative;
+  z-index: 1;
+  width: 0;
+  height: 0;
+  border-top: 7px solid transparent;
+  border-bottom: 7px solid transparent;
+  transition: transform 260ms ease;
+}
+
+/* Dinlenirken dışarıda bekler, duruşta içeri kayar. */
+.paylineTriangleLeft {
+  border-left: 9px solid var(--signal);
+  transform: translateX(-14px);
+}
+
+.paylineTriangleRight {
+  border-right: 9px solid var(--signal);
+  transform: translateX(14px);
+}
+
+.paylineSettled .paylineTriangleLeft,
+.paylineSettled .paylineTriangleRight {
+  transform: translateX(0);
+}
+
+/* Kol paneli: gövdeden öne çıkar, sayaç penceresi buna gömülür. */
+.leverColumn {
+  flex-shrink: 0;
+  width: 6rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid var(--rule);
+  background: linear-gradient(to bottom, var(--plate-top), var(--plate-bottom));
+  transform: translateZ(9px);
+}
+
+.quotaWindow {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.4rem 0.3rem;
+  border-radius: 6px;
+  background: var(--well);
+  /* Gömme pencere: içeri düşen gölge, altında panelden yansıyan ince ışık. */
+  box-shadow: inset 0 3px 6px color-mix(in srgb, var(--ink) 70%, transparent),
+    0 1px 0 color-mix(in srgb, var(--card) 12%, transparent);
+}
+
+.quotaCount {
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--card);
+  font-variant-numeric: tabular-nums;
+}
+
+.quotaLabel {
+  font-size: 0.6rem;
+  letter-spacing: 0.05em;
+  color: color-mix(in srgb, var(--card) 60%, transparent);
+}
+
+.leverSlot {
+  width: 100%;
+}
+
+@media (max-width: 560px) {
+  .stage {
+    perspective: 1100px;
+  }
+
+  .machine {
+    transform: rotateX(5deg);
+  }
+
+  .machine::before {
+    height: 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .payline,
+  .paylineTriangle {
+    transition: none;
+  }
+}

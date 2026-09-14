@@ -1,0 +1,117 @@
+/*
+  Slot makinesinin kolu. Yalnızca görünüm ve tutamak burada;
+  ne yaptığını bilmez. Renkler tokens.css'ten gelir.
+*/
+
+.root {
+  /* Topuzun hacmini veren saydam katmanlar; token'lardan seyreltilir. */
+  --knob-shade: color-mix(in srgb, var(--ink) 22%, transparent);
+  --knob-glint: color-mix(in srgb, var(--card) 60%, transparent);
+  --knob-rim: color-mix(in srgb, var(--ink) 30%, transparent);
+
+  display: block;
+  /* Buton içeriğine göre daralır; panel genişliğini doldurması için
+     width açıkça verilmeli, display: block tek başına yetmiyor. */
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  line-height: 0;
+  cursor: grab;
+  /* Sürükleme sırasında tarayıcı sayfayı kaydırmasın. */
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.root:active:not(:disabled) {
+  cursor: grabbing;
+}
+
+.root:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.root:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.plate {
+  fill: var(--plate-bottom);
+}
+
+.armBody {
+  fill: var(--arm-body);
+}
+
+.armLight {
+  fill: var(--arm-light);
+}
+
+.armShadow {
+  fill: var(--arm-shadow);
+}
+
+.collar {
+  fill: var(--arm-collar);
+}
+
+.collarHighlight {
+  fill: var(--arm-light);
+}
+
+.knob {
+  fill: var(--knob);
+  transition: fill 120ms ease;
+}
+
+.knobShade {
+  fill: var(--knob-shade);
+}
+
+.knobGlint {
+  fill: var(--knob-glint);
+}
+
+.knobRim {
+  fill: none;
+  stroke: var(--knob-rim);
+  stroke-width: 1.5;
+}
+
+.pivot {
+  fill: var(--pivot);
+}
+
+.pivotDot {
+  fill: var(--well);
+}
+
+.notch {
+  fill: var(--rule);
+  transition: fill 120ms ease;
+}
+
+/* Eşik aşıldı: kol bırakılırsa çekiliş sayılacak. */
+.armed .knob {
+  fill: var(--knob-armed);
+}
+
+.armed .notch {
+  fill: var(--signal);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .knob,
+  .notch {
+    transition: none;
+  }
+}

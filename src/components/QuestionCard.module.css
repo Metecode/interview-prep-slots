@@ -1,0 +1,269 @@
+/*
+  Soru kartı ve sonuç paneli aynı yüzeyi paylaşır; ikisi de bu dosyayı
+  kullanır. Renkler tokens.css'ten gelir, ham renk yazılmaz.
+
+  Dosyanın kendi yazdığı değişken:
+    --paper  paletin en açık tonu; kartın üst kenarı ve yazı alanı
+*/
+
+.card {
+  --paper: var(--drum-face-top);
+
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.25rem;
+  border-radius: 10px;
+  background: var(--card);
+  /* Üst kenar açık, yanlar ve alt koyu: kart masadan kalkmış görünsün. */
+  border: 1px solid var(--drum-face-border);
+  border-top-color: var(--paper);
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--ink) 16%, transparent);
+  animation: rise-in 240ms ease-out;
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---------------------------------------------------------------- */
+/* Soru kartı                                                        */
+/* ---------------------------------------------------------------- */
+
+.meta {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+}
+
+.question {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 24px;
+  font-weight: 600;
+  /* Ağırlık ekseni elle sabitlenir; değişken font ara bir ağırlığa kaymasın. */
+  font-variation-settings: "wght" 600;
+  /* Sahte kalın üretilmesin — kelime kelime kalınlık farkı oradan çıkıyor. */
+  font-synthesis: none;
+  line-height: 1.34;
+  /* Okuma satırı uzayınca göz satır başını kaybediyor. */
+  max-width: 32ch;
+  color: var(--ink);
+}
+
+.answer {
+  width: 100%;
+  min-height: 140px;
+  padding: 0.75rem;
+  font-family: var(--serif);
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--drum-face-border);
+  border-radius: 8px;
+  resize: vertical;
+}
+
+.answer::placeholder {
+  color: color-mix(in srgb, var(--ink-soft) 70%, transparent);
+}
+
+/* Accent yalnızca kol topuzunda ve ödeme çizgisinde; ipucu nötr kalır. */
+.hint {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+  color: var(--ink);
+  background: color-mix(in srgb, var(--ink) 5%, transparent);
+  border-left: 2px solid var(--ink-soft);
+  border-radius: 0 6px 6px 0;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+/* ---------------------------------------------------------------- */
+/* Düğmeler                                                          */
+/* ---------------------------------------------------------------- */
+
+.primary,
+.secondary {
+  padding: 0.55rem 1.1rem;
+  font: inherit;
+  font-size: 0.95rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.primary {
+  color: var(--card);
+  background: var(--enamel-top);
+  border: 1px solid var(--enamel-top);
+  font-weight: 600;
+}
+
+.secondary {
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid var(--drum-face-border);
+}
+
+.secondary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.link {
+  padding: 0;
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+  background: none;
+  border: 0;
+  text-decoration: underline;
+  cursor: pointer;
+  /* Birincil eylemden uzak dursun, yanlışlıkla tıklanmasın. */
+  margin-left: auto;
+}
+
+/* Odak halkası da nötr: accent kartta hiç görünmüyor. */
+.primary:focus-visible,
+.secondary:focus-visible,
+.link:focus-visible,
+.answer:focus-visible,
+.modelSummary:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------------- */
+/* Sonuç paneli                                                      */
+/* ---------------------------------------------------------------- */
+
+.score {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
+.scoreValue {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+  /* Skor turdan tura değişiyor; rakamlar yerinden oynamasın. */
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.scoreCaption {
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Çipler durum göstergesi, düğme değil: imleç değişmez, hover yok. */
+.chip {
+  padding: 0.25rem 0.65rem;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  border: 1px solid color-mix(in srgb, var(--ink) 18%, transparent);
+  border-radius: 999px;
+  cursor: default;
+}
+
+.chipHit {
+  color: var(--card);
+  background: var(--enamel-top);
+  border-color: var(--enamel-top);
+}
+
+/* Yalnızca geliştirme aracı: ham benzerlik skoru, çip metninden ayrışsın. */
+.chipScore {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.7;
+}
+
+.model {
+  font-size: 0.95rem;
+  color: var(--ink);
+}
+
+.modelSummary {
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+/*
+  modelAnswer şemada Markdown; henüz işleyici yok, düz metin olarak
+  basılıyor. pre-wrap satır başlarını koruyor ki liste ve paragraflar
+  tek satıra yapışmasın.
+*/
+.modelBody {
+  margin: 0.6rem 0 0;
+  font-family: var(--serif);
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.divider {
+  width: 100%;
+  margin: 0;
+  border: 0;
+  border-top: 1px solid var(--drum-face-border);
+}
+
+.rating {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.ratingLabel {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+.ratingButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.ai {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.aiNote {
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    animation: none;
+  }
+}
