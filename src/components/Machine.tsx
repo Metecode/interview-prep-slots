@@ -4,7 +4,7 @@ import { Drum, FACES } from "./Drum";
 import type { DrumHandle } from "./Drum";
 import { Lever } from "./Lever";
 import { CATEGORY_LABELS } from "../content/labels";
-import type { Question } from "../domain/question";
+import type { Category, Question } from "../domain/question";
 import styles from "./Machine.module.css";
 
 /* ------------------------------------------------------------------ */
@@ -31,6 +31,8 @@ export type MachineProps = {
   question: Question | null;
   /** Tamburların etiket havuzunu türetmek için tüm içerik. */
   allQuestions: readonly Question[];
+  /** Havuz yalnızca bu kategorilerdeki sorulardan kurulur. */
+  activeCategories: Category[];
   /** Her artışında yeni bir dönüş tetiklenir. */
   spinKey: number;
   spinning: boolean;
@@ -102,6 +104,7 @@ function buildFaces(pool: readonly string[], winnerLabel: string): string[] {
 export function Machine({
   question,
   allQuestions,
+  activeCategories,
   spinKey,
   spinning,
   canSpin,
@@ -115,19 +118,25 @@ export function Machine({
   const leftSlotRef = useRef<HTMLDivElement>(null);
   const rightSlotRef = useRef<HTMLDivElement>(null);
 
-  // Havuzlar içeriğe bağlı, dönüşe değil: spinKey her arttığında yeniden
-  // hesaplanmaları gereksiz olurdu.
+  // Havuzlar içeriğe ve seçili kategorilere bağlı, dönüşe değil: spinKey
+  // her arttığında yeniden hesaplanmaları gereksiz olurdu.
+  const pool = useMemo(
+    () => allQuestions.filter((q) => activeCategories.includes(q.category)),
+    [allQuestions, activeCategories],
+  );
+
+  // Tek kategori seçiliyse pool tek kategoriye, dolayısıyla leftPool tek
+  // değere iner — bu durumda 16 yüzün hepsi aynı olur. Doğru davranış:
+  // kullanıcı zaten tek kategori seçmiş. buildFaces/pickFace'teki üç
+  // kademeli gevşetme (bkz. aşağıda) bunu sonsuz döngüye girmeden karşılar.
   const leftPool = useMemo(
     () =>
-      Array.from(new Set(allQuestions.map((q) => q.category))).map(
+      Array.from(new Set(pool.map((q) => q.category))).map(
         (category) => CATEGORY_LABELS[category],
       ),
-    [allQuestions],
+    [pool],
   );
-  const rightPool = useMemo(
-    () => Array.from(new Set(allQuestions.map((q) => q.topic))),
-    [allQuestions],
-  );
+  const rightPool = useMemo(() => Array.from(new Set(pool.map((q) => q.topic))), [pool]);
 
   // question null iken tamburlar son durumlarını korur; o an için bir
   // kazanan etiketi gerekmez ama dizi yine de FACES uzunluğunda olmalı,

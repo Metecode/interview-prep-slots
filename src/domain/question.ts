@@ -6,12 +6,14 @@ import { z } from "zod";
 
 export const CATEGORIES = [
   "java-spring",
+  "javascript",
   "sql",
   "react",
   "koleksiyonlar",
   "algoritma",
   "tasarim-kaliplari",
   "kafka-redis",
+  "docker",
 ] as const;
 
 export const categorySchema = z.enum(CATEGORIES);
@@ -36,13 +38,21 @@ export const questionSchema = z.object({
   /** Diller arasında sabit kalır — tr ve en aynı id'yi paylaşır. */
   id: z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "kebab-case olmalı"),
   category: categorySchema,
+  /**
+   * "definition": kavramı tanımla/açıkla türü sorular.
+   * "applied": bir senaryoyu çöz, kod yaz, karar gerekçelendir türü sorular.
+   * Alan yoksa (eski içerik) "definition" varsayılır.
+   */
+  kind: z.enum(["definition", "applied"]).default("definition"),
   /** Makara dilimi. Kategoriden dar, sorudan geniş: "Transaction", "Index". */
   topic: z.string().min(2).max(24),
   difficulty: z.union([z.literal(1), z.literal(2), z.literal(3)]),
   prompt: z.string().min(10),
   /** Markdown. Kısa tutulur — kart içinde okunacak, makale değil. */
   modelAnswer: z.string().min(20),
-  keyConcepts: z.array(keyConceptSchema).min(2).max(6),
+  // 3'ten az kavramla değerlendirme anlamlı ayrışmıyor; ipucu hep aynı
+  // birkaç kavrama düşüyor.
+  keyConcepts: z.array(keyConceptSchema).min(3).max(6),
   /** Mülakatçının devam sorusu. AI turu bunları örnek olarak kullanır. */
   followUps: z.array(z.string().min(10)).max(3).optional(),
   /** Katkı rehberi gereği: soru nereden türetildi. */

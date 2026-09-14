@@ -1,0 +1,119 @@
+{
+  "lang": "tr",
+  "category": "sql",
+  "questions": [
+    {
+      "id": "sql-index-types",
+      "category": "sql",
+      "kind": "definition",
+      "topic": "Index türleri",
+      "difficulty": 2,
+      "prompt": "PostgreSQL'de index türleri nelerdir ve hangisi hangi sorgu tipine uyar?",
+      "modelAnswer": "B-Tree varsayılandır ve işlerin çoğunu görür: eşitlik, aralık ve sıralama. Hash yalnızca eşitlikte çalışır, aralık ve sıralamada kullanılamaz; pratikte B-Tree eşitlikte de yeterince iyi olduğu için nadiren tercih edilir.\n\nDiğerleri veri tipine göre ayrışır. GIN, bir satırda birden çok değer barındıran alanlar içindir: dizi elemanı arama, JSONB içinde anahtar arama, tam metin arama. GiST geometrik veri ve aralık tipleri gibi 'yakınlık' sorularına cevap verir. BRIN ise fiziksel sırayla korelasyonu yüksek büyük tablolarda kullanılır — zaman damgasına göre eklenen log tablosu gibi; çok küçük yer kaplar ama sadece o korelasyon varsa işe yarar.\n\nSık atlanan nokta: index okumayı hızlandırırken yazmayı yavaşlatır. Her INSERT ve UPDATE tüm ilgili index'leri güncellemek zorundadır, bu yüzden 'her kolona index atalım' yaklaşımı yazma ağırlıklı tablolarda zarar verir.",
+      "keyConcepts": [
+        {
+          "id": "btree-default",
+          "label": "B-Tree varsayılan ve genel amaçlı",
+          "aliases": ["b-tree", "varsayılan", "aralık", "sıralama", "range"],
+          "anchors": [
+            "B-Tree varsayılan index türüdür; eşitlik, aralık ve sıralama sorgularının hepsinde çalışır.",
+            "Belirtmezsen oluşturulan index B-Tree olur ve çoğu senaryoyu karşılar."
+          ]
+        },
+        {
+          "id": "hash-equality-only",
+          "label": "Hash yalnızca eşitlik",
+          "aliases": ["hash", "sadece eşittir", "aralıkta çalışmaz", "exact match"],
+          "anchors": [
+            "Hash index yalnızca eşitlik aramalarında kullanılabilir, aralık ve sıralamada kullanılamaz.",
+            "Hash yapısı sıra bilgisi tutmadığı için büyüktür küçüktür sorgularına cevap veremez."
+          ]
+        },
+        {
+          "id": "gin-multivalue",
+          "label": "GIN çok değerli alanlar için",
+          "aliases": ["gin", "jsonb", "dizi", "tam metin", "array"],
+          "anchors": [
+            "GIN bir satırda birden çok değer tutan alanlar içindir: dizi, JSONB, tam metin arama.",
+            "JSONB içinde anahtar aramak ya da dizi elemanı sorgulamak için GIN kullanılır."
+          ]
+        },
+        {
+          "id": "brin-correlated-large",
+          "label": "BRIN sıralı büyük tablolar için",
+          "aliases": ["brin", "fiziksel sıra", "log tablosu", "zaman damgası", "küçük boyut"],
+          "anchors": [
+            "BRIN fiziksel sırayla korelasyonu yüksek büyük tablolarda kullanılır ve çok az yer kaplar.",
+            "Zaman damgasına göre sırayla eklenen log tablolarında BRIN uygundur."
+          ]
+        },
+        {
+          "id": "index-write-cost",
+          "label": "Index yazmayı yavaşlatır",
+          "aliases": ["yazma maliyeti", "insert yavaşlar", "güncelleme", "her index güncellenir"],
+          "anchors": [
+            "Her index yazma işlemini yavaşlatır çünkü INSERT ve UPDATE sırasında güncellenmesi gerekir.",
+            "Gereğinden fazla index açmak yazma ağırlıklı tablolarda performansı düşürür."
+          ]
+        }
+      ],
+      "followUps": [
+        "Bileşik index'te kolon sırası neden önemli?",
+        "Bir index'in gerçekten kullanılıp kullanılmadığını nasıl anlarsın?"
+      ],
+      "source": "Vakıfbank teknik mülakatı, Eylül 2026"
+    },
+    {
+      "id": "sql-many-to-many-employee-project",
+      "category": "sql",
+      "kind": "applied",
+      "topic": "Veri modelleme",
+      "difficulty": 2,
+      "prompt": "Çalışanlar ve projeler var. Bir çalışan birden fazla projede yer alabilir, bir projede birden fazla çalışan olabilir. Tabloları yaz ve kararlarını açıkla.",
+      "modelAnswer": "Çok-a-çok ilişki iki tabloyla ifade edilemez; araya bir bağlantı tablosu girer.\n\n```sql\nCREATE TABLE employee (\n  id        BIGSERIAL PRIMARY KEY,\n  full_name TEXT NOT NULL\n);\n\nCREATE TABLE project (\n  id   BIGSERIAL PRIMARY KEY,\n  name TEXT NOT NULL\n);\n\nCREATE TABLE employee_project (\n  employee_id BIGINT NOT NULL REFERENCES employee(id) ON DELETE CASCADE,\n  project_id  BIGINT NOT NULL REFERENCES project(id)  ON DELETE CASCADE,\n  role        TEXT,\n  assigned_at DATE NOT NULL DEFAULT CURRENT_DATE,\n  PRIMARY KEY (employee_id, project_id)\n);\n\nCREATE INDEX idx_emp_proj_project ON employee_project (project_id);\n```\n\nBağlantı tablosunun birincil anahtarı iki yabancı anahtarın bileşimidir; hem aynı çalışanın aynı projeye iki kez atanmasını engeller hem ayrı bir yüzey anahtara gerek bırakmaz.\n\nRol ve atanma tarihi bağlantı tablosunda durur, çünkü bu bilgi ne çalışana ne projeye aittir.\n\nSık atlanan nokta: bileşik anahtar (employee_id, project_id) sırasıyla kurulduğu için yalnızca 'bu çalışanın projeleri' sorgusu index'ten yararlanır. Ters yön için project_id üzerine ayrı bir index gerekir.",
+      "keyConcepts": [
+        {
+          "id": "junction-table",
+          "label": "Bağlantı tablosu",
+          "aliases": ["ara tablo", "junction", "join table", "üçüncü tablo"],
+          "anchors": [
+            "Çok-a-çok ilişki için araya üçüncü bir bağlantı tablosu konur.",
+            "İki tablonun kimliklerini eşleyen ayrı bir tablo oluşturulur."
+          ]
+        },
+        {
+          "id": "composite-pk",
+          "label": "Bileşik birincil anahtar",
+          "aliases": ["bileşik", "composite", "iki kolon primary key", "tekrarı engeller"],
+          "anchors": [
+            "Bağlantı tablosunun birincil anahtarı iki yabancı anahtarın bileşimidir.",
+            "İki kolon birlikte birincil anahtar yapılır, böylece aynı çift tekrar edemez."
+          ]
+        },
+        {
+          "id": "relationship-attributes",
+          "label": "İlişkiye ait alanlar",
+          "aliases": ["rol", "atanma tarihi", "ilişki verisi", "ek alan"],
+          "anchors": [
+            "Rol ve atanma tarihi gibi alanlar bağlantı tablosunda tutulur.",
+            "Bu bilgi ne çalışana ne projeye aittir, ikisinin ilişkisine aittir."
+          ]
+        },
+        {
+          "id": "reverse-direction-index",
+          "label": "Ters yön için ayrı index",
+          "aliases": ["ikinci index", "project_id index", "ters sorgu", "kolon sırası"],
+          "anchors": [
+            "Bileşik anahtarın ikinci kolonu tek başına aramada kullanılamaz, o yön için ayrı index gerekir.",
+            "Projeden çalışana giden sorgu için project_id üzerine ayrı bir index açılmalıdır."
+          ]
+        }
+      ],
+      "followUps": [
+        "Bir çalışan aynı projeye farklı rollerle iki kez atanabilseydi şema nasıl değişirdi?",
+        "Bağlantı tablosuna ayrı bir id kolonu koymanın artısı ve eksisi ne olurdu?"
+      ],
+      "source": "Vakıfbank teknik mülakatı, Eylül 2026"
+    }
+  ]
+}

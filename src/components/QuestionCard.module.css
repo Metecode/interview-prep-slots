@@ -167,26 +167,9 @@
   color: var(--ink);
 }
 
-.scoreDetails {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-
 .scoreCaption {
   font-size: 0.9rem;
   color: var(--ink-soft);
-}
-
-/* Değerlendirmenin kaynağı: lexical mi anlamsal mı. Chip'le aynı dilde,
-   ama küçük — burada bilgi, seçilebilir bir durum değil. */
-.sourceTag {
-  align-self: flex-start;
-  padding: 0.1rem 0.5rem;
-  font-size: 0.7rem;
-  color: var(--ink-soft);
-  border: 1px solid color-mix(in srgb, var(--ink) 18%, transparent);
-  border-radius: 999px;
 }
 
 .chips {

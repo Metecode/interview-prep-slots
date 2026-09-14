@@ -23,13 +23,6 @@ function scoreCaption(hitCount: number, total: number): string {
   return `${total} kavramdan ${hitCount} tanesi cevabında geçti.`;
 }
 
-/** Değerlendirmenin hangi yoldan geldiğini skorun yanında gösterir. */
-const SOURCE_LABELS: Record<Evaluation["source"], string> = {
-  semantic: "anlamsal",
-  lexical: "kelime eşleşmesi",
-  ai: "yapay zekâ",
-};
-
 export type ResultPanelProps = {
   question: Question;
   /** null ise soru pas geçilmiş demektir. */
@@ -61,14 +54,11 @@ export function ResultPanel({
     <section className={styles.card}>
       <div className={styles.score}>
         <span className={styles.scoreValue}>{passed ? "—" : `${hits.length}/${total}`}</span>
-        <div className={styles.scoreDetails}>
-          <span className={styles.scoreCaption}>
-            {passed
-              ? "Pas geçtin, soru kutu 1'e düştü."
-              : scoreCaption(hits.length, total)}
-          </span>
-          {evaluation && <span className={styles.sourceTag}>{SOURCE_LABELS[evaluation.source]}</span>}
-        </div>
+        <span className={styles.scoreCaption}>
+          {passed
+            ? "Pas geçtin, soru kutu 1'e düştü."
+            : scoreCaption(hits.length, total)}
+        </span>
       </div>
 
       {/* Yakalananlar dolu, kaçırılanlar ince çerçeveli. Pas geçildiyse

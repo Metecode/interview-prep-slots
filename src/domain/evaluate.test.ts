@@ -23,6 +23,7 @@ function makeQuestion(over: Partial<Question> = {}): Question {
   return {
     id: "q1",
     category: "sql",
+    kind: "definition",
     topic: "Index",
     difficulty: 1,
     prompt: "Test sorusu",

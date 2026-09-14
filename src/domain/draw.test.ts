@@ -12,6 +12,7 @@ function makeQuestion(id: string, category: Category = "sql"): Question {
   return {
     id,
     category,
+    kind: "definition",
     topic: "Index",
     difficulty: 1,
     prompt: `${id} için soru metni`,

@@ -237,6 +237,35 @@ export class EmbeddingClient {
 /** Uygulama genelinde tek worker: her çağıran kendi client'ını kurarsa model birden çok kez inebilir. */
 export const embeddingClient = new EmbeddingClient();
 
+/**
+ * Network Information API standart DOM tipinde yok (deneysel), o yüzden
+ * yalnızca burada kullanılan alanlarla elle tanımlanıyor.
+ */
+type NetworkInformation = {
+  saveData?: boolean;
+  effectiveType?: "slow-2g" | "2g" | "3g" | "4g";
+};
+
+const SLOW_EFFECTIVE_TYPES = new Set(["slow-2g", "2g", "3g"]);
+
+/**
+ * Model indirmeye otomatik başlanmalı mı? Kullanıcı kapattıysa ya da
+ * ağ buna uygun değilse hayır. Network Information API her tarayıcıda
+ * yok (özellikle Safari) — o durumda bilinmeyeni kısıtlamak yerine
+ * indirmeye izin veriyoruz.
+ */
+export function shouldAutoDownloadModel(disableModelDownload: boolean): boolean {
+  if (disableModelDownload) return false;
+
+  const connection = (navigator as Navigator & { connection?: NetworkInformation }).connection;
+  if (!connection) return true;
+
+  if (connection.saveData) return false;
+  if (connection.effectiveType && SLOW_EFFECTIVE_TYPES.has(connection.effectiveType)) return false;
+
+  return true;
+}
+
 /** İki vektör arasındaki kosinüs benzerliği, [-1, 1]. Sıfır vektörde 0 döner. */
 export function cosine(a: readonly number[], b: readonly number[]): number {
   let dot = 0;

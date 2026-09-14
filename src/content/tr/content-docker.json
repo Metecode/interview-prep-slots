@@ -1,0 +1,49 @@
+{
+  "lang": "tr",
+  "category": "docker",
+  "questions": [
+    {
+      "id": "docker-container-communication",
+      "category": "docker",
+      "kind": "applied",
+      "topic": "Konteyner iletişimi",
+      "difficulty": 2,
+      "prompt": "Aynı host üzerinde çalışan A konteynerinden B konteynerine nasıl erişirsin? Konteyner adıyla erişmek her durumda çalışır mı?",
+      "modelAnswer": "İki konteyneri aynı kullanıcı tanımlı ağa koyarsın; o ağda konteyner adı DNS ismi gibi çözülür.\n\n```bash\ndocker network create app-net\ndocker run -d --name b --network app-net nginx\ndocker run -it --name a --network app-net alpine sh\n# a içinden:\nwget -qO- http://b:80\n```\n\nHer durumda çalışmaz: varsayılan bridge ağında Docker'ın gömülü DNS'i ad çözümlemesi yapmaz, konteynerler birbirine yalnızca IP ile erişir. IP'ler yeniden başlatmada değişebildiği için bu kırılgan bir yapıdır.\n\nSık atlanan bir nokta: konteynerler arası erişim için portu -p ile yayınlamak gerekmez. O bayrak servisi host makineye açar; aynı ağdaki konteynerler yayınlanmamış portlara da erişebilir.",
+      "keyConcepts": [
+        {
+          "id": "shared-user-network",
+          "label": "Aynı kullanıcı tanımlı ağ",
+          "aliases": ["network create", "custom network", "özel ağ", "aynı ağ", "user-defined bridge"],
+          "anchors": [
+            "İki konteyner aynı kullanıcı tanımlı ağa bağlanır ve birbirine adıyla erişir.",
+            "docker network create ile bir ağ açılıp her iki konteyner o ağa katılır."
+          ]
+        },
+        {
+          "id": "default-bridge-no-dns",
+          "label": "Varsayılan bridge'te DNS yok",
+          "aliases": ["varsayılan bridge", "default bridge", "isim çözülmez", "sadece ip"],
+          "anchors": [
+            "Varsayılan bridge ağında ad çözümleme çalışmaz, yalnızca IP ile erişilir.",
+            "Docker'ın gömülü DNS'i varsayılan köprü ağında devrede değildir."
+          ]
+        },
+        {
+          "id": "publish-not-required",
+          "label": "Port yayınlamaya gerek yok",
+          "aliases": ["-p", "publish", "port aç", "expose", "dışarı açma"],
+          "anchors": [
+            "Konteynerler arası erişim için portu dışarıya yayınlamaya gerek yoktur.",
+            "-p bayrağı servisi host makineye açar, aynı ağdaki konteynerler zaten erişebilir."
+          ]
+        }
+      ],
+      "followUps": [
+        "Docker Compose kullandığında servisler birbirini nasıl buluyor?",
+        "Konteyner içinden host makinedeki bir servise nasıl erişirsin?"
+      ],
+      "source": "Vakıfbank teknik mülakatı, Eylül 2026"
+    }
+  ]
+}

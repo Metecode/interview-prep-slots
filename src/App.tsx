@@ -5,115 +5,16 @@ import { CategoryPicker } from "./components/CategoryPicker";
 import { Machine } from "./components/Machine";
 import { QuestionCard } from "./components/QuestionCard";
 import { ResultPanel } from "./components/ResultPanel";
+import { QUESTIONS } from "./content";
 import { evaluateLexical } from "./domain/evaluate";
-import { embeddingClient } from "./embedding/client";
+import { embeddingClient, shouldAutoDownloadModel } from "./embedding/client";
 import { evaluateSemanticAnswer } from "./embedding/semanticEvaluate";
 import { useEmbeddingStatus } from "./embedding/useEmbeddingStatus";
 import { initialSessionState, sessionReducer, toStore } from "./domain/session";
 import type { SessionState } from "./domain/session";
 import { useStore } from "./storage/useStore";
 import type { SelfRating, Store } from "./domain/progress";
-import type { Category, Question } from "./domain/question";
-
-/* ------------------------------------------------------------------ */
-/* GEÇİCİ deneme sayfası — kart eklenene kadar yalnızca makine ve       */
-/* konsola düşen faz değişimi var.                                     */
-/* ------------------------------------------------------------------ */
-
-const TEMP_QUESTIONS: Question[] = [
-  {
-    id: "sql-index-nedir",
-    category: "sql",
-    topic: "Index",
-    difficulty: 1,
-    prompt: "Bir veritabanı index'i nedir ve sorgu performansını nasıl etkiler?",
-    modelAnswer:
-      "Index, tabloya ek bir arama yapısı ekleyerek WHERE ve JOIN sorgularının tam tablo taraması yapmadan ilgili satırlara hızlıca ulaşmasını sağlar.",
-    keyConcepts: [
-      {
-        id: "b-tree",
-        label: "B-Tree yapısı",
-        aliases: ["b-tree", "b agaci", "btree"],
-        anchors: ["Çoğu index B-Tree ağacı üzerinde sıralı olarak tutulur."],
-      },
-      {
-        id: "arama-hizi",
-        label: "Arama hızını artırır",
-        aliases: ["hizli arama", "performans"],
-        anchors: ["Index olmadan veritabanı tüm satırları taramak zorunda kalır."],
-      },
-    ],
-  },
-  {
-    id: "react-usememo-ne-zaman",
-    category: "react",
-    topic: "Memo",
-    difficulty: 2,
-    prompt: "useMemo ne zaman kullanılır, ne zaman gereksizdir?",
-    modelAnswer:
-      "useMemo, pahalı bir hesaplamanın her render'da tekrar çalışmasını önlemek için bağımlılıklar değişmediği sürece sonucu önbellekler; ucuz hesaplamalarda gereksiz karmaşıklık katar.",
-    keyConcepts: [
-      {
-        id: "pahali-hesap",
-        label: "Pahalı hesaplama önbellekleme",
-        aliases: ["memoization", "onbellek", "cache"],
-        anchors: ["useMemo yalnızca maliyetli hesaplamaları önbelleğe almak için anlamlıdır."],
-      },
-      {
-        id: "bagimlilik-dizisi",
-        label: "Bağımlılık dizisi",
-        aliases: ["dependency array", "deps"],
-        anchors: ["Bağımlılık dizisindeki değerler değişmedikçe eski sonuç döner."],
-      },
-    ],
-  },
-  {
-    id: "koleksiyon-hashmap-vs-treemap",
-    category: "koleksiyonlar",
-    topic: "HashMap",
-    difficulty: 2,
-    prompt: "HashMap ile TreeMap arasındaki temel fark nedir?",
-    modelAnswer:
-      "HashMap sabit zamanlı erişim sağlar ama sırasızdır; TreeMap anahtarları sıralı tutar, erişim ve ekleme log(n) zaman alır.",
-    keyConcepts: [
-      {
-        id: "siralama",
-        label: "Sıralı anahtar tutma",
-        aliases: ["sirali", "ordered"],
-        anchors: ["TreeMap anahtarları doğal sıraya ya da comparator'a göre tutar."],
-      },
-      {
-        id: "zaman-karmasikligi",
-        label: "Zaman karmaşıklığı farkı",
-        aliases: ["o(1)", "o(log n)", "zaman karmasikligi"],
-        anchors: ["HashMap ortalama O(1), TreeMap O(log n) zaman karmaşıklığına sahiptir."],
-      },
-    ],
-  },
-  {
-    id: "kafka-partition-nedir",
-    category: "kafka-redis",
-    topic: "Partition",
-    difficulty: 3,
-    prompt: "Kafka'da partition kavramı neden vardır ve paralelliği nasıl etkiler?",
-    modelAnswer:
-      "Bir topic birden fazla partition'a bölünerek farklı consumer'ların paralel okuma yapmasına izin verir; partition sayısı paralellik üst sınırını belirler.",
-    keyConcepts: [
-      {
-        id: "paralel-tuketim",
-        label: "Paralel tüketim",
-        aliases: ["paralellik", "concurrent consumer"],
-        anchors: ["Partition sayısı kadar consumer paralel olarak mesaj tüketebilir."],
-      },
-      {
-        id: "sira-garantisi",
-        label: "Partition içi sıra garantisi",
-        aliases: ["mesaj sirasi", "ordering"],
-        anchors: ["Mesaj sırası yalnızca aynı partition içinde garanti edilir."],
-      },
-    ],
-  },
-];
+import type { Category } from "./domain/question";
 
 /**
  * İlk state, diskten geleni HYDRATE ile uygulayarak kurulur.
@@ -164,18 +65,23 @@ function Session({ store, recovered, save }: SessionProps) {
   const [state, dispatch] = useReducer(sessionReducer, store, initState);
   const [spinKey, setSpinKey] = useState(0);
   const [fastMode, setFastMode] = useState(store.settings.fastMode);
-  const [semanticEnabled, setSemanticEnabled] = useState(store.settings.semanticEnabled);
+  const [disableModelDownload, setDisableModelDownload] = useState(
+    store.settings.disableModelDownload,
+  );
   const [lastAnswer, setLastAnswer] = useState("");
   const [warningDismissed, setWarningDismissed] = useState(false);
   const prevPhaseRef = useRef(state.phase);
+  // İlk çekilişte indirme yalnızca bir kez tetiklenir; sonraki çekilişler
+  // ayar değişse bile bunu tekrar sormaz.
+  const hasTriggeredDownloadRef = useRef(false);
   const embeddingStatus = useEmbeddingStatus();
 
   // Kaydı RATE'i kovalayarak değil, ilerleme ve ayar değişimini izleyerek
   // yapıyoruz: hangi eylemin yazdırdığını bilmek gerekmiyor.
   const { progress, activeCategories } = state;
   useEffect(() => {
-    save(toStore({ progress, activeCategories }, { fastMode, semanticEnabled }));
-  }, [progress, activeCategories, fastMode, semanticEnabled, save]);
+    save(toStore({ progress, activeCategories }, { fastMode, disableModelDownload }));
+  }, [progress, activeCategories, fastMode, disableModelDownload, save]);
 
   // spinKey yalnızca gerçek bir dönüş başladığında artar — çekiliş havuzu
   // boşsa reducer state'i değiştirmez, Machine'e anlamsız bir dönüş gitmez.
@@ -188,8 +94,17 @@ function Session({ store, recovered, save }: SessionProps) {
     console.log("faz ->", state.phase, state.current?.id ?? null);
   }, [state]);
 
+  /**
+   * Model indirme yalnızca ilk çekilişte, sessizce tetiklenir — kullanıcı
+   * bir şey işaretlemek zorunda kalmaz. Ayarlardan kapatılmışsa ya da ağ
+   * buna uygun değilse (veri tasarrufu, yavaş bağlantı) hiç denenmez.
+   */
   function handlePull() {
-    dispatch({ type: "SPIN", questions: TEMP_QUESTIONS, now: new Date(), rng: Math.random });
+    if (!hasTriggeredDownloadRef.current) {
+      hasTriggeredDownloadRef.current = true;
+      if (shouldAutoDownloadModel(disableModelDownload)) embeddingClient.preload();
+    }
+    dispatch({ type: "SPIN", questions: QUESTIONS, now: new Date(), rng: Math.random });
   }
 
   function handleSettle() {
@@ -197,9 +112,8 @@ function Session({ store, recovered, save }: SessionProps) {
   }
 
   /**
-   * "Daha iyi değerlendirme" kapalıysa ya da model henüz hazır değilse
-   * doğrudan lexical'a gidilir — model hazır değilken yükleme burada
-   * arka planda tetiklenir, bu turu beklettirmeden. Hazırsa embedding
+   * Model hazır değilse doğrudan lexical'a gidilir — burada yeniden
+   * indirme denenmez, bu yalnızca ilk çekilişin işi. Hazırsa embedding
    * denenir; herhangi bir adım başarısız olursa yine lexical'a düşülür.
    */
   function handleSubmit(answer: string) {
@@ -208,8 +122,7 @@ function Session({ store, recovered, save }: SessionProps) {
     // RATE denemeyi kaydederken cevabı istiyor; kart o an sökülmüş olacak.
     setLastAnswer(answer);
 
-    if (!semanticEnabled || embeddingStatus.state !== "ready") {
-      if (semanticEnabled) embeddingClient.preload();
+    if (embeddingStatus.state !== "ready") {
       dispatch({ type: "SUBMIT", evaluation: evaluateLexical(question, answer) });
       return;
     }
@@ -253,7 +166,8 @@ function Session({ store, recovered, save }: SessionProps) {
 
       <Machine
         question={state.current}
-        allQuestions={TEMP_QUESTIONS}
+        allQuestions={QUESTIONS}
+        activeCategories={state.activeCategories}
         spinKey={spinKey}
         spinning={state.phase === "spinning"}
         canSpin={canSpin}
@@ -268,39 +182,29 @@ function Session({ store, recovered, save }: SessionProps) {
         <p className={styles.spinHint}>Çevirmek için en az bir kategori seç.</p>
       )}
 
-      {/* Makineye ait bir ayar, soruya değil: yeri makinenin hemen altı. */}
-      <label className={styles.controls}>
-        <input
-          type="checkbox"
-          checked={fastMode}
-          onChange={(e) => setFastMode(e.target.checked)}
-        />
-        Hızlı mod
-      </label>
+      {/* Makineye ait ayarlar, soruya değil: yeri makinenin hemen altı.
+          Varsayılan kapalı — kimse ayar aramak zorunda kalmasın. */}
+      <details className={styles.settings}>
+        <summary>Ayarlar</summary>
 
-      <label className={styles.controls}>
-        <input
-          type="checkbox"
-          checked={semanticEnabled}
-          onChange={(e) => setSemanticEnabled(e.target.checked)}
-        />
-        Daha iyi değerlendirme (bir kez ~50 MB indirir)
-      </label>
+        <label className={styles.controls}>
+          <input
+            type="checkbox"
+            checked={fastMode}
+            onChange={(e) => setFastMode(e.target.checked)}
+          />
+          Hızlı mod
+        </label>
 
-      {/* Yükleme engelleyici değil: kart açıkken de görünebilir, kullanıcı
-          bu sırada lexical sonuçla devam eder. */}
-      {semanticEnabled && embeddingStatus.state === "loading" && (
-        <div className={styles.embeddingProgress}>
-          <progress value={embeddingStatus.loaded} max={Math.max(embeddingStatus.total, 1)} />
-          <span>Model indiriliyor…</span>
-        </div>
-      )}
-
-      {semanticEnabled && embeddingStatus.state === "error" && (
-        <p className={styles.embeddingError}>
-          Model yüklenemedi, kelime eşleşmesi kullanılıyor.
-        </p>
-      )}
+        <label className={styles.controls}>
+          <input
+            type="checkbox"
+            checked={!disableModelDownload}
+            onChange={(e) => setDisableModelDownload(!e.target.checked)}
+          />
+          Gelişmiş değerlendirme modelini indirme (~50 MB)
+        </label>
+      </details>
 
       {recovered && !warningDismissed && (
         <div className={styles.warning} role="alert">

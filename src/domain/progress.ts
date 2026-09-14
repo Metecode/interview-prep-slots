@@ -60,12 +60,12 @@ export const storeSchema = z.object({
      */
     initialized: z.boolean().default(false),
     /**
-     * "Daha iyi değerlendirme" anahtarı: kullanıcı tarayıcıda embedding
-     * modelini indirmeyi kabul etti mi? Varsayılan kapalı — model ~50 MB,
-     * isteğe bağlı AI yolundan farklı olsa da aynı gerekçeyle: indirme
-     * kullanıcının açık onayı olmadan başlamaz.
+     * Embedding modeli varsayılan olarak ilk çekilişte sessizce indirilir
+     * (bkz. App.tsx). Bu anahtar bunu bir opt-out'a çevirir — true olursa
+     * otomatik indirme hiç denenmez. Varsayılan false: kullanıcı özellikle
+     * kapatmadıkça indirme akışın normal parçasıdır.
      */
-    semanticEnabled: z.boolean().default(false),
+    disableModelDownload: z.boolean().default(false),
   }),
 });
 export type Store = z.infer<typeof storeSchema>;
@@ -78,7 +78,7 @@ export const emptyStore = (): Store => ({
     lang: "tr",
     activeCategories: [],
     initialized: false,
-    semanticEnabled: false,
+    disableModelDownload: false,
   },
 });
 

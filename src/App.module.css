@@ -18,6 +18,30 @@
   color: var(--ink-soft);
 }
 
+/*
+  Makineye ait ayarlar burada toplanır: varsayılan kapalı, tek satırlık
+  bir özet olarak durur — makinenin altında çıplak iki onay kutusu
+  yerine tek bir yer.
+*/
+.settings {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+.settings summary {
+  cursor: pointer;
+  color: var(--ink);
+}
+
+.settings summary:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.settings .controls {
+  margin-top: 0.6rem;
+}
+
 .controls {
   display: flex;
   align-items: center;
@@ -64,28 +88,4 @@
 .warningClose:focus-visible {
   outline: 2px solid var(--ink);
   outline-offset: 2px;
-}
-
-/*
-  Model indirilirken görünür, engelleyici değildir: kullanıcı bu satırı
-  görmezden gelip lexical yolla devam edebilir. Accent kullanılmıyor,
-  bu bir uyarı değil bir bilgi notu.
-*/
-.embeddingProgress {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.8rem;
-  color: var(--ink-soft);
-}
-
-.embeddingProgress progress {
-  width: 8rem;
-  accent-color: var(--enamel-top);
-}
-
-.embeddingError {
-  margin: 0;
-  font-size: 0.8rem;
-  color: var(--ink-soft);
 }

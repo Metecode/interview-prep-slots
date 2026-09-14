@@ -18,6 +18,7 @@ function makeQuestion(id: string, category: Category = "sql"): Question {
   return {
     id,
     category,
+    kind: "definition",
     topic: "Index",
     difficulty: 1,
     prompt: `${id} için soru metni`,
@@ -478,7 +479,7 @@ describe("HYDRATE", () => {
       lang: "tr",
       activeCategories: ["sql"],
       initialized: true,
-      semanticEnabled: false,
+      disableModelDownload: false,
       ...over,
     };
   }
@@ -577,7 +578,7 @@ describe("toStore", () => {
       progress,
     });
 
-    const store = toStore(state, { fastMode: true, semanticEnabled: true });
+    const store = toStore(state, { fastMode: true, disableModelDownload: true });
 
     expect(store).toEqual({
       schemaVersion: SCHEMA_VERSION,
@@ -587,28 +588,28 @@ describe("toStore", () => {
         lang: "tr",
         activeCategories: ["sql"],
         initialized: true,
-        semanticEnabled: true,
+        disableModelDownload: true,
       },
     });
   });
 
   it("initialized'ı her zaman true yazar", () => {
     // toStore'a giren state bir oturumdan geldiği için "ilk açılış" artık geçmişte.
-    const store = toStore(makeState(), { fastMode: false, semanticEnabled: false });
+    const store = toStore(makeState(), { fastMode: false, disableModelDownload: false });
 
     expect(store.settings.initialized).toBe(true);
   });
 
-  it("semanticEnabled'ı olduğu gibi taşır", () => {
-    const store = toStore(makeState(), { fastMode: false, semanticEnabled: true });
+  it("disableModelDownload'ı olduğu gibi taşır", () => {
+    const store = toStore(makeState(), { fastMode: false, disableModelDownload: true });
 
-    expect(store.settings.semanticEnabled).toBe(true);
+    expect(store.settings.disableModelDownload).toBe(true);
   });
 
   it("kotayı diske yazmaz", () => {
     const store = toStore(makeState({ quotaRemaining: 9 }), {
       fastMode: false,
-      semanticEnabled: false,
+      disableModelDownload: false,
     });
 
     // Kota hesaba bağlı; diskte tutulsa kullanıcı elle artırabilirdi.
