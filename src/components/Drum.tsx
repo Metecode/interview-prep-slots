@@ -302,6 +302,21 @@ export const Drum = forwardRef<DrumHandle, DrumProps>(function Drum(
       // 16 yüzün tamamını okumak gürültü olur; metin zaten soru kartında.
       aria-hidden="true"
     >
+      {/* GEÇİCİ TEŞHİS: flat render oluyor mu, yüzlerden bağımsız kanıt. */}
+      {mode === "flat" && (
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            color: "#fff",
+            fontSize: 12,
+            zIndex: 99,
+          }}
+        >
+          {labels.length} yüz
+        </div>
+      )}
       <div
         ref={drumRef}
         className={drumClassName}
@@ -316,7 +331,17 @@ export const Drum = forwardRef<DrumHandle, DrumProps>(function Drum(
                 ? `${styles.face} ${faceModeClassName} ${styles.mid}`
                 : `${styles.face} ${faceModeClassName}`
             }
-            style={{ "--i": i } as CssVars}
+            style={
+              mode === "flat"
+                ? // GEÇİCİ TEŞHİS: CSS modülünden bağımsız, elle görünürlük.
+                  ({
+                    "--i": i,
+                    background: "#fff",
+                    border: "1px solid red",
+                    color: "#000",
+                  } as CssVars)
+                : ({ "--i": i } as CssVars)
+            }
           >
             <span className={styles.label}>{label}</span>
           </div>
