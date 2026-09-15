@@ -1,10 +1,14 @@
-import { useEffect, useReducer, useRef, useState } from "react";
+import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 
 import styles from "./App.module.css";
 import { CategoryPicker } from "./components/CategoryPicker";
+import { ChevronIcon } from "./components/ChevronIcon";
+import { Footer } from "./components/Footer";
 import { Machine } from "./components/Machine";
 import { QuestionCard } from "./components/QuestionCard";
 import { ResultPanel } from "./components/ResultPanel";
+import { Switch } from "./components/Switch";
+import { TopBar } from "./components/TopBar";
 import { QUESTIONS } from "./content";
 import { evaluateLexical } from "./domain/evaluate";
 import { initialSessionState, sessionReducer, toStore } from "./domain/session";
@@ -62,6 +66,7 @@ function Session({ store, recovered, save }: SessionProps) {
   const [state, dispatch] = useReducer(sessionReducer, store, initState);
   const [spinKey, setSpinKey] = useState(0);
   const [fastMode, setFastMode] = useState(store.settings.fastMode);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [lastAnswer, setLastAnswer] = useState("");
   const [warningDismissed, setWarningDismissed] = useState(false);
   const prevPhaseRef = useRef(state.phase);
@@ -72,6 +77,12 @@ function Session({ store, recovered, save }: SessionProps) {
   useEffect(() => {
     save(toStore({ progress, activeCategories }, { fastMode }));
   }, [progress, activeCategories, fastMode, save]);
+
+  // TopBar'daki havuz bilgisi: aktif kategorilerdeki soru sayısı.
+  const activeQuestionCount = useMemo(
+    () => QUESTIONS.filter((q) => activeCategories.includes(q.category)).length,
+    [activeCategories],
+  );
 
   // spinKey yalnızca gerçek bir dönüş başladığında artar — çekiliş havuzu
   // boşsa reducer state'i değiştirmez, Machine'e anlamsız bir dönüş gitmez.
@@ -123,81 +134,91 @@ function Session({ store, recovered, save }: SessionProps) {
     state.activeCategories.length > 0;
 
   return (
-    <main className={styles.app}>
-      <h1 className={styles.title}>Mülakat Slot — makine denemesi</h1>
+    <>
+      <TopBar questionCount={activeQuestionCount} quotaRemaining={state.quotaRemaining} />
 
-      <CategoryPicker
-        active={state.activeCategories}
-        disabled={state.phase === "spinning"}
-        onToggle={handleToggleCategory}
-      />
+      <main className={styles.app}>
+        <h1 className={styles.title}>Mülakat Slot — makine denemesi</h1>
 
-      <Machine
-        question={state.current}
-        allQuestions={QUESTIONS}
-        activeCategories={state.activeCategories}
-        spinKey={spinKey}
-        spinning={state.phase === "spinning"}
-        canSpin={canSpin}
-        quotaRemaining={state.quotaRemaining}
-        fastMode={fastMode}
-        onPull={handlePull}
-        onSettle={handleSettle}
-      />
+        <CategoryPicker
+          active={state.activeCategories}
+          disabled={state.phase === "spinning"}
+          onToggle={handleToggleCategory}
+        />
 
-      {/* Kol zaten disabled ama sebebi görünmüyor; yalnızca seçim boşken çıkar. */}
-      {state.activeCategories.length === 0 && (
-        <p className={styles.spinHint}>Çevirmek için en az bir kategori seç.</p>
-      )}
+        <Machine
+          question={state.current}
+          allQuestions={QUESTIONS}
+          activeCategories={state.activeCategories}
+          spinKey={spinKey}
+          spinning={state.phase === "spinning"}
+          canSpin={canSpin}
+          fastMode={fastMode}
+          onPull={handlePull}
+          onSettle={handleSettle}
+        />
 
-      {/* Makineye ait ayarlar, soruya değil: yeri makinenin hemen altı.
-          Varsayılan kapalı — kimse ayar aramak zorunda kalmasın. */}
-      <details className={styles.settings}>
-        <summary>Ayarlar</summary>
+        {/* Kol zaten disabled ama sebebi görünmüyor; yalnızca seçim boşken çıkar. */}
+        {state.activeCategories.length === 0 && (
+          <p className={styles.spinHint}>Çevirmek için en az bir kategori seç.</p>
+        )}
 
-        <label className={styles.controls}>
-          <input
-            type="checkbox"
-            checked={fastMode}
-            onChange={(e) => setFastMode(e.target.checked)}
-          />
-          Hızlı mod
-        </label>
-      </details>
-
-      {recovered && !warningDismissed && (
-        <div className={styles.warning} role="alert">
-          <span>Kayıtlı ilerlemen okunamadı, sıfırdan başlıyorsun.</span>
+        {/* Makineye ait ayarlar, soruya değil: yeri makinenin hemen altı.
+            Varsayılan kapalı — kimse ayar aramak zorunda kalmasın. */}
+        <div className={styles.settings}>
           <button
             type="button"
-            className={styles.warningClose}
-            onClick={() => setWarningDismissed(true)}
-            aria-label="Uyarıyı kapat"
+            className={styles.settingsToggle}
+            aria-expanded={settingsOpen}
+            onClick={() => setSettingsOpen((open) => !open)}
           >
-            ×
+            Ayarlar
+            <ChevronIcon className={styles.chevron} />
           </button>
+
+          {settingsOpen && (
+            <div className={styles.controls}>
+              <Switch checked={fastMode} onChange={setFastMode} label="Hızlı mod" />
+            </div>
+          )}
         </div>
-      )}
 
-      {/* key: soru değişince kart yeniden kurulur, yazılan cevap temizlenir. */}
-      {state.phase === "answering" && state.current && (
-        <QuestionCard
-          key={state.current.id}
-          question={state.current}
-          onSubmit={handleSubmit}
-          onPass={handlePass}
-        />
-      )}
+        {recovered && !warningDismissed && (
+          <div className={styles.warning} role="alert">
+            <span>Kayıtlı ilerlemen okunamadı, sıfırdan başlıyorsun.</span>
+            <button
+              type="button"
+              className={styles.warningClose}
+              onClick={() => setWarningDismissed(true)}
+              aria-label="Uyarıyı kapat"
+            >
+              ×
+            </button>
+          </div>
+        )}
 
-      {state.phase === "evaluated" && state.current && (
-        <ResultPanel
-          question={state.current}
-          evaluation={state.evaluation}
-          quotaRemaining={state.quotaRemaining}
-          onRate={handleRate}
-          onAskAi={handleAskAi}
-        />
-      )}
-    </main>
+        {/* key: soru değişince kart yeniden kurulur, yazılan cevap temizlenir. */}
+        {state.phase === "answering" && state.current && (
+          <QuestionCard
+            key={state.current.id}
+            question={state.current}
+            onSubmit={handleSubmit}
+            onPass={handlePass}
+          />
+        )}
+
+        {state.phase === "evaluated" && state.current && (
+          <ResultPanel
+            question={state.current}
+            evaluation={state.evaluation}
+            quotaRemaining={state.quotaRemaining}
+            onRate={handleRate}
+            onAskAi={handleAskAi}
+          />
+        )}
+      </main>
+
+      <Footer />
+    </>
   );
 }

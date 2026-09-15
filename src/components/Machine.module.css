@@ -8,8 +8,8 @@
 */
 
 .stage {
-  --contact-shadow: color-mix(in srgb, var(--ink) 42%, transparent);
-  --well-shadow: color-mix(in srgb, var(--ink) 55%, transparent);
+  --contact-shadow: color-mix(in srgb, var(--bg) 60%, transparent);
+  --well-shadow: color-mix(in srgb, var(--bg) 70%, transparent);
 
   width: 100%;
   /* Kasanın perspective + preserve-3d + rotateX tilt'i bilerek yok:
@@ -30,8 +30,8 @@
   gap: 1rem;
   padding: 1rem;
   border-radius: 8px;
-  background: linear-gradient(to bottom, var(--enamel-top), var(--enamel-bottom));
-  border: 1px solid var(--rule);
+  background: linear-gradient(to bottom, var(--surface-raised), var(--surface));
+  border: 1px solid var(--line);
 }
 
 /* Üst yüzey: gövdeden 90 derece katlanarak ışığı en çok alan düzlemi oluşturur. */
@@ -46,8 +46,8 @@
   transform: rotateX(90deg);
   background: linear-gradient(
     to bottom,
-    var(--enamel-face-top),
-    var(--enamel-face-bottom)
+    color-mix(in srgb, var(--surface-raised) 80%, var(--text) 20%),
+    var(--surface-raised)
   );
   border-radius: 8px 8px 0 0;
 }
@@ -74,14 +74,13 @@
   --bay-pad: 1px;
 
   position: relative;
-  flex: 1;
   min-width: 0;
   display: flex;
   gap: 1px;
   padding: var(--bay-pad);
   border-radius: 8px;
   overflow: hidden;
-  background: var(--rule);
+  background: var(--line);
 }
 
 /*
@@ -104,6 +103,32 @@
 .drumSlot {
   flex: 1;
   min-width: 0;
+}
+
+/* Etiket satırı + yuva dikey olarak burada birlikte durur; .machine'in
+   yatay sıralamasında bay'in eski yerini bu sütun alır. */
+.reelsColumn {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Sütun etiketleri: hangi tamburun ne gösterdiği artık belirsiz kalmaz. */
+.reelLabels {
+  display: flex;
+  gap: 1px;
+  margin-bottom: 0.35rem;
+}
+
+.reelLabel {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
 }
 
 @keyframes tick {
@@ -147,13 +172,14 @@
   opacity: 1;
 }
 
-/* Dolgu yalnızca satırı işaretleyecek kadar; asıl vurgu kenar çizgileri. */
+/* Ödeme çizgisi: accent'in üç sanctioned kullanımından biri. Dolgu
+   yalnızca satırı işaretleyecek kadar; asıl vurgu kenar çizgileri. */
 .paylineFill {
   position: absolute;
   inset: 0;
-  background: color-mix(in srgb, var(--signal) 7%, transparent);
-  border-top: 1px solid color-mix(in srgb, var(--signal) 50%, transparent);
-  border-bottom: 1px solid color-mix(in srgb, var(--signal) 50%, transparent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
 }
 
 .paylineTriangle {
@@ -168,12 +194,12 @@
 
 /* Dinlenirken dışarıda bekler, duruşta içeri kayar. */
 .paylineTriangleLeft {
-  border-left: 9px solid var(--signal);
+  border-left: 9px solid var(--accent);
   transform: translateX(-14px);
 }
 
 .paylineTriangleRight {
-  border-right: 9px solid var(--signal);
+  border-right: 9px solid var(--accent);
   transform: translateX(14px);
 }
 
@@ -182,47 +208,21 @@
   transform: translateX(0);
 }
 
-/* Kol paneli: gövdeden öne çıkar, sayaç penceresi buna gömülür. */
+/* Kol paneli: gövdeden öne çıkar. Sayaç penceresi artık TopBar'da;
+   panel tek başına kola kaldığı için biraz genişletildi ve kol
+   dikeyde ortalandı. */
 .leverColumn {
   flex-shrink: 0;
-  width: 6rem;
+  width: 7rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-end;
-  gap: 0.6rem;
+  justify-content: center;
   padding: 0.5rem;
   border-radius: 6px;
-  border: 1px solid var(--rule);
-  background: linear-gradient(to bottom, var(--plate-top), var(--plate-bottom));
+  border: 1px solid var(--line);
+  background: linear-gradient(to bottom, var(--surface-raised), var(--surface));
   transform: translateZ(9px);
-}
-
-.quotaWindow {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 0.4rem 0.3rem;
-  border-radius: 6px;
-  background: var(--well);
-  /* Gömme pencere: içeri düşen gölge, altında panelden yansıyan ince ışık. */
-  box-shadow: inset 0 3px 6px color-mix(in srgb, var(--ink) 70%, transparent),
-    0 1px 0 color-mix(in srgb, var(--card) 12%, transparent);
-}
-
-.quotaCount {
-  font-size: 1.1rem;
-  font-weight: 700;
-  line-height: 1.2;
-  color: var(--card);
-  font-variant-numeric: tabular-nums;
-}
-
-.quotaLabel {
-  font-size: 0.6rem;
-  letter-spacing: 0.05em;
-  color: color-mix(in srgb, var(--card) 60%, transparent);
 }
 
 .leverSlot {

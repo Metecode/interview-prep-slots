@@ -34,14 +34,14 @@
   pointer-events: none;
   background: linear-gradient(
     to bottom,
-    rgb(var(--drum-shade), 0.34) 0%,
+    rgb(var(--well-rgb), 0.34) 0%,
     transparent 33.33%,
     transparent 66.67%,
-    rgb(var(--drum-shade), 0.18) 100%
+    rgb(var(--well-rgb), 0.18) 100%
   );
   box-shadow:
-    inset 6px 0 10px -6px rgb(var(--drum-shade), 0.5),
-    inset -6px 0 10px -6px rgb(var(--drum-shade), 0.5);
+    inset 6px 0 10px -6px rgb(var(--well-rgb), 0.5),
+    inset -6px 0 10px -6px rgb(var(--well-rgb), 0.5);
 }
 
 .strip {
@@ -59,15 +59,17 @@
   align-items: center;
   justify-content: center;
   padding: 0 0.5rem;
-  color: var(--drum-text);
+  font-family: var(--mono);
+  /* Pasif satır: --text-faint zemine göre en az 4.5:1 kontrast verir. */
+  color: var(--text-faint);
   background: linear-gradient(
     to bottom,
-    var(--drum-face-top),
-    var(--drum-face-bottom)
+    var(--surface-raised),
+    var(--surface)
   );
   /* Şeritteki dikiş. Kenarlık yerine iç gölge: kenarlık satır
      yüksekliğini değiştirir ve kaydırma hesabını bozardı. */
-  box-shadow: inset 0 -1px 0 var(--drum-face-border);
+  box-shadow: inset 0 -1px 0 var(--line);
 }
 
 .label {
@@ -78,9 +80,10 @@
   text-overflow: ellipsis;
 }
 
-/* Ortaya oturan yüz: gradyan yerine düz ve en açık ton. */
+/* Ortaya oturan yüz: gradyan yerine düz zemin ve tam kontrastlı metin. */
 .mid {
-  background: var(--drum-face-top);
+  background: var(--surface-raised);
+  color: var(--text);
   font-weight: 600;
 }
 

@@ -15,7 +15,7 @@
 .title {
   margin: 0;
   font-size: 1rem;
-  color: var(--ink-soft);
+  color: var(--text-dim);
 }
 
 /*
@@ -25,41 +25,56 @@
 */
 .settings {
   font-size: 0.85rem;
-  color: var(--ink-soft);
+  color: var(--text-dim);
 }
 
-.settings summary {
+.settingsToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0;
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  background: none;
+  border: 0;
   cursor: pointer;
-  color: var(--ink);
+  transition: color 120ms ease;
 }
 
-.settings summary:focus-visible {
-  outline: 2px solid var(--ink);
+@media (hover: hover) {
+  .settingsToggle:hover {
+    color: var(--text);
+  }
+}
+
+.settingsToggle:focus-visible {
+  outline: 2px solid var(--text);
   outline-offset: 2px;
 }
 
-.settings .controls {
-  margin-top: 0.6rem;
+.chevron {
+  transition: transform 160ms ease;
+}
+
+.settingsToggle[aria-expanded="true"] .chevron {
+  transform: rotate(180deg);
 }
 
 .controls {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.85rem;
-  color: var(--ink-soft);
+  margin-top: 0.6rem;
 }
 
 /* Kol neden devre dışı belli olsun diye; yalnızca seçim boşken görünür. */
 .spinHint {
   margin: 0;
   font-size: 0.85rem;
-  color: var(--ink-soft);
+  color: var(--text-dim);
 }
 
 /*
   Kayıtlı ilerleme okunamadığında bir kez görünür, kapatılabilir.
-  Accent kullanılmıyor: o renk kol topuzu ve ödeme çizgisine ayrılmış durumda.
+  Gerçek bir uyarı durumu: --warn kullanılır.
 */
 .warning {
   display: flex;
@@ -67,9 +82,9 @@
   gap: 0.75rem;
   padding: 0.6rem 0.75rem;
   font-size: 0.85rem;
-  color: var(--ink);
-  background: color-mix(in srgb, var(--ink) 6%, transparent);
-  border-left: 2px solid var(--enamel-top);
+  color: var(--text);
+  background: color-mix(in srgb, var(--warn) 10%, transparent);
+  border-left: 2px solid var(--warn);
   border-radius: 0 6px 6px 0;
 }
 
@@ -79,13 +94,24 @@
   font: inherit;
   font-size: 1.1rem;
   line-height: 1;
-  color: var(--ink-soft);
+  color: var(--text-dim);
   background: none;
   border: 0;
   cursor: pointer;
+  transition: color 120ms ease, transform 120ms ease;
+}
+
+@media (hover: hover) {
+  .warningClose:hover {
+    color: var(--text);
+  }
+}
+
+.warningClose:active {
+  transform: translateY(1px);
 }
 
 .warningClose:focus-visible {
-  outline: 2px solid var(--ink);
+  outline: 2px solid var(--text);
   outline-offset: 2px;
 }

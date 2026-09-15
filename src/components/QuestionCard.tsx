@@ -15,6 +15,9 @@ const DIFFICULTY_LABELS: Record<Question["difficulty"], string> = {
   3: "Zor",
 };
 
+/** Sınırlayıcı değil, yalnızca gösterge: 1200'ü aşınca sayaç --warn'a döner. */
+const ANSWER_LENGTH_WARN_AT = 1200;
+
 export type QuestionCardProps = {
   question: Question;
   onSubmit: (answer: string) => void;
@@ -45,20 +48,33 @@ export function QuestionCard({ question, onSubmit, onPass }: QuestionCardProps) 
     <section className={styles.card}>
       {/* Kutu ve son görülme şimdilik sabit metin; ilerleme bağlanınca
           gerçek değerle değişecek. */}
-      <p className={styles.meta}>
-        Kutu 1 · ilk kez · {DIFFICULTY_LABELS[question.difficulty]}
-      </p>
+      <div className={styles.meta}>
+        <span className={styles.metaBadge}>Kutu 1</span>
+        <span className={styles.metaBadge}>ilk kez</span>
+        <span className={styles.metaBadge}>{DIFFICULTY_LABELS[question.difficulty]}</span>
+      </div>
 
       <h2 className={styles.question}>{question.prompt}</h2>
 
-      <textarea
-        className={styles.answer}
-        value={answer}
-        onChange={(event) => setAnswer(event.target.value)}
-        onKeyDown={handleKeyDown}
-        placeholder="Cevabını yaz…"
-        aria-label="Cevabın"
-      />
+      <div className={styles.answerWrap}>
+        <textarea
+          className={styles.answer}
+          value={answer}
+          onChange={(event) => setAnswer(event.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder="Cevabını yaz…"
+          aria-label="Cevabın"
+        />
+        <span
+          className={
+            answer.length > ANSWER_LENGTH_WARN_AT
+              ? `${styles.charCount} ${styles.charCountOver}`
+              : styles.charCount
+          }
+        >
+          {answer.length} / {ANSWER_LENGTH_WARN_AT}
+        </span>
+      </div>
 
       {hintVisible && (
         <p className={styles.hint} aria-live="polite">
@@ -74,6 +90,7 @@ export function QuestionCard({ question, onSubmit, onPass }: QuestionCardProps) 
         <button type="button" className={styles.primary} onClick={() => onSubmit(answer)}>
           Gönder
         </button>
+        <span className={styles.shortcutHint}>Ctrl + Enter</span>
         <button
           type="button"
           className={styles.secondary}
@@ -82,7 +99,7 @@ export function QuestionCard({ question, onSubmit, onPass }: QuestionCardProps) 
         >
           İpucu
         </button>
-        <button type="button" className={styles.link} onClick={onPass}>
+        <button type="button" className={styles.tertiary} onClick={onPass}>
           Pas geç
         </button>
       </div>
