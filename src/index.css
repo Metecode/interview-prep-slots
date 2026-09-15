@@ -19,6 +19,17 @@
   box-sizing: border-box;
 }
 
+/*
+  iOS Safari, appearance sıfırlanmadan <button>'a kendi kromunu (gri
+  gradyan, sabit arka plan) çiziyor ve bileşenlerin belirlediği
+  background/border bunun altında kalıp hiç görünmüyor. Uygulamadaki
+  her buton zaten kendi görünümünü tanımlıyor, native stile ihtiyaç yok.
+*/
+button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
 body {
   margin: 0;
   background: var(--desk);

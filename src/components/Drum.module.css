@@ -15,11 +15,15 @@
   position: relative;
   /* Üç satır görünür: ortadaki seçili, üst ve alt komşular karartılır. */
   height: calc(var(--row-h) * 3);
+  /* Yüzler pencere dışına taşar; overflow: hidden bunu zaten kırpıyor.
+     Burada eskiden ayrıca `contain: paint` vardı — iOS Safari'de bu,
+     preserve-3d'li çocukları düzleştirip tamburu tamamen görünmez
+     yapıyor (gerçek cihazda; Chrome'un mobil emülasyonu Blink kullandığı
+     için bunu hiç göstermiyor). Kırpma için overflow yeterli, contain'e
+     gerek yok. */
   overflow: hidden;
-  /* Yüzler pencere dışına taşar; boyamayı buraya hapsetmek kaydırmada
-     bütün sayfanın yeniden boyanmasını önler. */
-  contain: paint;
   perspective: 34rem;
+  -webkit-perspective: 34rem;
   background: var(--well);
   /* Köşe yuvarlaması bilerek yok: iki tambur tek bir yuvanın içinde
      görünmeli, yuvarlaklık dıştaki .bay'de. */
@@ -56,6 +60,7 @@
   inset: 0;
   z-index: 0;
   transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
   /* Dinlenme duruşu. Dönüş sırasında bu transform'u Web Animations API
      devralır, o yüzden burada yalnızca derinlik kaydırması var. */
   transform: translateZ(calc(-1 * var(--radius, 0px)));
@@ -77,6 +82,7 @@
   padding: 0 0.5rem;
   /* Prizmanın arka yüzleri öne sızmasın. */
   backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
   color: var(--drum-text);
   background: linear-gradient(
     to bottom,
