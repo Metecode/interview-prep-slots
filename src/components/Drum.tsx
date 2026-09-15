@@ -100,6 +100,10 @@ export const Drum = forwardRef<DrumHandle, DrumProps>(function Drum(
   // Yalnızca dönüş bittiğinde değişir — animasyon kareleri state'e bağlı değil.
   const [settledIndex, setSettledIndex] = useState<number | null>(null);
 
+  // GEÇİCİ TEŞHİS: iOS Safari'de tambur render sorunu için. Kalıcı çözüm
+  // yazılınca kaldırılacak.
+  const [debugInfo, setDebugInfo] = useState<{ rowHeight: number; radius: number } | null>(null);
+
   useImperativeHandle(ref, () => ({
     finish() {
       // finish() onfinish'i tetikler, bitiş işleri tek yerde kalır.
@@ -116,8 +120,10 @@ export const Drum = forwardRef<DrumHandle, DrumProps>(function Drum(
 
     // Yarıçap her dönüş başında okunur; mobil kırılımda --row değişmişse
     // resize dinlemeden yakalanır.
-    const radius = radiusFor(readRowHeight(face));
+    const rowHeight = readRowHeight(face);
+    const radius = radiusFor(rowHeight);
     drum.style.setProperty("--radius", `${radius}px`);
+    setDebugInfo({ rowHeight, radius }); // GEÇİCİ TEŞHİS
 
     const isFirstMount = lastSpunKeyRef.current === null;
     // Aynı spinKey ile efekt yeniden çalışırsa (StrictMode'un çift çağrısı
@@ -194,6 +200,25 @@ export const Drum = forwardRef<DrumHandle, DrumProps>(function Drum(
       // 16 yüzün tamamını okumak gürültü olur; metin zaten soru kartında.
       aria-hidden="true"
     >
+      {/* GEÇİCİ TEŞHİS: iOS Safari render sorunu çözülünce kaldırılacak. */}
+      {debugInfo && (
+        <div
+          style={{
+            position: "absolute",
+            inset: "auto 0 0 0",
+            zIndex: 10,
+            padding: "2px 4px",
+            fontSize: "10px",
+            lineHeight: 1.2,
+            fontFamily: "monospace",
+            color: "#0f0",
+            background: "rgba(0,0,0,0.7)",
+            pointerEvents: "none",
+          }}
+        >
+          row {debugInfo.rowHeight.toFixed(1)}px · radius {debugInfo.radius.toFixed(1)}px
+        </div>
+      )}
       <div
         ref={drumRef}
         className={styles.drum}
