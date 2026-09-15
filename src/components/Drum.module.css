@@ -1,50 +1,30 @@
 /*
-  Tek satırlık bir pencereden bakılan makara.
+  Tek pencereden bakılan dikey şerit.
 
-  İki render modu var (bkz. Drum.tsx useDrumMode):
-    3d   — 16 yüzlü döner prizma (preserve-3d + perspective)
-    flat — dikey kayan şerit (yalnızca translateY)
+  Üç satır görünür: üst komşu, ortadaki seçili, alt komşu.
+  Şerit normal akışta dizili yüzlerden oluşur; hareket eden tek şey
+  şeridin kendi translateY'si. Mutlak konumlandırma, perspektif ve
+  preserve-3d yok — WebKit'te sorun çıkaran her şey kaldırıldı.
 
-  WebKit (iOS Safari ve iOS Chrome, ikisi de aynı motor) preserve-3d'li
-  pencereleri render etmiyor; bu yüzden dar ekranda flat moda düşülüyor.
-  Ortak kurallar (.window, .drum, .face, .label, .mid) her iki modda da
-  geçerli; mod'a özgü olanlar ayrı sınıflarda (…3d / …Flat).
-
-  Bileşenin kendi yazdığı değişkenler:
-    --step    (yalnızca 3d) yüzler arası açı, FACES sabitinden türetilir
-    --radius  (yalnızca 3d) prizma yarıçapı, satır yüksekliğinden hesaplanır
-    --i       her iki modda da yüzün sırası
+  Silindir hissi tamamen ::after'daki karartma gradyanından geliyor.
 */
 
 .window {
-  /* --row'un yedeği tek yerde dursun; yüzler bunu devralır. */
   --row-h: var(--row, 3.5rem);
 
   position: relative;
-  /* Üç satır görünür: ortadaki seçili, üst ve alt komşular karartılır. */
   height: calc(var(--row-h) * 3);
   overflow: hidden;
   background: var(--well);
-  /* Köşe yuvarlaması bilerek yok: iki tambur tek bir yuvanın içinde
+  /* Köşe yuvarlaması bilerek yok: iki tambur tek yuvanın içinde
      görünmeli, yuvarlaklık dıştaki .bay'de. */
 }
 
-/* Yalnızca 3d modda: perspektifsiz preserve-3d düz görünür. */
-.window3d {
-  perspective: 34rem;
-  -webkit-perspective: 34rem;
-}
-
 /*
-  Komşu satırların karartması. Işık yukarıdan geldiği için üst satır alt
-  satırdan daha koyu; ortadaki şerit tamamen açık kalır. Bu, "silindir"
-  hissini flat modda da taşıyan tek katman — flat'te derinlik/perspektif
-  olmadığı için ışık-gölge yanılsaması tamamen buna dayanıyor.
-  Duraklar geometriyle birlikte okunmalı, o yüzden oranlar burada.
-
-  Yanlardaki iç gölge de burada: tambur yüzleri dönüşümlü/kaydırılan
-  çocuklar olduğu için .window'un kendi box-shadow'u onların altında
-  kalır ve hiç görünmez. Aynı katman hem üstü hem yanı karartıyor.
+  Komşu satırların karartması ve yan iç gölge.
+  Işık yukarıdan geldiği için üst satır alttan daha koyu.
+  Şerit dönüşen bir çocuk olduğu için .window'un kendi box-shadow'u
+  onun altında kalır; bu yüzden gölge de bu katmanda.
 */
 .window::after {
   content: "";
@@ -59,34 +39,22 @@
     transparent 66.67%,
     rgb(var(--drum-shade), 0.18) 100%
   );
-  box-shadow: inset 6px 0 10px -6px rgb(var(--drum-shade), 0.5),
+  box-shadow:
+    inset 6px 0 10px -6px rgb(var(--drum-shade), 0.5),
     inset -6px 0 10px -6px rgb(var(--drum-shade), 0.5);
 }
 
-.drum {
+.strip {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
   z-index: 0;
   will-change: transform;
 }
 
-/* preserve-3d + dinlenme duruşu. Dönüş sırasında transform'u Web
-   Animations API devralır, o yüzden burada yalnızca derinlik kaydırması var. */
-.drum3d {
-  transform-style: preserve-3d;
-  -webkit-transform-style: preserve-3d;
-  transform: translateZ(calc(-1 * var(--radius, 0px)));
-}
-
 .face {
-  position: absolute;
-  left: 0;
-  right: 0;
-  /* Yüzler pencerenin dikey ortasına oturur; 3d'de yarıçap hesabı, flat'te
-     translateY hesabı bu yüzden tek satır yüksekliğine bakar. */
-  top: 50%;
   height: var(--row-h);
-  margin-top: calc(var(--row-h) / -2);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -97,35 +65,20 @@
     var(--drum-face-top),
     var(--drum-face-bottom)
   );
-  /* Makara şeridindeki dikiş. Kenarlık yerine iç gölge: kenarlık yüzün
-     ölçülen yüksekliğini değiştirir ve geometri hesabını kaydırırdı. */
+  /* Şeritteki dikiş. Kenarlık yerine iç gölge: kenarlık satır
+     yüksekliğini değiştirir ve kaydırma hesabını bozardı. */
   box-shadow: inset 0 -1px 0 var(--drum-face-border);
 }
 
-/* Prizmanın arka yüzleri öne sızmasın — yalnızca 3d'de anlamlı. */
-.face3d {
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  transform: rotateX(calc(var(--i) * var(--step))) translateZ(var(--radius, 0px));
-}
-
-/* Flat: her yüz kendi sırasına göre dikeyde kaydırılır, döngü/derinlik yok. */
-.faceFlat {
-  transform: translateY(calc(var(--i) * var(--row-h)));
-}
-
-/* Üç nokta yalnızca blok bir kutuda çalışır, esnek kutuda değil. */
 .label {
   max-width: 100%;
-  /* İki tambur yan yana dar bir yere sığıyor; "Koleksiyonlar" gibi uzun
-     etiketler arayüz ölçüsünde kırpılmasın. */
   font-size: 0.9rem;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 
-/* Dönüş bittikten sonra ortaya oturan yüz: gradyan yerine düz ve en açık ton. */
+/* Ortaya oturan yüz: gradyan yerine düz ve en açık ton. */
 .mid {
   background: var(--drum-face-top);
   font-weight: 600;
