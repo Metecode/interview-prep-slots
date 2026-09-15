@@ -73,3 +73,14 @@ export default defineConfig([
 ])
 
 ```
+
+## Lisans
+
+Bu depoda iki ayrı lisans vardır:
+
+- **Kaynak kod** (soru içeriği hariç her şey) [MIT lisansı](LICENSE) ile
+  sunulur.
+- **Soru içeriği** (`src/content/` altındaki dosyalar) ayrı olarak
+  [CC BY-SA 4.0](src/content/LICENSE) ile sunulur.
+
+Kodu kullanırken MIT, içeriği kullanırken CC BY-SA 4.0 koşulları geçerlidir.
