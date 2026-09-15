@@ -5,9 +5,24 @@ import styles from "./Drum.module.css";
 
 /* ------------------------------------------------------------------ */
 /* Tambur — ne göstereceğini bilmez, nasıl göstereceğini bilir         */
+/*                                                                     */
+/* WebKit'te (iOS Safari VE iOS Chrome — ikisi de motor olarak WebKit) */
+/* preserve-3d içeren pencere hiç render olmuyor; masaüstünde sorun    */
+/* yok. Motoru güvenilir biçimde ayırt etmenin yolu yok — CSS.supports */
+/* WebKit'te "destekleniyor" der ama fiilen çalışmaz — o yüzden dar    */
+/* ekranda (telefon varsayımıyla) 3B yerine düz dikey şerit moduna     */
+/* geçiliyor. Mod yalnızca ilk render'da, aşağıdaki useState ile       */
+/* belirlenir ve bileşen ömrü boyunca sabit kalır.                     */
+/*                                                                      */
+/* NOT: Bu useState bilerek ayrı bir "useDrumMode" hook'una             */
+/* çıkarılmadı — öyle yapınca eslint-plugin-react-hooks'un              */
+/* react-hooks/refs kuralı aşağıdaki `latest.current = ...` satırında   */
+/* yanlış pozitif veriyor (yerel bir custom hook'un varlığı analizi     */
+/* şaşırtıyor). Tekrar ayıklamadan önce lint'in hâlâ geçtiğini kontrol  */
+/* et.                                                                  */
 /* ------------------------------------------------------------------ */
 
-/** Prizmanın yüz sayısı. Geometrinin tamamı buna bağlı. */
+/** Prizmanın (3d modda) / şeridin (flat modda) yüz sayısı. */
 export const FACES = 16;
 
 const STEP = 360 / FACES;
@@ -15,10 +30,15 @@ const STEP = 360 / FACES;
 /** Hedefi aşma miktarı ve aşmanın tamamlandığı ilerleme oranı. */
 const OVERSHOOT_DEG = 7;
 const OVERSHOOT_AT = 0.9;
+/** Flat modda derece yerine adım (satır) kullanılır; oran 3B ile aynı tutulur. */
+const OVERSHOOT_STEPS = OVERSHOOT_DEG / STEP;
 
 /** Ana dönüş ve sonundaki yerine oturma eğrileri. */
 const EASE_SPIN = "cubic-bezier(.26,.84,.34,1)";
 const EASE_SETTLE = "cubic-bezier(.2,.72,.3,1)";
+
+/** tokens.css'teki mobil kırılımla aynı; flat moda geçiş eşiği de bu. */
+const FLAT_BREAKPOINT = "(max-width: 560px)";
 
 /** Özel CSS değişkenlerini stil nesnesine yazabilmek için. */
 type CssVars = CSSProperties & Record<`--${string}`, string | number>;
@@ -41,6 +61,8 @@ export type DrumProps = {
   onSettle?: () => void;
 };
 
+type DrumMode = "3d" | "flat";
+
 function prefersReducedMotion(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
@@ -61,28 +83,41 @@ function readRowHeight(faceEl: HTMLElement): number {
   return Number.isFinite(height) ? height : 0;
 }
 
-/** Yarıçap, bir yüzün yarısının prizma merkezine olan uzaklığından çıkar. */
+/** Yarıçap, bir yüzün yarısının prizma merkezine olan uzaklığından çıkar. 3d modda kullanılır. */
 function radiusFor(rowHeight: number): number {
   return rowHeight / 2 / Math.tan(Math.PI / FACES);
 }
 
-function transformAt(radius: number, angleDeg: number): string {
+function transform3dAt(radius: number, angleDeg: number): string {
   return `translateZ(${-radius}px) rotateX(${-angleDeg}deg)`;
+}
+
+/**
+ * Flat modda "adım" birimi bir satır yüksekliğidir. 3d'nin aksine geri
+ * sarma/normalize yok: her dönüş 0'dan başlar, hedefe kadar olan mesafeyi
+ * (bkz. flatTotalSteps) doğrudan kat eder.
+ */
+function transformFlatAt(rowHeight: number, steps: number): string {
+  return `translateY(${-steps * rowHeight}px)`;
 }
 
 export const Drum = forwardRef<DrumHandle, DrumProps>(function Drum(
   { labels, targetIndex, spinKey, durationMs, turns, onSettle },
   ref,
 ) {
+  const [mode] = useState<DrumMode>(() =>
+    window.matchMedia(FLAT_BREAKPOINT).matches ? "flat" : "3d",
+  );
+
   const drumRef = useRef<HTMLDivElement>(null);
-  /** Yarıçap hesabı için tek satırın gerçek yüksekliğini ölçtüğümüz yüz. */
+  /** Satır yüksekliğini ölçtüğümüz yüz (her iki modda da index 0). */
   const faceRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<Animation | null>(null);
 
   /**
-   * Tamburun oturduğu son açı, [0, 360) aralığında.
+   * 3d modda tamburun oturduğu son açı, [0, 360) aralığında.
    * Dönüş buradan devam eder; sıfırdan başlamak turns 1 iken görünür bir
-   * sıçrama yapardı.
+   * sıçrama yapardı. Flat modda karşılığı yok: her dönüş 0'dan başlar.
    */
   const currentAngleRef = useRef(0);
 
@@ -98,11 +133,8 @@ export const Drum = forwardRef<DrumHandle, DrumProps>(function Drum(
   latest.current = { targetIndex, durationMs, turns, onSettle };
 
   // Yalnızca dönüş bittiğinde değişir — animasyon kareleri state'e bağlı değil.
+  // Flat modda flatLabels içindeki indeksi, 3d modda 0..FACES-1 indeksi tutar.
   const [settledIndex, setSettledIndex] = useState<number | null>(null);
-
-  // GEÇİCİ TEŞHİS: iOS Safari'de tambur render sorunu için. Kalıcı çözüm
-  // yazılınca kaldırılacak.
-  const [debugInfo, setDebugInfo] = useState<{ rowHeight: number; radius: number } | null>(null);
 
   useImperativeHandle(ref, () => ({
     finish() {
@@ -111,19 +143,26 @@ export const Drum = forwardRef<DrumHandle, DrumProps>(function Drum(
     },
   }), []);
 
-  // useLayoutEffect: yarıçap ilk boyamadan önce yazılmazsa 16 yüz bir kare
-  // boyunca üst üste yassı görünür.
+  /**
+   * Flat modda dönüş toplamda targetIndex + turns*FACES adım ilerler
+   * (her zaman 0'dan başlayıp geri sarmadan). Etiket şeridi bu mesafeyi
+   * kaplayacak kadar tekrarlanmalı — labels[i % FACES] — yoksa şerit
+   * dönüşün ortasında biter, pencere içeriksiz kalır.
+   */
+  const flatTotalSteps = targetIndex + turns * FACES;
+  const displayLabels =
+    mode === "flat"
+      ? Array.from({ length: flatTotalSteps + 1 }, (_, i) => labels[i % FACES] ?? "")
+      : labels;
+
+  // useLayoutEffect: geometri ilk boyamadan önce yazılmazsa yüzler bir kare
+  // boyunca üst üste/yanlış konumda görünür.
   useLayoutEffect(() => {
     const drum = drumRef.current;
     const face = faceRef.current;
     if (!drum || !face) return;
 
-    // Yarıçap her dönüş başında okunur; mobil kırılımda --row değişmişse
-    // resize dinlemeden yakalanır.
     const rowHeight = readRowHeight(face);
-    const radius = radiusFor(rowHeight);
-    drum.style.setProperty("--radius", `${radius}px`);
-    setDebugInfo({ rowHeight, radius }); // GEÇİCİ TEŞHİS
 
     const isFirstMount = lastSpunKeyRef.current === null;
     // Aynı spinKey ile efekt yeniden çalışırsa (StrictMode'un çift çağrısı
@@ -131,18 +170,77 @@ export const Drum = forwardRef<DrumHandle, DrumProps>(function Drum(
     const alreadySpun = lastSpunKeyRef.current === spinKey;
     lastSpunKeyRef.current = spinKey;
 
+    if (mode === "flat") {
+      const targetSteps = latest.current.targetIndex + latest.current.turns * FACES;
+
+      if (isFirstMount) {
+        // İlk bağlanışta dönüş yok: tambur hedefte durur ve onSettle çağrılmaz.
+        drum.style.transform = transformFlatAt(rowHeight, targetSteps);
+        setSettledIndex(targetSteps);
+        return;
+      }
+
+      if (alreadySpun) {
+        drum.style.transform = transformFlatAt(rowHeight, targetSteps);
+        return;
+      }
+
+      // Hem onfinish hem elle finish() aynı ana denk gelebilir; tur bir kez kapanır.
+      let hasSettled = false;
+      const settle = () => {
+        if (hasSettled) return;
+        hasSettled = true;
+        setSettledIndex(targetSteps);
+        latest.current.onSettle?.();
+      };
+
+      setSettledIndex(null);
+
+      if (prefersReducedMotion()) {
+        drum.style.transform = transformFlatAt(rowHeight, targetSteps);
+        settle();
+        return;
+      }
+
+      const animation = drum.animate(
+        [
+          { transform: transformFlatAt(rowHeight, 0), easing: EASE_SPIN, offset: 0 },
+          {
+            transform: transformFlatAt(rowHeight, targetSteps + OVERSHOOT_STEPS),
+            easing: EASE_SETTLE,
+            offset: OVERSHOOT_AT,
+          },
+          { transform: transformFlatAt(rowHeight, targetSteps), offset: 1 },
+        ],
+        { duration: latest.current.durationMs, fill: "forwards" },
+      );
+
+      animationRef.current = animation;
+      animation.onfinish = settle;
+
+      return () => {
+        // Sökülürken ya da yeni dönüş başlarken eskisi bırakılmaz.
+        animation.cancel();
+        if (animationRef.current === animation) animationRef.current = null;
+      };
+    }
+
+    // --- 3d ---
+    // Yarıçap her dönüş başında okunur; mobil kırılımda --row değişmişse
+    // resize dinlemeden yakalanır.
+    const radius = radiusFor(rowHeight);
+    drum.style.setProperty("--radius", `${radius}px`);
+
     if (isFirstMount) {
-      // İlk bağlanışta dönüş yok: tambur hedefte durur ve onSettle çağrılmaz,
-      // yoksa daha çevrilmeden tur bitmiş sayılır.
       const restAngle = normalizeAngle(latest.current.targetIndex * STEP);
       currentAngleRef.current = restAngle;
-      drum.style.transform = transformAt(radius, restAngle);
+      drum.style.transform = transform3dAt(radius, restAngle);
       setSettledIndex(latest.current.targetIndex);
       return;
     }
 
     if (alreadySpun) {
-      drum.style.transform = transformAt(radius, currentAngleRef.current);
+      drum.style.transform = transform3dAt(radius, currentAngleRef.current);
       return;
     }
 
@@ -152,7 +250,6 @@ export const Drum = forwardRef<DrumHandle, DrumProps>(function Drum(
     const remaining = normalizeAngle(spinTarget * STEP - normalizeAngle(from));
     const to = from + remaining + 360 * latest.current.turns;
 
-    // Hem onfinish hem elle finish() aynı ana denk gelebilir; tur bir kez kapanır.
     let hasSettled = false;
     const settle = () => {
       if (hasSettled) return;
@@ -166,20 +263,20 @@ export const Drum = forwardRef<DrumHandle, DrumProps>(function Drum(
     setSettledIndex(null);
 
     if (prefersReducedMotion()) {
-      drum.style.transform = transformAt(radius, normalizeAngle(to));
+      drum.style.transform = transform3dAt(radius, normalizeAngle(to));
       settle();
       return;
     }
 
     const animation = drum.animate(
       [
-        { transform: transformAt(radius, from), easing: EASE_SPIN, offset: 0 },
+        { transform: transform3dAt(radius, from), easing: EASE_SPIN, offset: 0 },
         {
-          transform: transformAt(radius, to + OVERSHOOT_DEG),
+          transform: transform3dAt(radius, to + OVERSHOOT_DEG),
           easing: EASE_SETTLE,
           offset: OVERSHOOT_AT,
         },
-        { transform: transformAt(radius, to), offset: 1 },
+        { transform: transform3dAt(radius, to), offset: 1 },
       ],
       { duration: latest.current.durationMs, fill: "forwards" },
     );
@@ -188,50 +285,40 @@ export const Drum = forwardRef<DrumHandle, DrumProps>(function Drum(
     animation.onfinish = settle;
 
     return () => {
-      // Sökülürken ya da yeni dönüş başlarken eskisi bırakılmaz.
       animation.cancel();
       if (animationRef.current === animation) animationRef.current = null;
     };
-  }, [spinKey]);
+  }, [spinKey, mode]);
+
+  const windowClassName =
+    mode === "flat" ? styles.window : `${styles.window} ${styles.window3d}`;
+  const drumClassName =
+    mode === "flat" ? `${styles.drum} ${styles.drumFlat}` : `${styles.drum} ${styles.drum3d}`;
+  const faceModeClassName = mode === "flat" ? styles.faceFlat : styles.face3d;
 
   return (
     <div
-      className={styles.window}
+      className={windowClassName}
       // 16 yüzün tamamını okumak gürültü olur; metin zaten soru kartında.
       aria-hidden="true"
     >
-      {/* GEÇİCİ TEŞHİS: iOS Safari render sorunu çözülünce kaldırılacak. */}
-      {debugInfo && (
-        <div
-          style={{
-            position: "absolute",
-            inset: "auto 0 0 0",
-            zIndex: 10,
-            padding: "2px 4px",
-            fontSize: "10px",
-            lineHeight: 1.2,
-            fontFamily: "monospace",
-            color: "#0f0",
-            background: "rgba(0,0,0,0.7)",
-            pointerEvents: "none",
-          }}
-        >
-          row {debugInfo.rowHeight.toFixed(1)}px · radius {debugInfo.radius.toFixed(1)}px
-        </div>
-      )}
       <div
         ref={drumRef}
-        className={styles.drum}
-        style={{ "--step": `${STEP}deg` } as CssVars}
+        className={drumClassName}
+        style={mode === "3d" ? ({ "--step": `${STEP}deg` } as CssVars) : undefined}
       >
-        {Array.from({ length: FACES }, (_, i) => (
+        {displayLabels.map((label, i) => (
           <div
             key={i}
             ref={i === 0 ? faceRef : undefined}
-            className={i === settledIndex ? `${styles.face} ${styles.mid}` : styles.face}
+            className={
+              i === settledIndex
+                ? `${styles.face} ${faceModeClassName} ${styles.mid}`
+                : `${styles.face} ${faceModeClassName}`
+            }
             style={{ "--i": i } as CssVars}
           >
-            <span className={styles.label}>{labels[i] ?? ""}</span>
+            <span className={styles.label}>{label}</span>
           </div>
         ))}
       </div>
