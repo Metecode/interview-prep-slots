@@ -1,0 +1,107 @@
+/*
+  Skor ve kavram çipleri. Kart yüzeyi ResultPanel.module.css'ten
+  geliyor (className olarak iniyor), burada yalnızca içerik var.
+*/
+
+.score {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
+.scoreValue {
+  font-family: var(--mono);
+  font-size: 2.1rem;
+  font-weight: 700;
+  line-height: 1;
+  /* Sayarken rakam genişliği değişmesin, blok zıplamasın. */
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+/* Bölen sönük: asıl okunan sol taraftaki sayı. */
+.scoreTotal {
+  color: var(--text-dim);
+}
+
+.scoreCaption {
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--text-dim);
+}
+
+.conceptsLabel {
+  margin: 1rem 0 0.55rem;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  color: var(--text-faint);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/*
+  Çipler durum göstergesi, düğme değil: imleç değişmez, hover yok.
+  Sırayla belirirler — gecikme --i üzerinden.
+*/
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  border-radius: 999px;
+  cursor: default;
+  animation: chip-in var(--dur-base) var(--ease-out) backwards;
+  animation-delay: calc(var(--enter-offset, 0ms) + var(--i, 0) * var(--stagger-chip));
+}
+
+@keyframes chip-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+/* Kaçırılan kavram bir hata değil, yalnızca eksik: sönük kalır. */
+.chipMiss {
+  color: var(--text-dim);
+  border: 1px solid var(--line);
+}
+
+/* Yakalanan kavram gerçek bir durum bildirir: --ok. */
+.chipHit {
+  color: var(--ok);
+  border: 1px solid color-mix(in srgb, var(--ok) 45%, transparent);
+  background: color-mix(in srgb, var(--ok) 10%, transparent);
+}
+
+.chipIcon {
+  flex-shrink: 0;
+}
+
+/* Yalnızca geliştirme aracı: ham benzerlik skoru. */
+.chipScore {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.7;
+}
+
+/* Başlık ekranda görünmüyor ama bölümün adı olarak gerekiyor. */
+.hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

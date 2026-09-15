@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 
 import { ChevronIcon } from "./ChevronIcon";
+import { Collapse } from "./Collapse";
 import { CATEGORY_LABELS } from "../content/labels";
 import { CATEGORIES } from "../domain/question";
 import type { Category } from "../domain/question";
@@ -32,6 +33,7 @@ function summarize(active: Category[]): string {
 export function CategoryPicker({ active, disabled, onToggle }: CategoryPickerProps) {
   // Kalıcı olması gerekmiyor: her açılışta kapalı başlar.
   const [open, setOpen] = useState(false);
+  const listId = useId();
 
   return (
     <div className={styles.picker}>
@@ -39,6 +41,7 @@ export function CategoryPicker({ active, disabled, onToggle }: CategoryPickerPro
         type="button"
         className={styles.summary}
         aria-expanded={open}
+        aria-controls={listId}
         onClick={() => setOpen((value) => !value)}
       >
         <span>
@@ -47,7 +50,7 @@ export function CategoryPicker({ active, disabled, onToggle }: CategoryPickerPro
         <ChevronIcon className={styles.chevron} />
       </button>
 
-      {open && (
+      <Collapse open={open} id={listId}>
         <ul className={styles.list}>
           {CATEGORIES.map((category) => {
             const selected = active.includes(category);
@@ -67,7 +70,7 @@ export function CategoryPicker({ active, disabled, onToggle }: CategoryPickerPro
             );
           })}
         </ul>
-      )}
+      </Collapse>
     </div>
   );
 }

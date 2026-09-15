@@ -92,3 +92,13 @@
     font-size: 0.8rem;
   }
 }
+
+/*
+  Donmuş tamburun komşu satırları. Yüz değil, yalnızca yuvanın zemini:
+  gradyan ve dikiş çizgisi olmayınca satır "dönecek bir yüz" gibi
+  okunmuyor.
+*/
+.blank {
+  height: var(--row-h);
+  background: var(--well);
+}

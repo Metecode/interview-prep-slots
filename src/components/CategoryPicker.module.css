@@ -25,11 +25,13 @@
   border: 1px solid var(--line);
   border-radius: 999px;
   cursor: pointer;
-  transition: border-color 120ms ease, background-color 120ms ease;
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out);
 }
 
 .chevron {
-  transition: transform 160ms ease;
+  transition: transform var(--dur-base) var(--ease-out);
 }
 
 .summary[aria-expanded="true"] .chevron {
@@ -52,27 +54,9 @@
   flex-wrap: wrap;
   gap: 0.5rem;
   margin: 0;
-  padding: 0;
+  /* Üstteki boşluk özet düğmesinden ayırır; açılış hareketi Collapse'in işi. */
+  padding: 0.5rem 0 0;
   list-style: none;
-  animation: list-in 160ms ease-out;
-}
-
-/* Yükseklik değil opacity + kayma: yükseklik animasyonu kasıyordu. */
-@keyframes list-in {
-  from {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .list {
-    animation: none;
-  }
 }
 
 .chip {
@@ -84,7 +68,10 @@
   border: 1px solid var(--line);
   border-radius: 999px;
   cursor: pointer;
-  transition: border-color 120ms ease, background-color 120ms ease, color 120ms ease;
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
 }
 
 .chip[aria-pressed="true"] {

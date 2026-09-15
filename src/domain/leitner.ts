@@ -36,6 +36,23 @@ export function nextBox(
 }
 
 /**
+ * Bir öz-değerlendirme seçilirse sorunun bir sonraki tekrarı kaç gün
+ * sonraya düşer. Düğmelerin altındaki gün sayısı buradan geliyor.
+ *
+ * Hesap doğrudan aralık tablosundan okunmaz, nextBox üzerinden yapılır:
+ * ekranda yazan gün ile sorunun gerçekten gideceği kutu ayrışmasın.
+ * Kutu 1'de "biliyordum" kutu 2'ye taşır, yani 2 gün — tablodan sabit
+ * bir sayı okunsaydı bu ilişki ilk kutu değişikliğinde bozulurdu.
+ */
+export function reviewIntervalDays(
+  currentBox: Box,
+  rating: SelfRating,
+  passed = false,
+): number {
+  return BOX_INTERVALS_DAYS[nextBox(currentBox, rating, passed) - 1];
+}
+
+/**
  * Denemeyi ilerlemeye işler.
  * Saf: gelen nesneyi değiştirmez, yeni bir kayıt döner.
  */

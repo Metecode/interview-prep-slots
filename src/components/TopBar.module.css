@@ -1,6 +1,8 @@
 /*
   Üst çubuk: tam sayfa genişliğinde bir şerit, içeriği .app ile aynı
-  620px sütuna hizalanır. Renkler tokens.css'ten gelir.
+  sütuna hizalanır. Genişlik --shell'den okunuyor (App.module.css
+  .root'ta tanımlı), böylece sonuç ekranı iki sütuna açıldığında logo
+  ve rozetler de içerikle birlikte kayar.
 */
 
 .bar {
@@ -9,7 +11,7 @@
 }
 
 .inner {
-  max-width: 620px;
+  max-width: var(--shell, var(--shell-narrow));
   margin: 0 auto;
   padding: 0.7rem 20px;
   display: flex;

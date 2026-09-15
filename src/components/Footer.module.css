@@ -8,7 +8,8 @@
 }
 
 .inner {
-  max-width: 620px;
+  /* Üst çubuk ve içerikle aynı sütun; bkz. App.module.css .root */
+  max-width: var(--shell, var(--shell-narrow));
   margin: 0 auto;
   padding: 0.9rem 20px;
   display: flex;
@@ -23,7 +24,7 @@
 .link {
   color: var(--text-faint);
   text-decoration: none;
-  transition: color 120ms ease;
+  transition: color var(--dur-fast) var(--ease-out);
 }
 
 @media (hover: hover) {

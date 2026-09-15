@@ -1,0 +1,39 @@
+/*
+  Açılır bölüm. İki katman gerekiyor:
+    .collapse  grid satırı 0fr ↔ 1fr arasında gidip gelir
+    .inner     overflow'u kesip içeriği opacity + kayma ile sürer
+
+  overflow: hidden .collapse'te olmalı; .inner'da olsaydı odak halkası
+  kırpılırdı.
+*/
+
+.collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  overflow: hidden;
+  /* Kapanış açılıştan hızlı: geri giden hareket bekletmemeli. */
+  transition: grid-template-rows calc(var(--dur-base) * 0.7) var(--ease-in-out);
+}
+
+.collapse[data-open="true"] {
+  grid-template-rows: 1fr;
+  transition-duration: var(--dur-base);
+}
+
+.inner {
+  min-height: 0;
+  opacity: 0;
+  transform: translateY(-6px);
+  transition:
+    opacity calc(var(--dur-base) * 0.7) var(--ease-in-out),
+    transform calc(var(--dur-base) * 0.7) var(--ease-in-out);
+}
+
+.collapse[data-open="true"] .inner {
+  opacity: 1;
+  transform: translateY(0);
+  transition-duration: var(--dur-base);
+  /* İçerik, satır açılmaya başladıktan sonra gelsin; aynı anda başlarsa
+     yazı kırpılmış görünüyor. */
+  transition-delay: calc(var(--dur-base) * 0.25);
+}

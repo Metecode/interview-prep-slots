@@ -1,6 +1,6 @@
 /*
-  Soru kartı ve sonuç paneli aynı yüzeyi paylaşır; ikisi de bu dosyayı
-  kullanır. Renkler tokens.css'ten gelir, ham renk yazılmaz.
+  Soru kartı. Renkler tokens.css'ten gelir, ham renk yazılmaz;
+  süreler ve eğriler de oradan — bu dosyada ham ms yok.
 
   Dosyanın kendi yazdığı değişken:
     --paper  yazı alanının ve kartın üst kenarının oturduğu, kartın
@@ -20,18 +20,6 @@
   border: 1px solid var(--line);
   border-top-color: var(--paper);
   box-shadow: 0 6px 16px color-mix(in srgb, var(--bg) 70%, transparent);
-  animation: rise-in 240ms ease-out;
-}
-
-@keyframes rise-in {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 /* ---------------------------------------------------------------- */
@@ -87,7 +75,7 @@
   border: 1px solid var(--line);
   border-radius: 8px;
   resize: vertical;
-  transition: border-color 120ms ease;
+  transition: border-color var(--dur-fast) var(--ease-out);
 }
 
 .answer:focus {
@@ -148,8 +136,11 @@
   font-size: 0.95rem;
   border-radius: 8px;
   cursor: pointer;
-  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease,
-    transform 120ms ease;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
 }
 
 /* Birincil eylem: tek accent bütçesinin bir parçası, aynı anda yalnızca
@@ -224,131 +215,7 @@
 .primary:focus-visible,
 .secondary:focus-visible,
 .tertiary:focus-visible,
-.answer:focus-visible,
-.modelSummary:focus-visible {
+.answer:focus-visible {
   outline: 2px solid var(--text);
   outline-offset: 2px;
-}
-
-/* ---------------------------------------------------------------- */
-/* Sonuç paneli                                                      */
-/* ---------------------------------------------------------------- */
-
-.score {
-  display: flex;
-  align-items: baseline;
-  gap: 0.75rem;
-}
-
-.scoreValue {
-  font-family: var(--mono);
-  font-size: 2rem;
-  font-weight: 700;
-  line-height: 1;
-  /* Skor turdan tura değişiyor; rakamlar yerinden oynamasın. */
-  font-variant-numeric: tabular-nums;
-  color: var(--text);
-}
-
-.scoreCaption {
-  font-size: 0.9rem;
-  color: var(--text-dim);
-}
-
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-/* Çipler durum göstergesi, düğme değil: imleç değişmez, hover yok. */
-.chip {
-  padding: 0.25rem 0.65rem;
-  font-family: var(--mono);
-  font-size: 0.8rem;
-  color: var(--text-dim);
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  cursor: default;
-}
-
-/* Yakalanan kavram: gerçek bir durum bildirir, --ok kullanılır. */
-.chipHit {
-  color: var(--accent-ink);
-  background: var(--ok);
-  border-color: var(--ok);
-}
-
-/* Yalnızca geliştirme aracı: ham benzerlik skoru, çip metninden ayrışsın. */
-.chipScore {
-  font-variant-numeric: tabular-nums;
-  opacity: 0.7;
-}
-
-.model {
-  font-size: 0.95rem;
-  color: var(--text);
-}
-
-.modelSummary {
-  cursor: pointer;
-  font-size: 0.85rem;
-  color: var(--text-dim);
-}
-
-/*
-  modelAnswer şemada Markdown; henüz işleyici yok, düz metin olarak
-  basılıyor. pre-wrap satır başlarını koruyor ki liste ve paragraflar
-  tek satıra yapışmasın.
-*/
-.modelBody {
-  margin: 0.6rem 0 0;
-  font-family: var(--sans);
-  line-height: 1.5;
-  white-space: pre-wrap;
-}
-
-.divider {
-  width: 100%;
-  margin: 0;
-  border: 0;
-  border-top: 1px solid var(--line);
-}
-
-.rating {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-}
-
-.ratingLabel {
-  font-size: 0.85rem;
-  color: var(--text-dim);
-}
-
-.ratingButtons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.ai {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.6rem;
-}
-
-.aiNote {
-  font-size: 0.8rem;
-  color: var(--text-dim);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .card {
-    animation: none;
-  }
 }

@@ -1,0 +1,155 @@
+/*
+  Model cevap ve kod blokları. modelAnswer Markdown olarak geliyor,
+  domain/modelAnswer.ts blokları ayırıyor.
+*/
+
+.modelHead {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.85rem;
+}
+
+.modelTitle {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.modelBadge {
+  padding: 0.1rem 0.5rem;
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.03em;
+  color: var(--text-dim);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+
+.blocks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.paragraph {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: var(--text);
+}
+
+/*
+  Not kutusu: içerikte giriş cümlesiyle açılan paragraflar.
+  Uyarı ya da ipucu rengi verilmiyor — bunlar bir durum bildirmiyor,
+  yalnızca vurgulu paragraflar.
+*/
+.note {
+  margin: 0;
+  padding: 0.7rem 0.85rem;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--text-dim);
+  background: color-mix(in srgb, var(--text) 4%, transparent);
+  border-left: 2px solid var(--line);
+  border-radius: 0 6px 6px 0;
+}
+
+.noteLead {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.inlineCode {
+  padding: 0.1rem 0.3rem;
+  font-family: var(--mono);
+  font-size: 0.85em;
+  color: var(--text);
+  background: var(--well);
+  border-radius: 4px;
+}
+
+/* ---------------------------------------------------------------- */
+/* Kod bloğu                                                        */
+/* ---------------------------------------------------------------- */
+
+.code {
+  overflow: hidden;
+  background: var(--well);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.codeHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.4rem 0.5rem 0.4rem 0.75rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.codeLang {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  color: var(--text-faint);
+}
+
+.copyButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.5rem;
+  font: inherit;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  color: var(--text-dim);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  transition:
+    color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+}
+
+@media (hover: hover) {
+  .copyButton:hover {
+    color: var(--text);
+    border-color: var(--line);
+  }
+}
+
+.copyButton:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+/*
+  Kopyalandı yazısı tıkta anında görünür, 1.5s sonra söner.
+  Sönen tek şey opacity; genişlik değişmiyor ki düğme oynamasın.
+*/
+.copyLabel {
+  transition: opacity var(--dur-base) var(--ease-in-out);
+}
+
+.copyButton[data-faded="true"] .copyLabel {
+  opacity: 0;
+}
+
+.codeBody {
+  margin: 0;
+  padding: 0.75rem;
+  overflow-x: auto;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  line-height: 1.6;
+  color: var(--text);
+}
+
+/* Kod içi yorum satırı: gövdeden ayrışsın, okuma sırası bozulmasın. */
+.comment {
+  color: var(--text-faint);
+}

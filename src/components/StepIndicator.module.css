@@ -1,0 +1,76 @@
+/*
+  Adım göstergesi: üst çubuğun hemen altında ince bir şerit.
+  İçeriği .app ile aynı sütuna hizalanır.
+
+  Accent bütçesi: aktif adım bu ekrandaki iki accent kullanımından biri.
+*/
+
+.bar {
+  border-bottom: 1px solid var(--line);
+  background: var(--bg);
+}
+
+.track {
+  position: relative;
+  /* Üst çubuk ve içerikle aynı sütun; bkz. App.module.css .root */
+  max-width: var(--shell, var(--shell-narrow));
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/*
+  Kayan işaretçi. Genişliği bir adım kadar; `--step` 0..2 arası bir sayı,
+  kayma transform ile yapılıyor (left/margin animasyonu düzen tetikler).
+*/
+.marker {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 20px;
+  width: calc((100% - 40px) / 3);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent);
+  transform: translateX(calc(var(--step, 0) * 100%));
+  transition: transform var(--dur-slow) var(--ease-out);
+}
+
+.steps {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  padding: 0.5rem 0.25rem;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color var(--dur-base) var(--ease-out);
+}
+
+/* Geçmiş adım okunur kalır, gelecek adım geri çekilir. */
+.step[data-state="done"] {
+  color: var(--text-dim);
+}
+
+.step[data-state="next"] {
+  color: var(--text-faint);
+}
+
+.step[data-state="active"] {
+  color: var(--accent);
+}
+
+@media (max-width: 560px) {
+  .step {
+    font-size: 0.65rem;
+  }
+}

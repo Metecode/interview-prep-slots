@@ -3,10 +3,11 @@ import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import styles from "./App.module.css";
 import { CategoryPicker } from "./components/CategoryPicker";
 import { ChevronIcon } from "./components/ChevronIcon";
+import { Collapse } from "./components/Collapse";
 import { Footer } from "./components/Footer";
 import { Machine } from "./components/Machine";
-import { QuestionCard } from "./components/QuestionCard";
-import { ResultPanel } from "./components/ResultPanel";
+import { Stage } from "./components/Stage";
+import { StepIndicator } from "./components/StepIndicator";
 import { Switch } from "./components/Switch";
 import { TopBar } from "./components/TopBar";
 import { QUESTIONS } from "./content";
@@ -45,11 +46,13 @@ export default function App() {
   const { hydrated, recovered, save } = useStore();
 
   // Depo okunmadan oturum kurulmuyor; okuma IndexedDB'den, göz kırpması kadar.
+  // O aralıkta boş bir kabuk duruyor: yarım bir arayüz çizip hemen
+  // değiştirmektense hiç çizmemek daha sakin.
   if (!hydrated) {
     return (
-      <main className={styles.app}>
-        <h1 className={styles.title}>Mülakat Slot — makine denemesi</h1>
-      </main>
+      <div className={styles.root}>
+        <main className={styles.app} />
+      </div>
     );
   }
 
@@ -91,8 +94,6 @@ function Session({ store, recovered, save }: SessionProps) {
       setSpinKey((key) => key + 1);
     }
     prevPhaseRef.current = state.phase;
-
-    console.log("faz ->", state.phase, state.current?.id ?? null);
   }, [state]);
 
   function handlePull() {
@@ -122,7 +123,6 @@ function Session({ store, recovered, save }: SessionProps) {
 
   function handleAskAi() {
     dispatch({ type: "SPEND_QUOTA" });
-    console.log("yapay zekâ turu henüz bağlı değil");
   }
 
   function handleToggleCategory(category: Category) {
@@ -134,91 +134,88 @@ function Session({ store, recovered, save }: SessionProps) {
     state.activeCategories.length > 0;
 
   return (
-    <>
+    /*
+      data-wide: sonuç ekranı iki sütuna geçince içerik sütunu genişler.
+      Üst çubuk, adım göstergesi ve makine sütunu genişliği buradan
+      okuyor — hepsi aynı sol kenardan başlasın diye.
+    */
+    <div className={styles.root} data-wide={state.phase === "evaluated"}>
       <TopBar questionCount={activeQuestionCount} quotaRemaining={state.quotaRemaining} />
+      {/* Adım göstergesi üst çubuğun altında, ince bir ayırıcıyla. */}
+      <StepIndicator phase={state.phase} />
 
-      <main className={styles.app}>
-        <h1 className={styles.title}>Mülakat Slot — makine denemesi</h1>
+      <main className={styles.shell}>
+        <div className={styles.app}>
+          <CategoryPicker
+            active={state.activeCategories}
+            disabled={state.phase === "spinning"}
+            onToggle={handleToggleCategory}
+          />
 
-        <CategoryPicker
-          active={state.activeCategories}
-          disabled={state.phase === "spinning"}
-          onToggle={handleToggleCategory}
-        />
+          <Machine
+            question={state.current}
+            allQuestions={QUESTIONS}
+            activeCategories={state.activeCategories}
+            spinKey={spinKey}
+            spinning={state.phase === "spinning"}
+            canSpin={canSpin}
+            fastMode={fastMode}
+            onPull={handlePull}
+            onSettle={handleSettle}
+          />
 
-        <Machine
-          question={state.current}
-          allQuestions={QUESTIONS}
-          activeCategories={state.activeCategories}
-          spinKey={spinKey}
-          spinning={state.phase === "spinning"}
-          canSpin={canSpin}
-          fastMode={fastMode}
-          onPull={handlePull}
-          onSettle={handleSettle}
-        />
+          {/* Kol zaten disabled ama sebebi görünmüyor; yalnızca seçim boşken çıkar. */}
+          {state.activeCategories.length === 0 && (
+            <p className={styles.spinHint}>Çevirmek için en az bir kategori seç.</p>
+          )}
 
-        {/* Kol zaten disabled ama sebebi görünmüyor; yalnızca seçim boşken çıkar. */}
-        {state.activeCategories.length === 0 && (
-          <p className={styles.spinHint}>Çevirmek için en az bir kategori seç.</p>
-        )}
+          {/* Makineye ait ayarlar, soruya değil: yeri makinenin hemen altı.
+              Varsayılan kapalı — kimse ayar aramak zorunda kalmasın. */}
+          <div className={styles.settings}>
+            <button
+              type="button"
+              className={styles.settingsToggle}
+              aria-expanded={settingsOpen}
+              aria-controls="settings-panel"
+              onClick={() => setSettingsOpen((open) => !open)}
+            >
+              Ayarlar
+              <ChevronIcon className={styles.chevron} />
+            </button>
 
-        {/* Makineye ait ayarlar, soruya değil: yeri makinenin hemen altı.
-            Varsayılan kapalı — kimse ayar aramak zorunda kalmasın. */}
-        <div className={styles.settings}>
-          <button
-            type="button"
-            className={styles.settingsToggle}
-            aria-expanded={settingsOpen}
-            onClick={() => setSettingsOpen((open) => !open)}
-          >
-            Ayarlar
-            <ChevronIcon className={styles.chevron} />
-          </button>
+            <Collapse open={settingsOpen} id="settings-panel">
+              <div className={styles.controls}>
+                <Switch checked={fastMode} onChange={setFastMode} label="Hızlı mod" />
+              </div>
+            </Collapse>
+          </div>
 
-          {settingsOpen && (
-            <div className={styles.controls}>
-              <Switch checked={fastMode} onChange={setFastMode} label="Hızlı mod" />
+          {recovered && !warningDismissed && (
+            <div className={styles.warning} role="alert">
+              <span>Kayıtlı ilerlemen okunamadı, sıfırdan başlıyorsun.</span>
+              <button
+                type="button"
+                className={styles.warningClose}
+                onClick={() => setWarningDismissed(true)}
+                aria-label="Uyarıyı kapat"
+              >
+                ×
+              </button>
             </div>
           )}
         </div>
 
-        {recovered && !warningDismissed && (
-          <div className={styles.warning} role="alert">
-            <span>Kayıtlı ilerlemen okunamadı, sıfırdan başlıyorsun.</span>
-            <button
-              type="button"
-              className={styles.warningClose}
-              onClick={() => setWarningDismissed(true)}
-              aria-label="Uyarıyı kapat"
-            >
-              ×
-            </button>
-          </div>
-        )}
-
-        {/* key: soru değişince kart yeniden kurulur, yazılan cevap temizlenir. */}
-        {state.phase === "answering" && state.current && (
-          <QuestionCard
-            key={state.current.id}
-            question={state.current}
-            onSubmit={handleSubmit}
-            onPass={handlePass}
-          />
-        )}
-
-        {state.phase === "evaluated" && state.current && (
-          <ResultPanel
-            question={state.current}
-            evaluation={state.evaluation}
-            quotaRemaining={state.quotaRemaining}
-            onRate={handleRate}
-            onAskAi={handleAskAi}
-          />
-        )}
+        {/* Soru kartı ve sonuç ekranı burada; geçişi Stage yönetiyor. */}
+        <Stage
+          state={state}
+          onSubmit={handleSubmit}
+          onPass={handlePass}
+          onRate={handleRate}
+          onAskAi={handleAskAi}
+        />
       </main>
 
       <Footer />
-    </>
+    </div>
   );
 }

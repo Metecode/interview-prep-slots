@@ -5,6 +5,7 @@ import {
   MAX_ATTEMPTS,
   applyAttempt,
   nextBox,
+  reviewIntervalDays,
 } from "./leitner";
 import type { Attempt, Box, QuestionProgress, SelfRating } from "./progress";
 
@@ -138,5 +139,45 @@ describe("applyAttempt", () => {
     expect(progress.box).toBe(2);
     expect(progress.attempts).toHaveLength(0);
     expect(progress.lastSeenAt).toBe("2026-01-01T09:00:00.000Z");
+  });
+});
+
+describe("reviewIntervalDays", () => {
+  it("kutu 1'de biliyordum kutu 2'nin aralığını verir", () => {
+    expect(reviewIntervalDays(1, 2)).toBe(2);
+  });
+
+  it("kısmen kutuyu korur, aralık aynı kalır", () => {
+    expect(reviewIntervalDays(1, 1)).toBe(1);
+    expect(reviewIntervalDays(3, 1)).toBe(4);
+  });
+
+  it("bilmiyordum her kutuda ilk aralığa düşürür", () => {
+    expect(reviewIntervalDays(1, 0)).toBe(1);
+    expect(reviewIntervalDays(5, 0)).toBe(1);
+  });
+
+  it("biliyordum bir kutu ilerletir", () => {
+    expect(reviewIntervalDays(2, 2)).toBe(4);
+    expect(reviewIntervalDays(3, 2)).toBe(8);
+    expect(reviewIntervalDays(4, 2)).toBe(16);
+  });
+
+  it("tavan kutuda biliyordum aralığı büyütmez", () => {
+    expect(reviewIntervalDays(5, 2)).toBe(16);
+  });
+
+  it("pas geçilen soruda verilen not dikkate alınmaz", () => {
+    for (const rating of [0, 1, 2] as const) {
+      expect(reviewIntervalDays(4, rating, true)).toBe(1);
+    }
+  });
+
+  it("her kutu ve not birleşimi tabloda tanımlı bir aralık döndürür", () => {
+    for (const box of [1, 2, 3, 4, 5] as const) {
+      for (const rating of [0, 1, 2] as const) {
+        expect(BOX_INTERVALS_DAYS).toContain(reviewIntervalDays(box, rating));
+      }
+    }
   });
 });

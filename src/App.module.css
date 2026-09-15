@@ -1,21 +1,44 @@
 /*
-  Deneme sayfasının kabuğu. Makine ve kart aynı kapsayıcının içinde,
-  ikisi de tam genişlikte durur.
+  Sayfanın kabuğu.
+
+  --shell: sayfadaki tek içerik sütunu genişliği. Üst çubuk, adım
+  göstergesi, makine sütunu ve sonuç paneli hepsi bunu okur; böylece
+  hepsi aynı sol kenara hizalanır. Sonuç ekranı iki sütuna geçtiğinde
+  sütun genişler ve üst çubuk da onunla birlikte açılır.
+
+  Makine bu sütunla birlikte esnemez: Machine.module.css'te kendi
+  üst sınırı var, geniş kipte sütunun solunda kalır.
 */
+
+.root {
+  --shell: var(--shell-narrow);
+}
+
+/* İki sütunlu sonuç ekranı yalnızca burada açılıyor; sütun da. */
+@media (min-width: 1024px) {
+  .root[data-wide="true"] {
+    --shell: var(--shell-wide);
+  }
+}
+
+.shell {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding-bottom: 90px;
+}
 
 .app {
   display: flex;
   flex-direction: column;
+  /* Yaslama sola: geniş kipte makine ve kategori çipleri sütunun
+     ortasına kaçmasın, sonuç paneliyle aynı kenardan başlasın. */
+  align-items: flex-start;
   gap: 1.25rem;
-  max-width: 620px;
+  max-width: var(--shell);
+  width: 100%;
   margin: 0 auto;
-  padding: 34px 20px 90px;
-}
-
-.title {
-  margin: 0;
-  font-size: 1rem;
-  color: var(--text-dim);
+  padding: 34px 20px 0;
 }
 
 /*
@@ -39,7 +62,7 @@
   background: none;
   border: 0;
   cursor: pointer;
-  transition: color 120ms ease;
+  transition: color var(--dur-fast) var(--ease-out);
 }
 
 @media (hover: hover) {
@@ -54,7 +77,7 @@
 }
 
 .chevron {
-  transition: transform 160ms ease;
+  transition: transform var(--dur-base) var(--ease-out);
 }
 
 .settingsToggle[aria-expanded="true"] .chevron {
@@ -98,7 +121,9 @@
   background: none;
   border: 0;
   cursor: pointer;
-  transition: color 120ms ease, transform 120ms ease;
+  transition:
+    color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
 }
 
 @media (hover: hover) {

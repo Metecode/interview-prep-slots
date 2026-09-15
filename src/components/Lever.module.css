@@ -78,7 +78,9 @@
   fill: var(--accent);
   transform-box: fill-box;
   transform-origin: center;
-  transition: fill 120ms ease, transform 120ms ease;
+  transition:
+    fill var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
 }
 
 @media (hover: hover) {
@@ -112,7 +114,7 @@
 
 .notch {
   fill: var(--line);
-  transition: fill 120ms ease;
+  transition: fill var(--dur-fast) var(--ease-out);
 }
 
 /* Eşik aşıldı: kol bırakılırsa çekiliş sayılacak. Topuz zaten accent,
