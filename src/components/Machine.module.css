@@ -13,6 +13,7 @@
 
   width: 100%;
   perspective: 1600px;
+  -webkit-perspective: 1600px;
   perspective-origin: 50% 26%;
   /*
     Yanlardaki birkaç piksel boşluk süs değil: rotateX perspektif altında
@@ -31,6 +32,7 @@
   padding: 1rem;
   border-radius: 8px;
   transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
   transform: rotateX(7deg);
   background: linear-gradient(to bottom, var(--enamel-top), var(--enamel-bottom));
   border: 1px solid var(--rule);
@@ -234,6 +236,7 @@
 @media (max-width: 560px) {
   .stage {
     perspective: 1100px;
+    -webkit-perspective: 1100px;
   }
 
   .machine {
