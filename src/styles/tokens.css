@@ -1,48 +1,47 @@
 /*
   Palet ve ölçü token'ları — tek kaynak.
   Bileşen CSS'leri yalnızca bu değişkenleri okur, ham renk yazmaz.
-  Saydamlık gereken yerlerde token'lar color-mix ile seyreltilir;
-  tek istisna --drum-shade, çünkü gradyan duraklarında alpha ile
-  tekrar tekrar kullanılıyor.
+
+  Tek accent var: --accent. Yalnız birincil eylemde (Gönder, Biliyordum,
+  kolun eşiği aşmış hali), anahtar açıkken ve ödeme çizgisinde kullanılır;
+  ekranda aynı anda ikiden fazla yerde görünmemeli. Kategori çipleri
+  gibi çoklu-seçim listelerinde kullanılmaz — hepsi seçiliyken dokuz
+  accent çipi bu kuralı anında çiğner.
+  --ok ve --warn yalnız gerçek bir durum bildirirken kullanılır:
+  --ok sonuç panelinde yakalanan kavram, --warn kota bittiğinde ve
+  ilerleme okunamadığında.
 */
 
 :root {
-  /* yüzey */
-  --desk: #cec7b6;
-  --card: #f7f3ea;
-  --ink: #1a2220;
-  --ink-soft: #5c6864;
+  /* zemin */
+  --bg: #0b0f14;
+  --surface: #111721;
+  --surface-raised: #161e29;
+  --well: #080c11;
+  --line: #1f2937;
+  /* --well'in rgb bileşenleri: tambur gölgesi gradyanlarda alpha ile
+     tekrar tekrar kullanılıyor, var() doğrudan rgb() içine giremiyor. */
+  --well-rgb: 8, 12, 17;
 
-  /* makine gövdesi */
-  --enamel-top: #313d3a;      /* ön yüz üst */
-  --enamel-bottom: #28322f;   /* ön yüz alt */
-  --enamel-face-top: #5c6964; /* üst yüzey, ışığı en çok alan */
-  --enamel-face-bottom: #47534f;
-  --rule: #4a5754;
-  --well: #121a19;            /* yuva içi */
+  /* metin */
+  --text: #e6edf3;
+  --text-dim: #8b98a9;
+  /*
+    Sohbette önerilen değer #5A6675 idi: koyu zeminlerin hiçbirinde
+    4.5:1'e ulaşmıyordu (en iyi ihtimalle --bg üzerinde ~3.3:1).
+    Aynı ton ailesinde, kontrastı gerçekten tutturan bir değere
+    açıldı (--surface-raised üzerinde ~4.6:1, --bg üzerinde ~5.3:1).
+  */
+  --text-faint: #7b8794;
 
-  /* kol paneli */
-  --plate-top: #45524e;
-  --plate-bottom: #374340;
+  /* tek accent */
+  --accent: #22d3ee;
+  --accent-dim: #0e7490;
+  --accent-ink: #06232b;
 
-  /* tambur */
-  --drum-face-top: #fffcf5;
-  --drum-face-bottom: #f0eadc;
-  --drum-face-border: #ded7c7;
-  --drum-text: #1a2220;
-  --drum-shade: 12, 18, 17;   /* rgb bileşenleri, gradyanlarda alpha ile */
-
-  /* kol */
-  --arm-body: #8f9995;
-  --arm-light: #c7cfcb;
-  --arm-shadow: #59635f;
-  --arm-collar: #6e7975;
-  --pivot: #6e7975;
-  --knob: #c4442e;
-  --knob-armed: #e05a41;
-
-  /* vurgu */
-  --signal: #c4442e;
+  /* durum — yalnız gerçekten durum bildirirken */
+  --ok: #34d399;
+  --warn: #f59e0b;
 
   --row: 62px;
 }

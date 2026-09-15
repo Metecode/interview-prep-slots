@@ -1,6 +1,51 @@
 /*
   Kategori çipleri. Renkler tokens.css'ten gelir, ham renk yazılmaz.
+  Çoklu seçim listesi: accent burada kullanılmaz (varsayılan tümü
+  seçili durumda dokuz accent çip olurdu) — seçili durum nötr tonla,
+  daha parlak metin ve dolu yüzeyle işaretlenir.
 */
+
+.picker {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Kapalıyken tek satır: sayfa nefes alsın diye çipler varsayılan gizli. */
+.summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  align-self: flex-start;
+  padding: 0.35rem 0.8rem;
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+
+.chevron {
+  transition: transform 160ms ease;
+}
+
+.summary[aria-expanded="true"] .chevron {
+  transform: rotate(180deg);
+}
+
+.summary:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) {
+  .summary:hover {
+    border-color: var(--text-dim);
+  }
+}
 
 .list {
   display: flex;
@@ -9,23 +54,43 @@
   margin: 0;
   padding: 0;
   list-style: none;
+  animation: list-in 160ms ease-out;
+}
+
+/* Yükseklik değil opacity + kayma: yükseklik animasyonu kasıyordu. */
+@keyframes list-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .list {
+    animation: none;
+  }
 }
 
 .chip {
   padding: 0.35rem 0.8rem;
   font: inherit;
   font-size: 0.85rem;
-  color: var(--ink-soft);
+  color: var(--text-dim);
   background: transparent;
-  border: 1px solid color-mix(in srgb, var(--ink) 18%, transparent);
+  border: 1px solid var(--line);
   border-radius: 999px;
   cursor: pointer;
+  transition: border-color 120ms ease, background-color 120ms ease, color 120ms ease;
 }
 
 .chip[aria-pressed="true"] {
-  color: var(--ink);
-  background: var(--card);
-  border-color: var(--ink);
+  color: var(--text);
+  background: var(--surface-raised);
+  border-color: var(--text-dim);
   font-weight: 600;
 }
 
@@ -35,6 +100,12 @@
 }
 
 .chip:focus-visible {
-  outline: 2px solid var(--ink);
+  outline: 2px solid var(--text);
   outline-offset: 2px;
+}
+
+@media (hover: hover) {
+  .chip:hover:not(:disabled):not([aria-pressed="true"]) {
+    border-color: var(--text-dim);
+  }
 }

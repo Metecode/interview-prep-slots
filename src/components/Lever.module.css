@@ -1,13 +1,16 @@
 /*
   Slot makinesinin kolu. Yalnızca görünüm ve tutamak burada;
   ne yaptığını bilmez. Renkler tokens.css'ten gelir.
+
+  Kol dinlenirken nötr çelik tonlarında durur; yalnızca eşiği aştığında
+  (armed) accent'e döner — "birincil eylem" bütçesine geçici olarak girer.
 */
 
 .root {
   /* Topuzun hacmini veren saydam katmanlar; token'lardan seyreltilir. */
-  --knob-shade: color-mix(in srgb, var(--ink) 22%, transparent);
-  --knob-glint: color-mix(in srgb, var(--card) 60%, transparent);
-  --knob-rim: color-mix(in srgb, var(--ink) 30%, transparent);
+  --knob-shade: color-mix(in srgb, var(--bg) 35%, transparent);
+  --knob-glint: color-mix(in srgb, var(--text) 55%, transparent);
+  --knob-rim: color-mix(in srgb, var(--bg) 45%, transparent);
 
   display: block;
   /* Buton içeriğine göre daralır; panel genişliğini doldurması için
@@ -33,7 +36,7 @@
 }
 
 .root:focus-visible {
-  outline: 2px solid var(--signal);
+  outline: 2px solid var(--accent);
   outline-offset: 4px;
   border-radius: 8px;
 }
@@ -45,32 +48,44 @@
 }
 
 .plate {
-  fill: var(--plate-bottom);
+  fill: var(--surface);
 }
 
 .armBody {
-  fill: var(--arm-body);
+  fill: var(--text-dim);
 }
 
 .armLight {
-  fill: var(--arm-light);
+  fill: color-mix(in srgb, var(--text-dim) 45%, var(--text) 55%);
 }
 
 .armShadow {
-  fill: var(--arm-shadow);
+  fill: color-mix(in srgb, var(--text-dim) 55%, var(--bg) 45%);
 }
 
 .collar {
-  fill: var(--arm-collar);
+  fill: var(--text-dim);
 }
 
 .collarHighlight {
-  fill: var(--arm-light);
+  fill: color-mix(in srgb, var(--text-dim) 40%, var(--text) 60%);
 }
 
+/* Topuz her zaman accent: kol panelde neredeyse kaybolduğu için sabit
+   bir vurgu rengiyle işaretlendi (Gönder ve ödeme çizgisiyle birlikte
+   accent bütçesinin üçüncü, tek kalıcı kullanımı). */
 .knob {
-  fill: var(--knob);
-  transition: fill 120ms ease;
+  fill: var(--accent);
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: fill 120ms ease, transform 120ms ease;
+}
+
+@media (hover: hover) {
+  /* Topuz hafifçe açılır: kolun etkileşimli olduğunu ele verir. */
+  .root:hover:not(:disabled) .knob {
+    transform: scale(1.06);
+  }
 }
 
 .knobShade {
@@ -88,7 +103,7 @@
 }
 
 .pivot {
-  fill: var(--pivot);
+  fill: var(--text-dim);
 }
 
 .pivotDot {
@@ -96,22 +111,27 @@
 }
 
 .notch {
-  fill: var(--rule);
+  fill: var(--line);
   transition: fill 120ms ease;
 }
 
-/* Eşik aşıldı: kol bırakılırsa çekiliş sayılacak. */
+/* Eşik aşıldı: kol bırakılırsa çekiliş sayılacak. Topuz zaten accent,
+   eşikte biraz daha açılır; çentik nötrden accent'e döner. */
 .armed .knob {
-  fill: var(--knob-armed);
+  fill: color-mix(in srgb, var(--accent) 75%, white 25%);
 }
 
 .armed .notch {
-  fill: var(--signal);
+  fill: var(--accent);
 }
 
 @media (prefers-reduced-motion: reduce) {
   .knob,
   .notch {
     transition: none;
+  }
+
+  .root:hover:not(:disabled) .knob {
+    transform: none;
   }
 }

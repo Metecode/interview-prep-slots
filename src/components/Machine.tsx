@@ -38,7 +38,6 @@ export type MachineProps = {
   spinning: boolean;
   /** false ise kol devre dışı. */
   canSpin: boolean;
-  quotaRemaining: number;
   fastMode: boolean;
   onPull: () => void;
   onSettle: () => void;
@@ -108,7 +107,6 @@ export function Machine({
   spinKey,
   spinning,
   canSpin,
-  quotaRemaining,
   fastMode,
   onPull,
   onSettle,
@@ -182,51 +180,55 @@ export function Machine({
       <div className={styles.machine}>
         <div className={styles.contact} aria-hidden="true" />
 
-        <div className={styles.bay} onClick={handleBayClick}>
-          <div ref={leftSlotRef} className={styles.drumSlot}>
-            <Drum
-              ref={leftDrumRef}
-              labels={leftFaces}
-              targetIndex={WINNING_INDEX}
-              spinKey={spinKey}
-              durationMs={timing.first.durationMs}
-              turns={timing.first.turns}
-              onSettle={() => bumpTick(leftSlotRef.current)}
-            />
-          </div>
-          <div ref={rightSlotRef} className={styles.drumSlot}>
-            <Drum
-              ref={rightDrumRef}
-              labels={rightFaces}
-              targetIndex={WINNING_INDEX}
-              spinKey={spinKey}
-              durationMs={timing.second.durationMs}
-              turns={timing.second.turns}
-              onSettle={() => {
-                bumpTick(rightSlotRef.current);
-                onSettle();
-              }}
-            />
+        <div className={styles.reelsColumn}>
+          {/* Hangi tamburun ne gösterdiği belirsizdi; iki sütuna eşlenen etiket. */}
+          <div className={styles.reelLabels} aria-hidden="true">
+            <span className={styles.reelLabel}>KATEGORİ</span>
+            <span className={styles.reelLabel}>KONU</span>
           </div>
 
-          {/* Yalnızca duruşta görünür; üçgenler CSS geçişiyle dışarıdan içeri kayar. */}
-          <div
-            className={
-              spinning ? styles.payline : `${styles.payline} ${styles.paylineSettled}`
-            }
-            aria-hidden="true"
-          >
-            <span className={styles.paylineFill} />
-            <span className={`${styles.paylineTriangle} ${styles.paylineTriangleLeft}`} />
-            <span className={`${styles.paylineTriangle} ${styles.paylineTriangleRight}`} />
+          <div className={styles.bay} onClick={handleBayClick}>
+            <div ref={leftSlotRef} className={styles.drumSlot}>
+              <Drum
+                ref={leftDrumRef}
+                labels={leftFaces}
+                targetIndex={WINNING_INDEX}
+                spinKey={spinKey}
+                durationMs={timing.first.durationMs}
+                turns={timing.first.turns}
+                onSettle={() => bumpTick(leftSlotRef.current)}
+              />
+            </div>
+            <div ref={rightSlotRef} className={styles.drumSlot}>
+              <Drum
+                ref={rightDrumRef}
+                labels={rightFaces}
+                targetIndex={WINNING_INDEX}
+                spinKey={spinKey}
+                durationMs={timing.second.durationMs}
+                turns={timing.second.turns}
+                onSettle={() => {
+                  bumpTick(rightSlotRef.current);
+                  onSettle();
+                }}
+              />
+            </div>
+
+            {/* Yalnızca duruşta görünür; üçgenler CSS geçişiyle dışarıdan içeri kayar. */}
+            <div
+              className={
+                spinning ? styles.payline : `${styles.payline} ${styles.paylineSettled}`
+              }
+              aria-hidden="true"
+            >
+              <span className={styles.paylineFill} />
+              <span className={`${styles.paylineTriangle} ${styles.paylineTriangleLeft}`} />
+              <span className={`${styles.paylineTriangle} ${styles.paylineTriangleRight}`} />
+            </div>
           </div>
         </div>
 
         <div className={styles.leverColumn}>
-          <div className={styles.quotaWindow}>
-            <span className={styles.quotaCount}>{quotaRemaining}</span>
-            <span className={styles.quotaLabel}>YZ HAKKI</span>
-          </div>
           <div className={styles.leverSlot}>
             <Lever disabled={spinning || !canSpin} onPull={onPull} />
           </div>
