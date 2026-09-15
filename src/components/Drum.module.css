@@ -21,7 +21,9 @@
      yapıyor (gerçek cihazda; Chrome'un mobil emülasyonu Blink kullandığı
      için bunu hiç göstermiyor). Kırpma için overflow yeterli, contain'e
      gerek yok. */
-  overflow: hidden;
+  /* GEÇİCİ TEŞHİS: overflow: hidden kapatıldı, yüzler taşacak ama
+     görünüyorlar mı diye bakılıyor. Teşhis bitince geri açılacak. */
+  /* overflow: hidden; */
   perspective: 34rem;
   -webkit-perspective: 34rem;
   background: var(--well);
