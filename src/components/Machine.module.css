@@ -12,8 +12,13 @@
   --well-shadow: color-mix(in srgb, var(--ink) 55%, transparent);
 
   width: 100%;
-  perspective: 1600px;
-  -webkit-perspective: 1600px;
+  /* GEÇİCİ TEŞHİS: WebKit'te preserve-3d'li bir ata, overflow:hidden'lı
+     bir torunu (tamburun .window'u) tamamen görünmez kılıyor olabilir.
+     Kasanın 3B görünümü test için kapatıldı — tambur görünürse kanıtlanmış
+     olur, kalıcı çözüm kasanın kendi 3B'sini korurken .window'u ayrı bir
+     katmana izole etmek olacak. */
+  /* perspective: 1600px; */
+  /* -webkit-perspective: 1600px; */
   perspective-origin: 50% 26%;
   /*
     Yanlardaki birkaç piksel boşluk süs değil: rotateX perspektif altında
@@ -31,9 +36,11 @@
   gap: 1rem;
   padding: 1rem;
   border-radius: 8px;
-  transform-style: preserve-3d;
-  -webkit-transform-style: preserve-3d;
-  transform: rotateX(7deg);
+  /* GEÇİCİ TEŞHİS: bkz. .stage'teki not — kasa düzleştirildi, üst yüzey
+     katlaması (::before) bu süre boyunca yanlış görünecek, önemli değil. */
+  /* transform-style: preserve-3d; */
+  /* -webkit-transform-style: preserve-3d; */
+  /* transform: rotateX(7deg); */
   background: linear-gradient(to bottom, var(--enamel-top), var(--enamel-bottom));
   border: 1px solid var(--rule);
 }
