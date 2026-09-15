@@ -12,19 +12,13 @@
   --well-shadow: color-mix(in srgb, var(--ink) 55%, transparent);
 
   width: 100%;
-  /* GEÇİCİ TEŞHİS: WebKit'te preserve-3d'li bir ata, overflow:hidden'lı
-     bir torunu (tamburun .window'u) tamamen görünmez kılıyor olabilir.
-     Kasanın 3B görünümü test için kapatıldı — tambur görünürse kanıtlanmış
-     olur, kalıcı çözüm kasanın kendi 3B'sini korurken .window'u ayrı bir
-     katmana izole etmek olacak. */
-  /* perspective: 1600px; */
-  /* -webkit-perspective: 1600px; */
-  perspective-origin: 50% 26%;
-  /*
-    Yanlardaki birkaç piksel boşluk süs değil: rotateX perspektif altında
-    kasanın öne bakan kenarını yaklaşık %0,85 büyütüyor, yani boyanan kutu
-    yerleşim kutusundan geniş. Pay olmazsa kasa kapsayıcıdan taşar.
-    Dikeydeki pay gölge için.
+  /* Kasanın perspective + preserve-3d + rotateX tilt'i bilerek yok:
+     WebKit'te preserve-3d'li bir ata, overflow:hidden'lı bir torunu
+     (tamburun .window'u) tamamen görünmez kılıyordu — gerçek cihazda
+     doğrulandı. Tambur artık hiç 3B kullanmasa da bu atanın içindeydi,
+     bu yüzden onun da düzleşmesi gerekti. Kasa artık düz görünüyor;
+     üst yüzey katlaması (::before, rotateX(90deg)) da bu yüzden
+     kenardan bakılınca görünmez bir çizgiye iniyor.
   */
   padding: 0.5rem 4px;
 }
@@ -36,11 +30,6 @@
   gap: 1rem;
   padding: 1rem;
   border-radius: 8px;
-  /* GEÇİCİ TEŞHİS: bkz. .stage'teki not — kasa düzleştirildi, üst yüzey
-     katlaması (::before) bu süre boyunca yanlış görünecek, önemli değil. */
-  /* transform-style: preserve-3d; */
-  /* -webkit-transform-style: preserve-3d; */
-  /* transform: rotateX(7deg); */
   background: linear-gradient(to bottom, var(--enamel-top), var(--enamel-bottom));
   border: 1px solid var(--rule);
 }
