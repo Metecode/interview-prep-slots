@@ -4,6 +4,7 @@ import {
   useLayoutEffect,
   useMemo,
   useRef,
+  useState,
 } from "react";
 
 import styles from "./Drum.module.css";
@@ -103,6 +104,9 @@ export const Drum = forwardRef<DrumHandle, DrumProps>(function Drum(
   const latest = useRef({ targetIndex, durationMs, turns, onSettle, labels });
   latest.current = { targetIndex, durationMs, turns, onSettle, labels };
 
+  // GEÇİCİ TEŞHİS: readRowHeight gerçek cihazda ne okuyor, canlıda görmek için.
+  const [debugRow, setDebugRow] = useState<number | null>(null);
+
   /**
    * Şerit yalnızca spinKey değişince yeniden kurulur. Dönüş bittikten
    * sonra yerinde bırakılır — sıfırlamak, kazananın bir kare boyunca
@@ -135,6 +139,7 @@ export const Drum = forwardRef<DrumHandle, DrumProps>(function Drum(
     if (!strip || !face) return;
 
     const row = readRowHeight(face);
+    setDebugRow(row); // GEÇİCİ TEŞHİS
     if (row === 0) return;
 
     const end = -(winnerPos - CENTER) * row;
@@ -190,6 +195,22 @@ export const Drum = forwardRef<DrumHandle, DrumProps>(function Drum(
 
   return (
     <div className={styles.window} aria-hidden="true">
+      {/* GEÇİCİ TEŞHİS: row===0 ise yüzler hâlâ DOM'da ama transform hiç
+          uygulanmıyor demektir; bu metin en azından render olduğunu kanıtlar. */}
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          color: "#0f0",
+          fontSize: 10,
+          zIndex: 99,
+          background: "rgba(0,0,0,0.6)",
+          padding: "1px 3px",
+        }}
+      >
+        row {debugRow ?? "?"}
+      </div>
       <div ref={stripRef} className={styles.strip}>
         {items.map((label, i) => (
           <div
