@@ -36,6 +36,15 @@ export function nextBox(
 }
 
 /**
+ * Kutunun rozette görünen okunur hali. "Kutu N" jargonu yerine kutunun
+ * ne anlama geldiğini (ne sıklıkla tekrarlandığını) doğrudan söyler.
+ */
+export function boxCadenceLabel(box: Box): string {
+  const days = BOX_INTERVALS_DAYS[box - 1];
+  return days === 1 ? "Her gün tekrar" : `${days} günde bir tekrar`;
+}
+
+/**
  * Bir öz-değerlendirme seçilirse sorunun bir sonraki tekrarı kaç gün
  * sonraya düşer. Düğmelerin altındaki gün sayısı buradan geliyor.
  *

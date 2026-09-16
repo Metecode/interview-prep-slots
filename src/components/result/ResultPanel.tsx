@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 
 import { CATEGORY_LABELS } from "../../content/labels";
+import { boxCadenceLabel } from "../../domain/leitner";
 import type { QuestionProgress, SelfRating as Rating } from "../../domain/progress";
 import type { Evaluation, Question } from "../../domain/question";
 import { FollowUps } from "./FollowUps";
@@ -108,7 +109,7 @@ export function ResultPanel({
 
       <div className={styles.statusBar}>
         <span className={styles.statusText}>
-          Kutu {box} · {attempts > 0 ? `${attempts} deneme` : "ilk kez"} ·{" "}
+          {boxCadenceLabel(box)} · {attempts > 0 ? `${attempts} deneme` : "ilk kez"} ·{" "}
           {CATEGORY_LABELS[question.category]}
         </span>
 

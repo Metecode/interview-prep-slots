@@ -63,9 +63,9 @@
 
   --row: 62px;
 
-  /* İçerik sütunu. Dar hâli her ekranda, geniş hâli yalnızca iki
-     sütunlu sonuç ekranında kullanılır; App.module.css --shell'i
-     bunlardan seçer, diğer modüller --shell'i okur. */
+  /* İçerik sütunu. Dar hâli üst çubuk, adım göstergesi, makine ve
+     footer'da sabit kullanılır. Geniş hâli yalnızca sonuç paneli
+     (ResultPanel) kendi başına, bağımsız olarak kullanır. */
   --shell-narrow: 620px;
   --shell-wide: 1080px;
 }

@@ -83,6 +83,13 @@
   margin-top: 0.6rem;
 }
 
+/* Hidrasyon aralığındaki tek satır: boş ekran hiçbir zaman metinsiz kalmasın. */
+.loadingText {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
 /* Kol neden devre dışı belli olsun diye; yalnızca seçim boşken görünür. */
 .spinHint {
   margin: 0;

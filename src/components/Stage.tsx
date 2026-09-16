@@ -22,7 +22,7 @@ import styles from "./Stage.module.css";
  * dönüyor, sönmekte olan panelin gösterecek bir şeyi kalmıyordu.
  */
 type StageItem =
-  | { kind: "question"; question: Question }
+  | { kind: "question"; question: Question; progress: QuestionProgress | null }
   | {
       kind: "result";
       question: Question;
@@ -32,7 +32,13 @@ type StageItem =
 
 function stageOf(state: SessionState): StageItem | null {
   if (!state.current) return null;
-  if (state.phase === "answering") return { kind: "question", question: state.current };
+  if (state.phase === "answering") {
+    return {
+      kind: "question",
+      question: state.current,
+      progress: state.progress[state.current.id] ?? null,
+    };
+  }
   if (state.phase === "evaluated") {
     return {
       kind: "result",
@@ -69,7 +75,12 @@ export function Stage({ state, onSubmit, onPass, onRate, onAskAi }: StageProps) 
     if (item.kind === "question") {
       return (
         <div className={styles.narrow}>
-          <QuestionCard question={item.question} onSubmit={onSubmit} onPass={onPass} />
+          <QuestionCard
+            question={item.question}
+            progress={item.progress}
+            onSubmit={onSubmit}
+            onPass={onPass}
+          />
         </div>
       );
     }

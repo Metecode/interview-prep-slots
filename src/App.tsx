@@ -52,7 +52,11 @@ export default function App() {
   if (!hydrated) {
     return (
       <div className={styles.root}>
-        <main className={styles.app} />
+        <main className={styles.app}>
+          <p className={styles.loadingText} role="status">
+            Yükleniyor…
+          </p>
+        </main>
       </div>
     );
   }

@@ -4,6 +4,7 @@ import {
   BOX_INTERVALS_DAYS,
   MAX_ATTEMPTS,
   applyAttempt,
+  boxCadenceLabel,
   nextBox,
   reviewIntervalDays,
 } from "./leitner";
@@ -43,6 +44,19 @@ describe("BOX_INTERVALS_DAYS", () => {
     for (const box of ALL_BOXES) {
       expect(BOX_INTERVALS_DAYS[box - 1]).toBeGreaterThan(0);
     }
+  });
+});
+
+describe("boxCadenceLabel", () => {
+  it("kutu 1 için 'her gün' der, gün sayısını tekrarlamaz", () => {
+    expect(boxCadenceLabel(1)).toBe("Her gün tekrar");
+  });
+
+  it("diğer kutularda gün sayısını yazar", () => {
+    expect(boxCadenceLabel(2)).toBe("2 günde bir tekrar");
+    expect(boxCadenceLabel(3)).toBe("4 günde bir tekrar");
+    expect(boxCadenceLabel(4)).toBe("8 günde bir tekrar");
+    expect(boxCadenceLabel(5)).toBe("16 günde bir tekrar");
   });
 });
 
