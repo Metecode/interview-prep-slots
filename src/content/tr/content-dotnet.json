@@ -1,0 +1,143 @@
+{
+  "lang": "tr",
+  "category": "dotnet",
+  "questions": [
+    {
+      "id": "dotnet-di-lifetimes",
+      "category": "dotnet",
+      "kind": "definition",
+      "topic": "DI Yaşam Döngüleri",
+      "difficulty": 2,
+      "prompt": "ASP.NET Core'da yerleşik Dependency Injection kullanırken Transient, Scoped ve Singleton servis kayıtları arasındaki fark nedir? Entity Framework Core DbContext sınıfını kaydederken varsayılan olarak hangisi kullanılır ve neden?",
+      "modelAnswer": "Transient her çağrıldığında yepyeni bir nesne (instance) oluştururken, Singleton uygulamanın yaşam döngüsü boyunca ilk çağrıda tek bir nesne oluşturup tüm diğer isteklere bunu sunar. Scoped ise her HTTP isteği (request) başına bir nesne oluşturur ve o istek boyunca aynı nesneyi döndürür.\n\nSık atlanan nokta: DbContext varsayılan olarak Scoped kaydedilir. Çünkü veritabanı işlemleri genellikle tek bir HTTP isteği içinde başlar ve biter; aynı istek içindeki farklı servislerin aynı transaction'ı (ve Unit of Work modelini) paylaşabilmesi için DbContext'in Scoped olması hayati önem taşır. Singleton yapılsaydı eşzamanlı isteklerde veri çakışmaları ve thread-safety sorunları yaşanırdı.",
+      "keyConcepts": [
+        {
+          "id": "transient-new-instance",
+          "label": "Transient her çağrıda yeni",
+          "aliases": [
+            "transient",
+            "yeni örnek",
+            "her defasında",
+            "new",
+            "farklı referans"
+          ],
+          "anchors": [
+            "Transient olarak kaydedilen bir servis, her enjekte edildiğinde sıfırdan yeni bir örnek oluşturulur.",
+            "Bağımlılık her istendiğinde yepyeni bir obje yaratılıp veriliyorsa bu transient döngüsüdür."
+          ]
+        },
+        {
+          "id": "scoped-per-request",
+          "label": "Scoped HTTP isteği başına",
+          "aliases": [
+            "scoped",
+            "request başı",
+            "istek",
+            "aynı istek",
+            "per request"
+          ],
+          "anchors": [
+            "Scoped lifetime, gelen her bir HTTP isteği için bir nesne oluşturur ve o istek bitene kadar aynı örneği kullanır.",
+            "Bir API çağrısı başladığında üretilen nesnenin yanıt dönene kadar aynı kalması scoped ile sağlanır."
+          ]
+        },
+        {
+          "id": "singleton-one-instance",
+          "label": "Singleton uygulama boyunca tek",
+          "aliases": [
+            "singleton",
+            "tek örnek",
+            "uygulama kapanana kadar",
+            "paylaşımlı",
+            "global"
+          ],
+          "anchors": [
+            "Singleton servisler uygulama ayağa kalktığında bir kez oluşturulur ve tüm kullanıcılara aynı örnek hizmet verir.",
+            "Uygulama kapanana kadar bellekte tek bir instance tutuluyorsa bu singleton modelidir."
+          ]
+        },
+        {
+          "id": "dbcontext-scoped-transaction",
+          "label": "DbContext'in Scoped olma sebebi",
+          "aliases": [
+            "dbcontext",
+            "transaction paylaşımı",
+            "thread-safety",
+            "unit of work",
+            "çakışma"
+          ],
+          "anchors": [
+            "DbContext varsayılan olarak scoped'dur, böylece bir istek içindeki tüm veritabanı işlemleri aynı transaction üzerinden yürütülür.",
+            "Eğer DbContext singleton olsaydı birden fazla kullanıcının eşzamanlı istekleri aynı veritabanı bağlantısı üzerinde çakışır ve thread-safety hatası alırdık."
+          ]
+        }
+      ],
+      "followUps": [
+        "Singleton bir servisin içine Scoped bir servisi enjekte etmeye çalışırsan ne olur (Captive Dependency)?",
+        "Arka plan görevlerinde (BackgroundService) Scoped servisleri nasıl kullanırsın?"
+      ],
+      "source": "Kıdemli .NET Mülakatı, Ekim 2026"
+    },
+    {
+      "id": "dotnet-iqueryable-ienumerable",
+      "category": "dotnet",
+      "kind": "applied",
+      "topic": "IQueryable/IEnumerable",
+      "difficulty": 2,
+      "prompt": "Entity Framework Core ile veritabanından veri çekerken filtreleme işlemlerinde (Where) IEnumerable ve IQueryable kullanmanın SQL sorguları ve bellek tüketimi açısından farkı nedir?",
+      "modelAnswer": "IQueryable, C# üzerindeki filtreleme koşullarını veritabanına gidilmeden önce bir ifade ağacında (Expression Tree) tutar ve işlemi SQL'e çevirir.\n\ncsharp\nIQueryable<User> query = dbContext.Users.Where(u => u.Age > 18);\nvar result = query.ToList();\n\nBu kod çalıştığında veritabanına doğrudan SELECT * FROM Users WHERE Age > 18 sorgusu gider, sadece ilgili satırlar ağdan çekilir.\n\nEğer tabloyu IEnumerable olarak belleğe alıp sonra filtrelerseniz:\n\ncsharp\nIEnumerable<User> users = dbContext.Users.AsEnumerable();\nvar result = users.Where(u => u.Age > 18).ToList();\n\nAyırt edici nokta: IEnumerable kullanıldığında EF Core filtrelemeyi SQL'e çevirmez. Veritabanındaki tüm tabloyu (SELECT * FROM Users) çeker ve filtrelemeyi uygulamanın belleğinde (RAM üzerinde) yapar. Tabloda milyonlarca kayıt varsa bu durum anında bellek taşmasına (Out of Memory) ve ciddi ağ yavaşlamalarına sebep olur.",
+      "keyConcepts": [
+        {
+          "id": "iqueryable-sql-translation",
+          "label": "IQueryable SQL'e çevrilir",
+          "aliases": [
+            "iqueryable",
+            "sql",
+            "expression tree",
+            "veritabanında çalışır",
+            "sunucu tarafı"
+          ],
+          "anchors": [
+            "IQueryable sorguyu hemen çalıştırmaz, ifade ağacı oluşturarak veritabanının anlayacağı SQL koduna dönüştürür.",
+            "Filtreleme işlemlerinin doğrudan veritabanı motoru üzerinde çalışması için IQueryable kullanılmalıdır."
+          ]
+        },
+        {
+          "id": "ienumerable-in-memory",
+          "label": "IEnumerable bellekte çalışır",
+          "aliases": [
+            "ienumerable",
+            "bellek",
+            "ram",
+            "client-side",
+            "c# tarafı"
+          ],
+          "anchors": [
+            "IEnumerable arayüzü kullanıldığında işlemler veritabanında değil, uygulamanın çalıştığı sunucunun belleğinde gerçekleşir.",
+            "Gelen veriyi hafızaya (RAM) aldıktan sonra nesneler üzerinde filtreleme yapmak IEnumerable'ın çalışma mantığıdır."
+          ]
+        },
+        {
+          "id": "full-table-scan-risk",
+          "label": "Tüm veriyi çekme riski",
+          "aliases": [
+            "tüm tablo",
+            "select *",
+            "hepsini çeker",
+            "performans kaybı",
+            "ağ yükü"
+          ],
+          "anchors": [
+            "IEnumerable ile veritabanı sorgusu atıldığında ilgili tablodaki tüm veriler gereksiz yere uygulamaya çekilmiş olur.",
+            "Milyonlarca satırlık tablonun tamamını ağ üzerinden çekmek inanılmaz bir performans darboğazı yaratır."
+          ]
+        }
+      ],
+      "followUps": [
+        "Veritabanından çektiğin verilerde IQueryable içinde özel bir C# metodunu (örneğin ToUpper()) çağırırsan EF Core nasıl tepki verir?",
+        "IQueryable arayüzünü nerede IEnumerable arayüzüne dönüştürmek (AsEnumerable çağrısı) mantıklı olabilir?"
+      ],
+      "source": "Kıdemli .NET Mülakatı, Ekim 2026"
+    }
+  ]
+}

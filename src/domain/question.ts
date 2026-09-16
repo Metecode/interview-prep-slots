@@ -14,6 +14,8 @@ export const CATEGORIES = [
   "tasarim-kaliplari",
   "kafka-redis",
   "docker",
+  "dotnet",
+  "cybersecurity",
 ] as const;
 
 export const categorySchema = z.enum(CATEGORIES);

@@ -23,7 +23,12 @@
         {
           "id": "hash-equality-only",
           "label": "Hash yalnızca eşitlik",
-          "aliases": ["hash", "sadece eşittir", "aralıkta çalışmaz", "exact match"],
+          "aliases": [
+            "hash",
+            "sadece eşittir",
+            "aralıkta çalışmaz",
+            "exact match"
+          ],
           "anchors": [
             "Hash index yalnızca eşitlik aramalarında kullanılabilir, aralık ve sıralamada kullanılamaz.",
             "Hash yapısı sıra bilgisi tutmadığı için büyüktür küçüktür sorgularına cevap veremez."
@@ -41,7 +46,13 @@
         {
           "id": "brin-correlated-large",
           "label": "BRIN sıralı büyük tablolar için",
-          "aliases": ["brin", "fiziksel sıra", "log tablosu", "zaman damgası", "küçük boyut"],
+          "aliases": [
+            "brin",
+            "fiziksel sıra",
+            "log tablosu",
+            "zaman damgası",
+            "küçük boyut"
+          ],
           "anchors": [
             "BRIN fiziksel sırayla korelasyonu yüksek büyük tablolarda kullanılır ve çok az yer kaplar.",
             "Zaman damgasına göre sırayla eklenen log tablolarında BRIN uygundur."
@@ -50,7 +61,12 @@
         {
           "id": "index-write-cost",
           "label": "Index yazmayı yavaşlatır",
-          "aliases": ["yazma maliyeti", "insert yavaşlar", "güncelleme", "her index güncellenir"],
+          "aliases": [
+            "yazma maliyeti",
+            "insert yavaşlar",
+            "güncelleme",
+            "her index güncellenir"
+          ],
           "anchors": [
             "Her index yazma işlemini yavaşlatır çünkü INSERT ve UPDATE sırasında güncellenmesi gerekir.",
             "Gereğinden fazla index açmak yazma ağırlıklı tablolarda performansı düşürür."
@@ -70,7 +86,7 @@
       "topic": "Veri modelleme",
       "difficulty": 2,
       "prompt": "Çalışanlar ve projeler var. Bir çalışan birden fazla projede yer alabilir, bir projede birden fazla çalışan olabilir. Tabloları yaz ve kararlarını açıkla.",
-      "modelAnswer": "Çok-a-çok ilişki iki tabloyla ifade edilemez; araya bir bağlantı tablosu girer.\n\n```sql\nCREATE TABLE employee (\n  id        BIGSERIAL PRIMARY KEY,\n  full_name TEXT NOT NULL\n);\n\nCREATE TABLE project (\n  id   BIGSERIAL PRIMARY KEY,\n  name TEXT NOT NULL\n);\n\nCREATE TABLE employee_project (\n  employee_id BIGINT NOT NULL REFERENCES employee(id) ON DELETE CASCADE,\n  project_id  BIGINT NOT NULL REFERENCES project(id)  ON DELETE CASCADE,\n  role        TEXT,\n  assigned_at DATE NOT NULL DEFAULT CURRENT_DATE,\n  PRIMARY KEY (employee_id, project_id)\n);\n\nCREATE INDEX idx_emp_proj_project ON employee_project (project_id);\n```\n\nBağlantı tablosunun birincil anahtarı iki yabancı anahtarın bileşimidir; hem aynı çalışanın aynı projeye iki kez atanmasını engeller hem ayrı bir yüzey anahtara gerek bırakmaz.\n\nRol ve atanma tarihi bağlantı tablosunda durur, çünkü bu bilgi ne çalışana ne projeye aittir.\n\nSık atlanan nokta: bileşik anahtar (employee_id, project_id) sırasıyla kurulduğu için yalnızca 'bu çalışanın projeleri' sorgusu index'ten yararlanır. Ters yön için project_id üzerine ayrı bir index gerekir.",
+      "modelAnswer": "Çok-a-çok ilişki iki tabloyla ifade edilemez; araya bir bağlantı tablosu girer.\n\n`sql\nCREATE TABLE employee (\n  id        BIGSERIAL PRIMARY KEY,\n  full_name TEXT NOT NULL\n);\n\nCREATE TABLE project (\n  id   BIGSERIAL PRIMARY KEY,\n  name TEXT NOT NULL\n);\n\nCREATE TABLE employee_project (\n  employee_id BIGINT NOT NULL REFERENCES employee(id) ON DELETE CASCADE,\n  project_id  BIGINT NOT NULL REFERENCES project(id)  ON DELETE CASCADE,\n  role        TEXT,\n  assigned_at DATE NOT NULL DEFAULT CURRENT_DATE,\n  PRIMARY KEY (employee_id, project_id)\n);\n\nCREATE INDEX idx_emp_proj_project ON employee_project (project_id);\n`\n\nBağlantı tablosunun birincil anahtarı iki yabancı anahtarın bileşimidir; hem aynı çalışanın aynı projeye iki kez atanmasını engeller hem ayrı bir yüzey anahtara gerek bırakmaz.\n\nRol ve atanma tarihi bağlantı tablosunda durur, çünkü bu bilgi ne çalışana ne projeye aittir.\n\nSık atlanan nokta: bileşik anahtar (employee_id, project_id) sırasıyla kurulduğu için yalnızca 'bu çalışanın projeleri' sorgusu index'ten yararlanır. Ters yön için project_id üzerine ayrı bir index gerekir.",
       "keyConcepts": [
         {
           "id": "junction-table",
@@ -84,7 +100,12 @@
         {
           "id": "composite-pk",
           "label": "Bileşik birincil anahtar",
-          "aliases": ["bileşik", "composite", "iki kolon primary key", "tekrarı engeller"],
+          "aliases": [
+            "bileşik",
+            "composite",
+            "iki kolon primary key",
+            "tekrarı engeller"
+          ],
           "anchors": [
             "Bağlantı tablosunun birincil anahtarı iki yabancı anahtarın bileşimidir.",
             "İki kolon birlikte birincil anahtar yapılır, böylece aynı çift tekrar edemez."
@@ -102,7 +123,12 @@
         {
           "id": "reverse-direction-index",
           "label": "Ters yön için ayrı index",
-          "aliases": ["ikinci index", "project_id index", "ters sorgu", "kolon sırası"],
+          "aliases": [
+            "ikinci index",
+            "project_id index",
+            "ters sorgu",
+            "kolon sırası"
+          ],
           "anchors": [
             "Bileşik anahtarın ikinci kolonu tek başına aramada kullanılamaz, o yön için ayrı index gerekir.",
             "Projeden çalışana giden sorgu için project_id üzerine ayrı bir index açılmalıdır."
@@ -114,6 +140,168 @@
         "Bağlantı tablosuna ayrı bir id kolonu koymanın artısı ve eksisi ne olurdu?"
       ],
       "source": "Vakıfbank teknik mülakatı, Eylül 2026"
+    },
+    {
+      "id": "sql-transaction-dirty-read",
+      "category": "sql",
+      "kind": "definition",
+      "topic": "Kirli Okuma ve İzolasyon",
+      "difficulty": 2,
+      "prompt": "Finansal bir sistemde 'Dirty Read' (kirli okuma) anomalisi nasıl oluşur ve varsayılan olarak bunu hangi izolasyon seviyesi engeller?",
+      "modelAnswer": "Dirty Read, A işlemi bir hesaba para ekleyip henüz commit etmeden önce, B işleminin bu yeni (ve belki de iptal edilecek) bakiyeyi okumasıyla oluşur. Eğer A işlemi hata alıp rollback yaparsa, B işlemi hiç var olmamış bir bakiye üzerinden işlem yapmış olur. Çoğu modern ilişkisel veritabanında (PostgreSQL, SQL Server) varsayılan izolasyon seviyesi olan 'Read Committed' bu sorunu çözer.\n\nSık atlanan nokta: Read Committed kirli okumayı engellese de, aynı işlem içinde aynı satırın iki kez okunması durumunda farklı değerler gelmesini (Non-repeatable read) engellemez; bunun için Repeatable Read veya Snapshot izolasyonu gerekir.",
+      "keyConcepts": [
+        {
+          "id": "dirty-read-definition",
+          "label": "Commit edilmemiş veriyi okuma",
+          "aliases": [
+            "dirty read",
+            "commit edilmemiş",
+            "rollback",
+            "geri alma",
+            "askıda"
+          ],
+          "anchors": [
+            "Dirty read, bir transaction'ın henüz commit edilmemiş, askıda olan değişikliklerini başka bir transaction'ın okumasıdır.",
+            "Başka bir işlemin yazıp henüz onaylamadığı geçici veriyi okumak kirli okumadır."
+          ]
+        },
+        {
+          "id": "read-committed-solution",
+          "label": "Read Committed ile çözüm",
+          "aliases": ["read committed", "varsayılan", "default", "izolasyon"],
+          "anchors": [
+            "Bu problemi çözmek için en az Read Committed izolasyon seviyesi kullanılmalıdır.",
+            "Veritabanlarının çoğunda varsayılan olan Read Committed seviyesi kirli okumayı (dirty read) engeller."
+          ]
+        },
+        {
+          "id": "non-repeatable-read-gap",
+          "label": "Non-repeatable read riski",
+          "aliases": [
+            "non-repeatable",
+            "repeatable read",
+            "ikinci okuma",
+            "değişebilir"
+          ],
+          "anchors": [
+            "Read Committed kirli okumayı önlese de, okunan verinin aynı işlem içinde tekrar okunduğunda değişmemesini garanti etmez.",
+            "Kirli okuma çözülse bile aynı satırın farklı okunması anomalisine karşı Repeatable Read seviyesine çıkmak gerekebilir."
+          ]
+        }
+      ],
+      "followUps": [
+        "Sadece Read Committed kullanarak, para çekme işlemi sırasında bakiyenin eksiye düşmesini (Lost Update) nasıl engellersin?"
+      ],
+      "source": "Banka teknik mülakatları genel derlemesi"
+    },
+    {
+      "id": "sql-locking-lost-update",
+      "category": "sql",
+      "kind": "applied",
+      "topic": "Kilitleme stratejileri",
+      "difficulty": 3,
+      "prompt": "Aynı hesaptan aynı anda para çekilmeye çalışıldığında bakiyenin yanlış hesaplanmasını (Lost Update) önlemek için SELECT ... FOR UPDATE (Pessimistic) ile Versiyon kolonu (Optimistic) stratejilerini karşılaştır. Banka hesabında hangisini tercih edersin?",
+      "modelAnswer": "Pessimistic locking, satırı veritabanı seviyesinde kilitler:\n\n`sql\nSELECT balance FROM accounts WHERE id = 1 FOR UPDATE;\nUPDATE accounts SET balance = balance - 100 WHERE id = 1;\n`\nBu yöntemde ikinci işlem, ilk işlem bitip kilit açılana kadar veritabanında bekletilir (block olur).\n\nOptimistic locking ise kilit koymaz, bir `version` kolonu kullanır:\n\n`sql\nUPDATE accounts SET balance = balance - 100, version = 2 \nWHERE id = 1 AND version = 1;\n`\nEğer başka biri araya girip versiyonu artırdıysa, sorgu `0 rows affected` döner ve uygulamanın işlemi tekrar etmesi (retry) gerekir. Finansal hesap işlemlerinde, aynı hesaba peş peşe çok fazla istek gelme ihtimali (çakışma oranı) yüksekse Pessimistic Locking tercih edilir, çünkü Optimistic Locking sürekli retry döngülerine girip sistemi yorabilir.",
+      "keyConcepts": [
+        {
+          "id": "pessimistic-lock-db",
+          "label": "FOR UPDATE ile satır kilitleme",
+          "aliases": [
+            "pessimistic",
+            "for update",
+            "satır kilidi",
+            "bekletme",
+            "block"
+          ],
+          "anchors": [
+            "Pessimistic yaklaşım SELECT FOR UPDATE kullanarak işlem bitene kadar o satırı diğerlerine kilitler.",
+            "Kötümser kilitlemede eşzamanlı gelen diğer transaction kilit açılana kadar veritabanında bekletilir."
+          ]
+        },
+        {
+          "id": "optimistic-version-retry",
+          "label": "Versiyon kontrolü ve Retry",
+          "aliases": [
+            "optimistic",
+            "version",
+            "versiyon",
+            "sıfır satır",
+            "retry",
+            "uygulama seviyesi"
+          ],
+          "anchors": [
+            "İyimser kilitleme veritabanını kilitlemez, bunun yerine bir versiyon kolonu kontrol edilerek kayıt güncellenir.",
+            "Eğer versiyon uyuşmazlığı yüzünden sıfır satır etkilenirse, yazılımın işlemi baştan denemesi (retry) gerekir."
+          ]
+        },
+        {
+          "id": "high-contention-choice",
+          "label": "Çakışma yoğunluğuna göre seçim",
+          "aliases": [
+            "çakışma",
+            "contention",
+            "yoğunluk",
+            "retry döngüsü",
+            "peş peşe"
+          ],
+          "anchors": [
+            "Finansal işlemlerde aynı kayda aynı anda çok istek gelme ihtimali yüksekse kötümser (pessimistic) kilitleme daha verimlidir.",
+            "Eğer çakışma ihtimali yüksekse optimistic strateji sürekli retry üreteceği için sisteme yük bindirir, bu yüzden pessimistic seçilmelidir."
+          ]
+        }
+      ],
+      "followUps": [
+        "Pessimistic locking kullanırken Deadlock (kördüğüm) oluşmasını engellemek için birden fazla satırı güncellerken nelere dikkat etmeliyiz?"
+      ],
+      "source": "Banka teknik mülakatları genel derlemesi"
+    },
+    {
+      "id": "sql-window-running-total",
+      "category": "sql",
+      "kind": "applied",
+      "topic": "Pencere Fonksiyonu",
+      "difficulty": 2,
+      "prompt": "Müşterinin 'transactions' tablosunda, tarih sırasına göre her işlem sonrası oluşan güncel bakiyesini (running total) hesaplayan sorguyu nasıl yazarsın?",
+      "modelAnswer": "Kümülatif toplam hesaplamak için Window (Pencere) fonksiyonlarından yararlanırız. GROUP BY kullanmadan, satır bazında toplama işlemi yapmak için SUM() fonksiyonunu OVER bloğu ile birleştiririz.\n\n`sql\nSELECT \n  transaction_date, \n  amount, \n  SUM(amount) OVER (ORDER BY transaction_date) as running_balance\nFROM transactions\nWHERE account_id = 100;\n`\nOVER içindeki `ORDER BY`, SUM işleminin baştan başlayıp o anki satıra kadar olan kayıtları toplamasını sağlar.\n\nSık atlanan nokta: Eğer aynı günde birden fazla işlem varsa ve tarih kolonu saat bilgisi içermiyorsa, `ORDER BY transaction_date` aynı değerli satırları tek bir blok olarak kabul edip hepsine aynı ara toplamı basar. Bunu çözmek için `ORDER BY transaction_date, id` gibi eşsiz bir kırılım (tie-breaker) eklemek şarttır.",
+      "keyConcepts": [
+        {
+          "id": "sum-over-window",
+          "label": "SUM OVER kullanımı",
+          "aliases": ["window", "over", "sum over", "pencere", "group by sız"],
+          "anchors": [
+            "Kümülatif toplam için SUM fonksiyonu OVER kelimesiyle birlikte window function olarak kullanılır.",
+            "GROUP BY kullanmadan satır bazında ara toplam almak için SUM() OVER() yapısı tercih edilir."
+          ]
+        },
+        {
+          "id": "order-by-accumulation",
+          "label": "ORDER BY ile kümülatif birikim",
+          "aliases": [
+            "order by",
+            "satıra kadar",
+            "current row",
+            "önceki satırlar",
+            "birikimli"
+          ],
+          "anchors": [
+            "OVER bloğunun içine ORDER BY yazdığımızda, toplam işlemi ilk satırdan mevcut satıra kadar çalışır.",
+            "Sıralama belirtildiği için veritabanı varsayılan olarak baştan o anki satıra kadarki (current row) değerleri toplar."
+          ]
+        },
+        {
+          "id": "tie-breaker-id",
+          "label": "Eşitlik bozucu (tie-breaker) id",
+          "aliases": ["tie-breaker", "id", "aynı tarih", "eşsiz", "kırılım"],
+          "anchors": [
+            "Aynı tarihli işlemlerde aynı kümülatif toplamın basılmasını engellemek için sıralamaya eşsiz bir id kolonu (tie-breaker) eklenmelidir.",
+            "Eğer sıralama kriteri aynı değere sahip satırlar üretirse, ORDER BY yanına id gibi eşsiz bir kırılım ekleyerek sıra kesinleştirilmelidir."
+          ]
+        }
+      ],
+      "followUps": [
+        "Müşterilerin değil de bankanın tüm şubelerinin kümülatif hesap hareketlerini tek sorguda 'şube bazlı' ayrı ayrı göstermek istesek sorguya hangi ifadeyi eklerdik?"
+      ],
+      "source": "Banka teknik mülakatları genel derlemesi"
     }
   ]
 }

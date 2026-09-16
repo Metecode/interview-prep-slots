@@ -1,0 +1,137 @@
+{
+  "lang": "tr",
+  "category": "cybersecurity",
+  "questions": [
+    {
+      "id": "cybersecurity-jwt-xss",
+      "category": "cybersecurity",
+      "kind": "definition",
+      "topic": "JWT Saklama (XSS)",
+      "difficulty": 2,
+      "prompt": "React tabanlı bir Single Page Application'da kimlik doğrulama için JWT kullanılıyor. JWT'nin XSS (Cross-Site Scripting) saldırılarıyla çalınmasını önlemek için mimaride token nerede saklanmalıdır ve bu tercihin getirdiği yeni risk nedir?",
+      "modelAnswer": "JWT'yi tarayıcının LocalStorage veya SessionStorage alanlarında saklamak, JavaScript üzerinden erişilebildiği için XSS saldırılarına karşı tamamen savunmasızdır. Sayfaya sızan zararlı bir JS kodu token'ı okuyup saldırganın sunucusuna gönderebilir.\n\nSık atlanan nokta: Çözüm olarak token, backend tarafından HttpOnly ve Secure bayrakları işaretlenmiş bir çerez (cookie) içine yazılmalıdır. HttpOnly bayrağı çerezin tarayıcıdaki JavaScript kodları tarafından okunmasını donanımsal olarak engeller. Ancak token'ı Cookie'ye taşıdığınızda, sistem otomatik olarak gönderilen çerezler yüzünden CSRF (Cross-Site Request Forgery) saldırılarına açık hale gelir. Bu yeni riski kapatmak için SameSite attribute'u kullanılmalı veya Anti-CSRF token mimarisi kurulmalıdır.",
+      "keyConcepts": [
+        {
+          "id": "localstorage-xss-risk",
+          "label": "LocalStorage'ın XSS zafiyeti",
+          "aliases": [
+            "localstorage",
+            "sessionstorage",
+            "js erişimi",
+            "javascript",
+            "okunabilir"
+          ],
+          "anchors": [
+            "Token'ları LocalStorage'da tutmak zararlı JavaScript kodlarının bunlara kolayca erişmesine olanak tanır.",
+            "XSS zafiyeti olan bir sayfada LocalStorage içindeki veriler saldırganlar tarafından rahatlıkla çalınabilir."
+          ]
+        },
+        {
+          "id": "httponly-cookie",
+          "label": "HttpOnly Cookie kullanımı",
+          "aliases": [
+            "httponly",
+            "çerez",
+            "cookie",
+            "javascript okuyamaz",
+            "gizli"
+          ],
+          "anchors": [
+            "Token hırsızlığını engellemek için JWT'ler JavaScript'in okuyamayacağı HttpOnly çerezlerde saklanmalıdır.",
+            "Backend, token'ı HttpOnly flag'i ile bir cookie olarak dönerse istemci tarafındaki kodlar bu çerezi göremez."
+          ]
+        },
+        {
+          "id": "secure-flag",
+          "label": "Secure bayrağı",
+          "aliases": ["secure", "https", "sadece şifreli", "ssl", "ağ dinleme"],
+          "anchors": [
+            "Cookie ayarlarında Secure bayrağının açılması, çerezin yalnızca şifrelenmiş HTTPS bağlantıları üzerinden taşınmasını şart koşar.",
+            "Ağ üzerinden token dinlenmesini (Man in the middle) önlemek için Secure cookie kullanmak zorunludur."
+          ]
+        },
+        {
+          "id": "csrf-tradeoff",
+          "label": "CSRF riski değişimi",
+          "aliases": [
+            "csrf",
+            "cross site",
+            "samesite",
+            "anti-csrf",
+            "yeni zafiyet"
+          ],
+          "anchors": [
+            "HttpOnly cookie kullanıldığında XSS çözülür ancak tarayıcı çerezi her isteğe otomatik eklediği için CSRF zafiyeti doğar.",
+            "Cookie tabanlı mimariye geçildiğinde sistemin Cross-Site Request Forgery (CSRF) saldırılarına karşı ayrıca korunması gerekir."
+          ]
+        }
+      ],
+      "followUps": [
+        "Aynı etki alanında olmayan (Cross-Origin) farklı bir backend servisine HttpOnly cookie'yi nasıl iletirsin?",
+        "Eğer XSS açığı olan bir sitede HttpOnly kullanılıyorsa, saldırgan token'ı çalamasa bile kullanıcı adına istek atabilir mi?"
+      ],
+      "source": "Banka Güvenlik Mühendisliği Mülakatı, Eylül 2026"
+    },
+    {
+      "id": "cybersecurity-sql-injection-orm",
+      "category": "cybersecurity",
+      "kind": "applied",
+      "topic": "SQL Injection Koruması",
+      "difficulty": 1,
+      "prompt": "Giriş formunda kullanıcı adı alanına ' OR '1'='1 yazarak sisteme şifresiz girilmesine neden olan SQL Injection saldırısı kod seviyesinde nasıl oluşur? Bunu önlemek için Parametrik Sorgu (Parameterized Query) veya ORM araçları nasıl bir koruma sağlar?",
+      "modelAnswer": "Zafiyet, dışarıdan gelen kullanıcı girdisinin doğrudan SQL metniyle birleştirilmesiyle (string concatenation) oluşur:\n\nsql\n-- Kullanıcı girdi olarak \"' OR '1'='1\" gönderdiğinde oluşan nihai sorgu:\nSELECT * FROM Users WHERE Username = '' OR '1'='1' AND Password = '...'\n\nSorgu birleştiğinde 1=1 ifadesi daima doğru (true) döneceği için şifre kontrolü atlanır ve sistem veritabanındaki ilk kayıtla (genelde admin) giriş yapar.\n\nÇözüm olarak Entity Framework gibi ORM'ler veya SqlParameter sınıfları kullanıldığında veritabanı motoruna giden yapı değişir. Girdi, SQL komut metninin bir parçası olarak değil, ayrı bir 'veri paketi' (parametre) olarak iletilir. Veritabanı motoru parametreyi komut mantığının dışında, sadece bir düz metin olarak derlediği için içindeki tırnak veya OR operatörleri SQL sözdizimi olarak çalıştırılamaz; etkisiz hale getirilir (escape).",
+      "keyConcepts": [
+        {
+          "id": "string-concatenation-flaw",
+          "label": "String birleştirme hatası",
+          "aliases": [
+            "birleştirme",
+            "string concatenation",
+            "inline sql",
+            "doğrudan yazma",
+            "string interpolation"
+          ],
+          "anchors": [
+            "Saldırı, dışarıdan gelen metnin doğrulanmadan mevcut SQL cümlesine doğrudan eklenmesi (birleştirilmesi) yüzünden oluşur.",
+            "Girdinin kod içerisinde string birleştirme operatörleriyle SQL sorgusuna yedirilmesi en temel SQL Injection nedenidir."
+          ]
+        },
+        {
+          "id": "always-true-logic",
+          "label": "Mantıksal manipülasyon",
+          "aliases": [
+            "1=1",
+            "daima doğru",
+            "or true",
+            "mantık bozma",
+            "şartı atlama"
+          ],
+          "anchors": [
+            "Saldırgan eklediği OR 1=1 gibi ifadelerle WHERE koşulunun mantığını bozarak daima doğru (true) dönmesini sağlar.",
+            "Şifre kontrolünü devre dışı bırakmak için sorgu mantığını her zaman true üretecek şekilde manipüle ederler."
+          ]
+        },
+        {
+          "id": "data-vs-code-separation",
+          "label": "Veri ve komut ayrımı",
+          "aliases": [
+            "parametre",
+            "ayrıştırma",
+            "veri paketi",
+            "komut değil",
+            "sqlparameter"
+          ],
+          "anchors": [
+            "Parametrik sorgular girdiyi çalıştırılabilir bir SQL komutu olarak değil, tamamen ayrı bir veri olarak veritabanına sunar.",
+            "Veritabanı motoru hazırlanan ifadelerde veriyi ve kod bloğunu birbirinden kesin çizgilerle ayırarak işler."
+          ]
+        }
+      ],
+      "followUps": [
+        "Entity Framework Core kullanıyorsan FromSqlRaw metoduyla yazılmış bir sorguda hala SQL Injection zafiyeti yaratmak mümkün müdür?",
+        "Stored Procedure kullanmak SQL Injection'ı her durumda yüzde yüz engeller mi?"
+      ],
+      "source": "Banka Güvenlik Mühendisliği Mülakatı, Eylül 2026"
+    }
+  ]
+}
