@@ -14,4 +14,6 @@ export const CATEGORY_LABELS: Record<Category, string> = {
   "tasarim-kaliplari": "Tasarım Kalıpları",
   "kafka-redis": "Kafka/Redis",
   docker: "Docker",
+  dotnet: ".NET",
+  cybersecurity: "Siber Güvenlik",
 };
