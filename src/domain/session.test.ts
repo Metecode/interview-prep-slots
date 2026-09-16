@@ -142,6 +142,24 @@ describe("TOGGLE_CATEGORY", () => {
   });
 });
 
+describe("SET_CATEGORIES", () => {
+  it("aktif kategori listesini olduğu gibi değiştirir", () => {
+    const next = sessionReducer(makeState({ activeCategories: ["react"] }), {
+      type: "SET_CATEGORIES",
+      categories: ["sql", "docker"],
+    });
+    expect(next.activeCategories).toEqual(["sql", "docker"]);
+  });
+
+  it("spinning'de state'i değiştirmez", () => {
+    const state = makeState({ phase: "spinning", current: makeQuestion("q1") });
+
+    const next = sessionReducer(state, { type: "SET_CATEGORIES", categories: ["sql"] });
+
+    expect(next).toBe(state);
+  });
+});
+
 describe("SPIN", () => {
   it("çekiliş null dönerse phase idle kalır", () => {
     const state = makeState({ phase: "idle" });

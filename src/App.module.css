@@ -1,29 +1,26 @@
 /*
   Sayfanın kabuğu.
 
-  --shell: sayfadaki tek içerik sütunu genişliği. Üst çubuk, adım
-  göstergesi, makine sütunu ve sonuç paneli hepsi bunu okur; böylece
-  hepsi aynı sol kenara hizalanır. Sonuç ekranı iki sütuna geçtiğinde
-  sütun genişler ve üst çubuk da onunla birlikte açılır.
+  .app (kategori seçici, makine) sabit --shell-narrow genişliğinde durur
+  ve hiçbir adımda büyümez — üst çubukla aynı kenardan hizalı kalsın,
+  sonuç ekranına geçişte kaymasın diye. Sonuç paneli (ResultPanel) ayrı
+  bir kardeş öğe, kendi --shell-wide genişliğiyle bağımsız ortalanır.
 
-  Makine bu sütunla birlikte esnemez: Machine.module.css'te kendi
-  üst sınırı var, geniş kipte sütunun solunda kalır.
+  root, sayfa boyu içerik kısa kaldığında bile footer'ı ekranın altına
+  yaslamak için tam viewport yüksekliğinde bir flex kolon.
 */
 
 .root {
-  --shell: var(--shell-narrow);
-}
-
-/* İki sütunlu sonuç ekranı yalnızca burada açılıyor; sütun da. */
-@media (min-width: 1024px) {
-  .root[data-wide="true"] {
-    --shell: var(--shell-wide);
-  }
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .shell {
   display: flex;
   flex-direction: column;
+  flex: 1;
   gap: 1.25rem;
   padding-bottom: 90px;
 }
@@ -31,11 +28,9 @@
 .app {
   display: flex;
   flex-direction: column;
-  /* Yaslama sola: geniş kipte makine ve kategori çipleri sütunun
-     ortasına kaçmasın, sonuç paneliyle aynı kenardan başlasın. */
   align-items: flex-start;
   gap: 1.25rem;
-  max-width: var(--shell);
+  max-width: var(--shell-narrow);
   width: 100%;
   margin: 0 auto;
   padding: 34px 20px 0;

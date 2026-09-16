@@ -12,8 +12,8 @@
 
 .track {
   position: relative;
-  /* Üst çubuk ve içerikle aynı sütun; bkz. App.module.css .root */
-  max-width: var(--shell, var(--shell-narrow));
+  /* Üst çubuk gibi sabit genişlik; bkz. TopBar.module.css */
+  max-width: var(--shell-narrow);
   margin: 0 auto;
   padding: 0 20px;
 }

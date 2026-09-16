@@ -41,6 +41,7 @@ export type SessionAction =
       quotaRemaining?: number;
     }
   | { type: "TOGGLE_CATEGORY"; category: Category }
+  | { type: "SET_CATEGORIES"; categories: Category[] }
   | {
       type: "SPIN";
       questions: readonly Question[];
@@ -121,6 +122,12 @@ export function sessionReducer(
           ? state.activeCategories.filter((c) => c !== action.category)
           : [...state.activeCategories, action.category],
       };
+    }
+
+    case "SET_CATEGORIES": {
+      // Tümünü seç / tümünü kaldır: makara dönerken filtre değişmesin.
+      if (state.phase === "spinning") return state;
+      return { ...state, activeCategories: action.categories };
     }
 
     case "SPIN": {

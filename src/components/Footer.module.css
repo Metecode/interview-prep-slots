@@ -1,6 +1,7 @@
 /*
-  Alt bilgi: tam sayfa genişliğinde ayırıcı, içerik .app ile aynı
-  620px sütuna hizalanır. Renkler tokens.css'ten gelir.
+  Alt bilgi: tam sayfa genişliğinde ayırıcı, sabit 620px sütuna
+  hizalanır — üst çubukla aynı gerekçeyle (bkz. TopBar.module.css).
+  Renkler tokens.css'ten gelir.
 */
 
 .footer {
@@ -8,8 +9,8 @@
 }
 
 .inner {
-  /* Üst çubuk ve içerikle aynı sütun; bkz. App.module.css .root */
-  max-width: var(--shell, var(--shell-narrow));
+  /* Üst çubukla aynı sabit sütun; bkz. TopBar.module.css */
+  max-width: var(--shell-narrow);
   margin: 0 auto;
   padding: 0.9rem 20px;
   display: flex;

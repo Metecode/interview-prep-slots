@@ -16,6 +16,7 @@ import { initialSessionState, sessionReducer, toStore } from "./domain/session";
 import type { SessionState } from "./domain/session";
 import { useStore } from "./storage/useStore";
 import type { SelfRating, Store } from "./domain/progress";
+import { CATEGORIES } from "./domain/question";
 import type { Category } from "./domain/question";
 
 /**
@@ -129,17 +130,17 @@ function Session({ store, recovered, save }: SessionProps) {
     dispatch({ type: "TOGGLE_CATEGORY", category });
   }
 
+  function handleToggleAllCategories() {
+    const allSelected = state.activeCategories.length === CATEGORIES.length;
+    dispatch({ type: "SET_CATEGORIES", categories: allSelected ? [] : [...CATEGORIES] });
+  }
+
   const canSpin =
     (state.phase === "idle" || state.phase === "evaluated") &&
     state.activeCategories.length > 0;
 
   return (
-    /*
-      data-wide: sonuç ekranı iki sütuna geçince içerik sütunu genişler.
-      Üst çubuk, adım göstergesi ve makine sütunu genişliği buradan
-      okuyor — hepsi aynı sol kenardan başlasın diye.
-    */
-    <div className={styles.root} data-wide={state.phase === "evaluated"}>
+    <div className={styles.root}>
       <TopBar questionCount={activeQuestionCount} quotaRemaining={state.quotaRemaining} />
       {/* Adım göstergesi üst çubuğun altında, ince bir ayırıcıyla. */}
       <StepIndicator phase={state.phase} />
@@ -150,6 +151,7 @@ function Session({ store, recovered, save }: SessionProps) {
             active={state.activeCategories}
             disabled={state.phase === "spinning"}
             onToggle={handleToggleCategory}
+            onToggleAll={handleToggleAllCategories}
           />
 
           <Machine
