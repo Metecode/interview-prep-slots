@@ -45,6 +45,18 @@ export type DrumProps = {
   durationMs: number;
   /** Hedefe varmadan kaç tur atılacağı. Tur = FACES satır. */
   turns: number;
+  /**
+   * Havuzda tek değer varsa o değer; yoksa null.
+   * Doluyken tambur dönmez: dönüş, hepsi aynı yazan üç satırın kayması
+   * olurdu. Tek satır sabit durur, komşular boş kalır ve oturma bildirimi
+   * hiç gelmez — turu açma işini Machine gerçekten dönen tambura veriyor.
+   *
+   * Etiket ayrı bir alan olarak geliyor, `labels` üzerinden değil:
+   * `labels` dönüş başına bir kez üretiliyor ve turlar arasında bilerek
+   * eskimiş kalıyor. Kategori seçimi değiştiğinde donmuş tambur o eski
+   * diziden okusaydı boş ya da yanlış bir satır gösterirdi.
+   */
+  frozenLabel?: string | null;
   onSettle?: () => void;
 };
 
@@ -53,8 +65,34 @@ function prefersReducedMotion(): boolean {
 }
 
 /**
+ * Pencerede aynı anda görünen üç satırdan ortadaki ile komşularının aynı
+ * olmasını engeller. Havuzda başka bir değer yoksa dokunmaz.
+ */
+function separateNeighbors(
+  items: string[],
+  center: number,
+  pool: readonly string[],
+): void {
+  const label = items[center];
+  const other = pool.find((value) => value !== label);
+  if (other === undefined) return;
+
+  for (const index of [center - 1, center + 1]) {
+    if (index >= 0 && index < items.length && items[index] === label) {
+      items[index] = other;
+    }
+  }
+}
+
+/**
  * Şeridi kurar. Dinlenme etiketi CENTER'a konur ki dönüş başlarken
  * ekrandaki yazı değişmesin; kazanan, turların sonundaki konuma yazılır.
+ *
+ * Her iki konumun komşuları ayrıca ayrıştırılıyor. buildFaces yüz halkası
+ * içinde tekrarı zaten engelliyor ama şerit halkayı sarmalıyor: kazananın
+ * şeritteki komşuları faces[w±1] değil, faces[0] ve faces[2] oluyor.
+ * İki değerli bir havuzda bu üçü zorunlu olarak aynı değere düşüyordu —
+ * tambur durduğunda üç satır da aynı yazıyordu.
  */
 function buildStrip(
   labels: string[],
@@ -73,6 +111,10 @@ function buildStrip(
 
   items[CENTER] = restLabel;
   items[winnerPos] = pool[targetIndex] ?? "";
+
+  separateNeighbors(items, CENTER, pool);
+  separateNeighbors(items, winnerPos, pool);
+
   return { items, winnerPos };
 }
 
@@ -83,9 +125,10 @@ function readRowHeight(el: HTMLElement): number {
 }
 
 export const Drum = forwardRef<DrumHandle, DrumProps>(function Drum(
-  { labels, targetIndex, spinKey, durationMs, turns, onSettle },
+  { labels, targetIndex, spinKey, durationMs, turns, frozenLabel = null, onSettle },
   ref,
 ) {
+  const frozen = frozenLabel !== null;
   const stripRef = useRef<HTMLDivElement>(null);
   const faceRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<Animation | null>(null);
@@ -124,6 +167,20 @@ export const Drum = forwardRef<DrumHandle, DrumProps>(function Drum(
   );
 
   useLayoutEffect(() => {
+    // Donmuş tamburun şeridi hiç kurulmuyor; yalnızca dinlenme etiketi
+    // güncel tutuluyor ki havuz büyüyüp dönüş geri geldiğinde ilk kare
+    // ekrandaki yazıyı değiştirmesin.
+    if (frozen) {
+      // Kaydırma imperatif yazıldığı için React'in yönetiminde değil ve
+      // aynı DOM düğümü yeniden kullanıldığında olduğu yerde kalıyor:
+      // önceki dönüşten kalan öteleme temizlenmezse donmuş satır
+      // pencerenin dışında duruyor.
+      if (stripRef.current) stripRef.current.style.transform = "";
+      restLabelRef.current = frozenLabel ?? "";
+      lastSpunKeyRef.current = spinKey;
+      return;
+    }
+
     const strip = stripRef.current;
     const face = faceRef.current;
     if (!strip || !face) return;
@@ -180,7 +237,22 @@ export const Drum = forwardRef<DrumHandle, DrumProps>(function Drum(
       // İptal edilse bile şerit hedefte kalsın, pencere boş görünmesin.
       strip.style.transform = `translateY(${end}px)`;
     };
-  }, [spinKey, items, winnerPos]);
+  }, [spinKey, items, winnerPos, frozen, frozenLabel]);
+
+  if (frozen) {
+    return (
+      <div className={styles.window} aria-hidden="true">
+        <div ref={stripRef} className={styles.strip}>
+          {/* Komşu satırlar yalnızca zemin: dönmeyeceği belli olsun. */}
+          <div className={styles.blank} />
+          <div className={`${styles.face} ${styles.mid}`}>
+            <span className={styles.label}>{frozenLabel}</span>
+          </div>
+          <div className={styles.blank} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.window} aria-hidden="true">

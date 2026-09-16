@@ -1,0 +1,92 @@
+/*
+  Öz-değerlendirme düğmeleri. Kutuyu bu seçim belirliyor, skor değil.
+
+  Accent bütçesi: seçilen düğmenin çerçevesi bu ekrandaki iki accent
+  kullanımından biri (diğeri adım göstergesindeki aktif adım).
+*/
+
+.ratingButtons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.ratingButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.7rem 0.4rem;
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+  transition:
+    transform var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out);
+}
+
+@media (hover: hover) {
+  .ratingButton:hover:not(:disabled) {
+    transform: translateY(-1px);
+    border-color: var(--text-dim);
+    background: color-mix(in srgb, var(--text) 5%, transparent);
+  }
+}
+
+.ratingButton:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+/*
+  Seçilen buton: kayıt hemen yazılmıyor, kullanıcı neye bastığını
+  görecek kadar çerçeve accent'te kalıyor. Geçiş süresi yukarıdaki
+  transition'dan geliyor, anında atlamıyor.
+*/
+.ratingButton[data-chosen="true"] {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.ratingButton:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+/* Bir sonraki tekrarın ne zamana düştüğü — Leitner aralığından gelir. */
+.ratingInterval {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  color: var(--text-faint);
+}
+
+@media (max-width: 560px) {
+  /* Üç dar sütunda etiketler kırılıyor; alt alta daha okunur. */
+  .ratingButtons {
+    grid-template-columns: 1fr;
+  }
+
+  .ratingButton {
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 0.6rem 0.8rem;
+  }
+}
+
+.title {
+  margin: 0 0 0.35rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.note {
+  margin: 0 0 0.85rem;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--text-dim);
+}

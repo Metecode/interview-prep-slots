@@ -43,7 +43,48 @@
   --ok: #34d399;
   --warn: #f59e0b;
 
+  /* ---- hareket ---------------------------------------------------
+     Tek zamanlama dili. Her bileşen süreyi ve eğriyi buradan okur,
+     ham ms yazmaz; böylece geçişler tek yerden ayarlanır.
+     --dur-fast  hover, basma, küçük durum değişimi
+     --dur-base  açılır bölüm, panel girişi
+     --dur-slow  ekran geçişi
+     Sıralı giriş (stagger) aralıkları da burada: kart ve çip
+     gecikmeleri calc() ile bu değerlerden türetilir.
+  */
+  --dur-fast: 140ms;
+  --dur-base: 240ms;
+  --dur-slow: 400ms;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+  --stagger-card: 60ms;
+  --stagger-chip: 40ms;
+
   --row: 62px;
+
+  /* İçerik sütunu. Dar hâli üst çubuk, adım göstergesi, makine ve
+     footer'da sabit kullanılır. Geniş hâli yalnızca sonuç paneli
+     (ResultPanel) kendi başına, bağımsız olarak kullanır. */
+  --shell-narrow: 620px;
+  --shell-wide: 1080px;
+}
+
+/*
+  Hareket azaltma tercihi tek yerden karşılanır: süreler 1ms'ye,
+  gecikmeler 0'a iner. Bileşenlerin ayrıca `animation: none` yazmasına
+  gerek kalmıyor — hepsi zaten bu değişkenleri kullanıyor.
+  1ms seçildi, 0 değil: transitionend/animationend dinleyen kod
+  hiç tetiklenmeden kalmasın.
+*/
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 1ms;
+    --dur-base: 1ms;
+    --dur-slow: 1ms;
+    --stagger-card: 0ms;
+    --stagger-chip: 0ms;
+  }
 }
 
 /* Dar ekranda satır kısalır; tambur yarıçapı bunu her dönüşte yeniden okur. */

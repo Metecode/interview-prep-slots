@@ -35,6 +35,16 @@ function prefersReducedMotion(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
+/** Kolun fiziksel çekiliş hissi: destekleyen dokunmatik cihazda kısa bir titreşim. */
+function vibrate() {
+  if (!("vibrate" in navigator)) return;
+  try {
+    navigator.vibrate(15);
+  } catch {
+    // Bazı tarayıcılar izinsiz bağlamda (ör. iframe) fırlatabilir; sessizce yut.
+  }
+}
+
 function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
 }
@@ -127,12 +137,14 @@ export function Lever({ disabled = false, onPull }: LeverProps) {
 
     if (prefersReducedMotion()) {
       // Kolu oynatmadan sonucu ver.
+      vibrate();
       onPull();
       return;
     }
 
     autoPullingRef.current = true;
     animateAngle(MAX_ANGLE, PULL_MS, easeInCubic, () => {
+      vibrate();
       onPull();
       animateAngle(0, RECOVER_MS, easeOutCubic, () => {
         autoPullingRef.current = false;
@@ -177,7 +189,10 @@ export function Lever({ disabled = false, onPull }: LeverProps) {
     }
 
     const reachedThreshold = angleRef.current >= THRESHOLD_ANGLE;
-    if (reachedThreshold) onPull();
+    if (reachedThreshold) {
+      vibrate();
+      onPull();
+    }
     animateAngle(0, RECOVER_MS, easeOutCubic);
   }
 

@@ -1,6 +1,9 @@
 /*
-  Üst çubuk: tam sayfa genişliğinde bir şerit, içeriği .app ile aynı
-  620px sütuna hizalanır. Renkler tokens.css'ten gelir.
+  Üst çubuk: tam sayfa genişliğinde bir şerit. Genişliği sabit tutuyoruz
+  (--shell-narrow) — sonuç ekranı iki sütuna açılıp içerik genişlese
+  bile üst çubuk büyüyüp küçülmesin; adımlar arasında sabit bir çerçeve
+  kalsın diye. Bkz. StepIndicator.module.css ve Footer.module.css, aynı
+  gerekçeyle aynı sabit genişliği kullanıyor.
 */
 
 .bar {
@@ -9,7 +12,7 @@
 }
 
 .inner {
-  max-width: 620px;
+  max-width: var(--shell-narrow);
   margin: 0 auto;
   padding: 0.7rem 20px;
   display: flex;

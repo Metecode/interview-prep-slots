@@ -36,3 +36,21 @@ body {
   color: var(--text);
   font-family: var(--sans);
 }
+
+/*
+  Dokunmatik cihazda küçük düğmelerin (anahtar, çip, ikon butonu) görünür
+  boyutu aynı kalır ama dokunma alanı büyür: negatif inset'li görünmez
+  bir ::after ile. Masaüstünde fare kullanımını hiç etkilemez, yalnızca
+  pointer:coarse cihazlarda devreye girer.
+*/
+@media (pointer: coarse) {
+  button {
+    position: relative;
+  }
+
+  button::after {
+    content: "";
+    position: absolute;
+    inset: -8px;
+  }
+}

@@ -2,6 +2,8 @@ import { useState } from "react";
 import type { KeyboardEvent as ReactKeyboardEvent } from "react";
 
 import { evaluateLexical } from "../domain/evaluate";
+import { boxCadenceLabel } from "../domain/leitner";
+import type { QuestionProgress } from "../domain/progress";
 import type { Question } from "../domain/question";
 import styles from "./QuestionCard.module.css";
 
@@ -20,6 +22,8 @@ const ANSWER_LENGTH_WARN_AT = 1200;
 
 export type QuestionCardProps = {
   question: Question;
+  /** Sorunun kayıtlı ilerlemesi; ilk kez soruluyorsa null. */
+  progress: QuestionProgress | null;
   onSubmit: (answer: string) => void;
   onPass: () => void;
 };
@@ -28,9 +32,11 @@ export type QuestionCardProps = {
  * Cevap metni bileşenin kendi state'inde durur. Soru değişince temizlenmesi
  * çağıran tarafın işi: key={question.id} verilir, bileşen yeniden kurulur.
  */
-export function QuestionCard({ question, onSubmit, onPass }: QuestionCardProps) {
+export function QuestionCard({ question, progress, onSubmit, onPass }: QuestionCardProps) {
   const [answer, setAnswer] = useState("");
   const [hintVisible, setHintVisible] = useState(false);
+  const box = progress?.box ?? 1;
+  const attempts = progress?.attempts.length ?? 0;
 
   // İpucu her render'da tazelenir: kullanıcı yazdıkça sıradaki eksik
   // kavrama kayar, aynı ipucunda takılı kalmaz.
@@ -46,11 +52,11 @@ export function QuestionCard({ question, onSubmit, onPass }: QuestionCardProps) 
 
   return (
     <section className={styles.card}>
-      {/* Kutu ve son görülme şimdilik sabit metin; ilerleme bağlanınca
-          gerçek değerle değişecek. */}
       <div className={styles.meta}>
-        <span className={styles.metaBadge}>Kutu 1</span>
-        <span className={styles.metaBadge}>ilk kez</span>
+        <span className={styles.metaBadge}>{boxCadenceLabel(box)}</span>
+        <span className={styles.metaBadge}>
+          {attempts > 0 ? `${attempts} deneme` : "ilk kez"}
+        </span>
         <span className={styles.metaBadge}>{DIFFICULTY_LABELS[question.difficulty]}</span>
       </div>
 

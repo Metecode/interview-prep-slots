@@ -1,0 +1,213 @@
+/*
+  Sonuç ekranı. Üstte tam genişlik soru kartı, altında iki sütun:
+  solda skor/öz-değerlendirme/devam soruları, sağda model cevap.
+
+  Süreler ve eğriler tokens.css'ten gelir; bu dosyada ham ms yok.
+  Hareket azaltma tercihi de oradan karşılanıyor — buradaki
+  animasyonların hepsi --dur-* okuduğu için ayrıca kapatılmaları
+  gerekmiyor.
+
+  Accent bütçesi: bu ekranda accent yalnızca seçilen öz-değerlendirme
+  çerçevesinde; ikinci kullanım adım göstergesinin aktif adımı.
+*/
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: var(--shell-wide);
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/*
+  Kartlar 12px aşağıdan yükselerek gelir, --i kadar gecikmeyle.
+  backwards dolgusu: gecikme boyunca kart görünmez kalsın, önce
+  belirip sonra zıplamasın.
+*/
+.card {
+  padding: 1.05rem 1.15rem;
+  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-top-color: var(--surface-raised);
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--bg) 70%, transparent);
+  animation: card-rise var(--dur-slow) var(--ease-out) backwards;
+  /* --enter-offset sahne katmanından gelir: ekran geçişi sürerken
+     kartlar katman görünmeden başlamasın. */
+  animation-delay: calc(var(--enter-offset, 0ms) + var(--i, 0) * var(--stagger-card));
+}
+
+@keyframes card-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+/* ---------------------------------------------------------------- */
+/* Soru başlığı — iki sütunun üstünde, tam genişlik                 */
+/* ---------------------------------------------------------------- */
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.7rem;
+}
+
+.metaBadge {
+  padding: 0.15rem 0.55rem;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.02em;
+  color: var(--text-dim);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+
+.prompt {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  font-variation-settings: "wght" 600;
+  font-synthesis: none;
+  line-height: 1.35;
+  max-width: 54ch;
+  color: var(--text);
+}
+
+/* ---------------------------------------------------------------- */
+/* İki sütun — yalnızca 1024px ve üstünde                           */
+/* ---------------------------------------------------------------- */
+
+/*
+  Dar ekranda düz bir yığın: skor → kavramlar → model cevap →
+  öz-değerlendirme → devam soruları. DOM sırası zaten bu; kullanıcı
+  önce doğru cevabı görsün, sonra kendini değerlendirsin.
+*/
+.columns {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+@media (min-width: 1024px) {
+  .columns {
+    display: grid;
+    /* 2fr ve 3fr: %40 ile %60 */
+    grid-template-columns: 2fr 3fr;
+    /*
+      Dördüncü satır esnek ve boş. Model cevap bütün satırlara yayılıyor;
+      esnek bir satıra yayılan öğe soldaki auto satırların boyunu
+      hesaplamaya katılmaz, böylece uzun model cevap sol sütundaki
+      kartların arasını açmıyor.
+    */
+    grid-template-rows: auto auto auto 1fr;
+    align-items: start;
+  }
+
+  .colScore {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .colRating {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .colFollow {
+    grid-column: 1;
+    grid-row: 3;
+  }
+
+  .colModel {
+    grid-column: 2;
+    grid-row: 1 / -1;
+  }
+}
+
+/* ---------------------------------------------------------------- */
+/* Alt durum çubuğu                                                 */
+/* ---------------------------------------------------------------- */
+
+.statusBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 1rem;
+  padding: 0.7rem 1rem;
+  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  /* Sıranın sonuncusu: dört kartın ardından gelir. */
+  animation: card-rise var(--dur-slow) var(--ease-out) backwards;
+  animation-delay: calc(var(--enter-offset, 0ms) + 4 * var(--stagger-card));
+}
+
+.statusText {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}
+
+.statusActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin-left: auto;
+}
+
+.aiButton {
+  padding: 0.45rem 0.9rem;
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+  transition:
+    transform var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out);
+}
+
+@media (hover: hover) {
+  .aiButton:hover:not(:disabled) {
+    transform: translateY(-1px);
+    border-color: var(--text-dim);
+    background: color-mix(in srgb, var(--text) 5%, transparent);
+  }
+}
+
+.aiButton:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.aiButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.aiButton:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+.aiNote {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+}
+
+@media (max-width: 560px) {
+  .panel {
+    padding: 0 16px;
+  }
+
+  .prompt {
+    font-size: 18px;
+  }
+}

@@ -23,7 +23,9 @@
   background: transparent;
   border: 1px solid var(--line);
   cursor: pointer;
-  transition: background-color 140ms ease, border-color 140ms ease;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
 }
 
 .track[aria-checked="true"] {
@@ -41,7 +43,9 @@
   height: 16px;
   border-radius: 50%;
   background: var(--text-dim);
-  transition: transform 140ms ease, background-color 140ms ease;
+  transition:
+    transform var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out);
 }
 
 .track[aria-checked="true"] .knob {

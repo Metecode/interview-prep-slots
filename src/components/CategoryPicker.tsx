@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 
 import { ChevronIcon } from "./ChevronIcon";
+import { Collapse } from "./Collapse";
 import { CATEGORY_LABELS } from "../content/labels";
 import { CATEGORIES } from "../domain/question";
 import type { Category } from "../domain/question";
@@ -15,6 +16,8 @@ export type CategoryPickerProps = {
   /** true iken hiçbir çip tıklanamaz (ör. makara dönerken). */
   disabled: boolean;
   onToggle: (category: Category) => void;
+  /** Tümünü seç / tümünü kaldır arasında geçiş yapar. */
+  onToggleAll: () => void;
 };
 
 /** Kapalı özet metni: hepsi seçiliyse tek kelime, değilse ilk iki etiket + kalan sayı. */
@@ -29,25 +32,41 @@ function summarize(active: Category[]): string {
   return `${labels.slice(0, 2).join(", ")} +${labels.length - 2}`;
 }
 
-export function CategoryPicker({ active, disabled, onToggle }: CategoryPickerProps) {
+export function CategoryPicker({ active, disabled, onToggle, onToggleAll }: CategoryPickerProps) {
   // Kalıcı olması gerekmiyor: her açılışta kapalı başlar.
   const [open, setOpen] = useState(false);
+  const listId = useId();
+  const allSelected = active.length === CATEGORIES.length;
 
   return (
     <div className={styles.picker}>
-      <button
-        type="button"
-        className={styles.summary}
-        aria-expanded={open}
-        onClick={() => setOpen((value) => !value)}
-      >
-        <span>
-          {CATEGORIES.length} kategori · {summarize(active)}
-        </span>
-        <ChevronIcon className={styles.chevron} />
-      </button>
+      <div className={styles.header}>
+        <button
+          type="button"
+          className={styles.summary}
+          aria-expanded={open}
+          aria-controls={listId}
+          onClick={() => setOpen((value) => !value)}
+        >
+          <span>
+            {CATEGORIES.length} kategori · {summarize(active)}
+          </span>
+          <ChevronIcon className={styles.chevron} />
+        </button>
 
-      {open && (
+        {/* Açık/kapalı fark etmeden erişilebilir olsun diye özet
+            düğmesinin yanında, koleksiyonun içine gömülü değil. */}
+        <button
+          type="button"
+          className={styles.selectAll}
+          disabled={disabled}
+          onClick={onToggleAll}
+        >
+          {allSelected ? "Tümünü kaldır" : "Tümünü seç"}
+        </button>
+      </div>
+
+      <Collapse open={open} id={listId}>
         <ul className={styles.list}>
           {CATEGORIES.map((category) => {
             const selected = active.includes(category);
@@ -67,7 +86,7 @@ export function CategoryPicker({ active, disabled, onToggle }: CategoryPickerPro
             );
           })}
         </ul>
-      )}
+      </Collapse>
     </div>
   );
 }

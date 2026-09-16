@@ -12,6 +12,9 @@
   --well-shadow: color-mix(in srgb, var(--bg) 70%, transparent);
 
   width: 100%;
+  /* Sonuç ekranı sütunu genişlediğinde kasa onunla birlikte esnemesin:
+     makine dar sütunun ölçüsünde tasarlandı, gerilince oranları bozuluyor. */
+  max-width: var(--shell-narrow);
   /* Kasanın perspective + preserve-3d + rotateX tilt'i bilerek yok:
      WebKit'te preserve-3d'li bir ata, overflow:hidden'lı bir torunu
      (tamburun .window'u) tamamen görünmez kılıyordu — gerçek cihazda
@@ -144,7 +147,7 @@
 }
 
 .tick {
-  animation: tick 140ms ease-out;
+  animation: tick var(--dur-fast) var(--ease-out);
 }
 
 /*
@@ -165,7 +168,7 @@
   align-items: center;
   justify-content: space-between;
   opacity: 0;
-  transition: opacity 200ms ease;
+  transition: opacity var(--dur-base) var(--ease-out);
 }
 
 .paylineSettled {
@@ -189,7 +192,7 @@
   height: 0;
   border-top: 7px solid transparent;
   border-bottom: 7px solid transparent;
-  transition: transform 260ms ease;
+  transition: transform var(--dur-base) var(--ease-out);
 }
 
 /* Dinlenirken dışarıda bekler, duruşta içeri kayar. */

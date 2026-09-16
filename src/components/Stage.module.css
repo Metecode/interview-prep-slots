@@ -1,0 +1,63 @@
+/*
+  Sahne: soru kartı ve sonuç ekranı aynı grid hücresini paylaşır.
+  Geçiş sırasında ikisi birden DOM'da olur; üst üste durdukları için
+  çakışma satır yüksekliğini oynatmaz.
+
+  Animasyonlar yalnızca transform ve opacity kullanır — width/height/top
+  animasyonu her karede düzen tetikliyor.
+*/
+
+.stage {
+  display: grid;
+}
+
+.stageLayer {
+  /* Aynı hücre: ikisi de 1. satır 1. sütun. */
+  grid-area: 1 / 1;
+}
+
+/*
+  Giren ekran 8px aşağıdan gelir. Kendi içindeki kartların sıralı girişi
+  --enter-offset kadar bekler: çıkan ekran sönerken yenisi tam üstüne
+  binmesin, aradaki çakışma yaklaşık 80ms olsun (240ms'nin üçte biri).
+*/
+.stageLayer[data-state="enter"] {
+  --enter-offset: calc(var(--dur-base) * 0.66);
+
+  animation: screen-in var(--dur-slow) var(--ease-out) backwards;
+  animation-delay: var(--enter-offset);
+}
+
+@keyframes screen-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+/* Çıkan ekran 8px yukarı kayıp söner ve yerinde kalır (forwards). */
+.stageLayer[data-state="exit"] {
+  animation: screen-out var(--dur-base) var(--ease-in-out) forwards;
+  /* inert zaten tıklamayı kesiyor; bu, altta kalan katmanı da serbest bırakır. */
+  pointer-events: none;
+}
+
+@keyframes screen-out {
+  to {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+/* Soru kartı sonuç ekranı kadar geniş değil; kendi sütununda kalır. */
+.narrow {
+  max-width: 620px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+@media (max-width: 560px) {
+  .narrow {
+    padding: 0 16px;
+  }
+}

@@ -1,4 +1,4 @@
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 
 import { Drum, FACES } from "./Drum";
 import type { DrumHandle } from "./Drum";
@@ -123,10 +123,9 @@ export function Machine({
     [allQuestions, activeCategories],
   );
 
-  // Tek kategori seçiliyse pool tek kategoriye, dolayısıyla leftPool tek
-  // değere iner — bu durumda 16 yüzün hepsi aynı olur. Doğru davranış:
-  // kullanıcı zaten tek kategori seçmiş. buildFaces/pickFace'teki üç
-  // kademeli gevşetme (bkz. aşağıda) bunu sonsuz döngüye girmeden karşılar.
+  // Tek kategori seçiliyse leftPool tek değere iner; aynı şey tek soruluk
+  // bir havuzda rightPool için olur. O tambur donduruluyor (aşağıya bkz.):
+  // hepsi aynı yazan üç satırı kaydırmak dönüş gibi görünmüyor.
   const leftPool = useMemo(
     () =>
       Array.from(new Set(pool.map((q) => q.category))).map(
@@ -155,6 +154,34 @@ export function Machine({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [spinKey],
   );
+
+  // Havuzda tek değer varsa o tambur dönmez, o değeri sabit gösterir.
+  // Etiket havuzdan okunuyor: yüz dizileri dönüş başına üretildiği için
+  // kategori seçimi değişince eskimiş kalıyorlar.
+  const frozenLeft = leftPool.length <= 1 ? (leftPool[0] ?? "") : null;
+  const frozenRight = rightPool.length <= 1 ? (rightPool[0] ?? "") : null;
+  const leftFrozen = frozenLeft !== null;
+  const rightFrozen = frozenRight !== null;
+
+  /*
+    Turu, gerçekten dönen tamburların sonuncusu açar: sağ tambur ikinci
+    durduğu için normalde o. Sağ donmuşsa sıra sola geçer; ikisi de
+    donmuşsa ortada bekletecek bir animasyon yoktur, aşağıdaki efekt
+    turu doğrudan açar.
+  */
+  const settleOwner = !rightFrozen ? "right" : !leftFrozen ? "left" : "none";
+
+  // onSettle her render'da yeni bir kapanış, yani efekt tekrar tekrar
+  // çalışabilir; hangi dönüşün açıldığı ayrıca tutuluyor ki tur başına
+  // bir kez bildirilsin.
+  const openedKeyRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (settleOwner !== "none" || !spinning) return;
+    if (openedKeyRef.current === spinKey) return;
+    openedKeyRef.current = spinKey;
+    onSettle();
+  }, [spinKey, settleOwner, spinning, onSettle]);
 
   const timing = fastMode ? FAST_TIMING : NORMAL_TIMING;
 
@@ -196,7 +223,11 @@ export function Machine({
                 spinKey={spinKey}
                 durationMs={timing.first.durationMs}
                 turns={timing.first.turns}
-                onSettle={() => bumpTick(leftSlotRef.current)}
+                frozenLabel={frozenLeft}
+                onSettle={() => {
+                  bumpTick(leftSlotRef.current);
+                  if (settleOwner === "left") onSettle();
+                }}
               />
             </div>
             <div ref={rightSlotRef} className={styles.drumSlot}>
@@ -207,9 +238,10 @@ export function Machine({
                 spinKey={spinKey}
                 durationMs={timing.second.durationMs}
                 turns={timing.second.turns}
+                frozenLabel={frozenRight}
                 onSettle={() => {
                   bumpTick(rightSlotRef.current);
-                  onSettle();
+                  if (settleOwner === "right") onSettle();
                 }}
               />
             </div>

@@ -1,21 +1,39 @@
 /*
-  Deneme sayfasının kabuğu. Makine ve kart aynı kapsayıcının içinde,
-  ikisi de tam genişlikte durur.
+  Sayfanın kabuğu.
+
+  .app (kategori seçici, makine) sabit --shell-narrow genişliğinde durur
+  ve hiçbir adımda büyümez — üst çubukla aynı kenardan hizalı kalsın,
+  sonuç ekranına geçişte kaymasın diye. Sonuç paneli (ResultPanel) ayrı
+  bir kardeş öğe, kendi --shell-wide genişliğiyle bağımsız ortalanır.
+
+  root, sayfa boyu içerik kısa kaldığında bile footer'ı ekranın altına
+  yaslamak için tam viewport yüksekliğinde bir flex kolon.
 */
+
+.root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.shell {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 1.25rem;
+  padding-bottom: 90px;
+}
 
 .app {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: 1.25rem;
-  max-width: 620px;
+  max-width: var(--shell-narrow);
+  width: 100%;
   margin: 0 auto;
-  padding: 34px 20px 90px;
-}
-
-.title {
-  margin: 0;
-  font-size: 1rem;
-  color: var(--text-dim);
+  padding: 34px 20px 0;
 }
 
 /*
@@ -39,7 +57,7 @@
   background: none;
   border: 0;
   cursor: pointer;
-  transition: color 120ms ease;
+  transition: color var(--dur-fast) var(--ease-out);
 }
 
 @media (hover: hover) {
@@ -54,7 +72,7 @@
 }
 
 .chevron {
-  transition: transform 160ms ease;
+  transition: transform var(--dur-base) var(--ease-out);
 }
 
 .settingsToggle[aria-expanded="true"] .chevron {
@@ -63,6 +81,13 @@
 
 .controls {
   margin-top: 0.6rem;
+}
+
+/* Hidrasyon aralığındaki tek satır: boş ekran hiçbir zaman metinsiz kalmasın. */
+.loadingText {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-dim);
 }
 
 /* Kol neden devre dışı belli olsun diye; yalnızca seçim boşken görünür. */
@@ -98,7 +123,9 @@
   background: none;
   border: 0;
   cursor: pointer;
-  transition: color 120ms ease, transform 120ms ease;
+  transition:
+    color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
 }
 
 @media (hover: hover) {
