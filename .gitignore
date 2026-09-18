@@ -26,3 +26,9 @@ coverage
 *.njsproj
 *.sln
 *.sw?
+
+# Backend (Maven / Java)
+backend/target
+backend/.mvn/wrapper/maven-wrapper.jar
+*.class
+HELP.md
