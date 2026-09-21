@@ -26,18 +26,18 @@ class MulakatslotApplicationTests {
 		JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
 
 		Integer migrationCount = jdbcTemplate.queryForObject(
-				"SELECT count(*) FROM flyway_schema_history WHERE version = '1' AND success = true",
+				"SELECT count(*) FROM flyway_schema_history WHERE version IN ('1', '2') AND success = true",
 				Integer.class);
-		assertThat(migrationCount).isEqualTo(1);
+		assertThat(migrationCount).isEqualTo(2);
 
 		Integer tableCount = jdbcTemplate.queryForObject(
 				"""
 				SELECT count(*) FROM information_schema.tables
 				WHERE table_schema = 'public'
-				AND table_name IN ('app_user', 'question', 'question_progress')
+				AND table_name IN ('app_user', 'question', 'question_progress', 'refresh_token')
 				""",
 				Integer.class);
-		assertThat(tableCount).isEqualTo(3);
+		assertThat(tableCount).isEqualTo(4);
 	}
 
 }

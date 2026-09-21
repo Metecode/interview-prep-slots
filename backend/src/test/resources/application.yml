@@ -10,12 +10,29 @@ spring:
   flyway:
     enabled: true
 
+  # GitHub el sıkışması testlerde çalıştırılmıyor, ama kayıt olmadan
+  # oauth2Login yapılandırması açılamaz; sahte değerler yeterli.
+  security:
+    oauth2:
+      client:
+        registration:
+          github:
+            client-id: test-client-id
+            client-secret: test-client-secret
+            scope: read:user
+
 # Testler gerçek içeriğe (frontend'den kopyalanan) bağlı kalmasın diye
 # ayrı, sabit bir taban içerik kullanılır. QuestionSeederTest ve
 # QuestionControllerTest kendi klasörlerini ayrıca override eder.
 app:
   content:
     location: classpath:test-content/*.json
+  auth:
+    # 32 bayttan uzun sabit bir test anahtarı; üretimde JWT_SECRET'tan gelir.
+    jwt-secret: test-jwt-secret-en-az-otuz-iki-bayt-olmali
+    app-base-url: http://localhost:5173
+    # MockMvc HTTPS kullanmıyor; Secure bayrağı testlerde kapalı.
+    cookie-secure: false
 
 server:
   port: 8080
