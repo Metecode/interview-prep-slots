@@ -1,0 +1,43 @@
+spring:
+  application:
+    name: mulakatslot
+
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  jpa:
+    # true olursa view render edilene kadar connection pool'u meşgul eder,
+    # burada gerek yok çünkü servis katmanı DTO'ları transaction içinde hazırlıyor.
+    open-in-view: false
+    hibernate:
+      # Şemayı Flyway yönetir, Hibernate sadece doğrular.
+      ddl-auto: validate
+
+  flyway:
+    enabled: true
+
+  security:
+    oauth2:
+      client:
+        registration:
+          github:
+            client-id: ${GITHUB_CLIENT_ID}
+            client-secret: ${GITHUB_CLIENT_SECRET}
+            # Yalnızca herkese açık profil; e-posta kapsamı istenmiyor.
+            scope: read:user
+
+# Kimlik doğrulama ayarları; gizli değerler ortam değişkeninden gelir.
+app:
+  auth:
+    jwt-secret: ${JWT_SECRET}
+    app-base-url: ${APP_BASE_URL:http://localhost:5173}
+    # Varsayılan true; yalnızca HTTPS olmayan yerel geliştirmede kapatılır.
+    cookie-secure: ${COOKIE_SECURE:true}
+
+server:
+  port: 8080
+  # Vite ve nginx gibi proxy'lerin arkasında X-Forwarded-* başlıklarına
+  # güven: GitHub'a gönderilen redirect_uri proxy'nin adresiyle üretilsin.
+  forward-headers-strategy: framework

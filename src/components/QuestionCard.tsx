@@ -96,7 +96,6 @@ export function QuestionCard({ question, progress, onSubmit, onPass }: QuestionC
         <button type="button" className={styles.primary} onClick={() => onSubmit(answer)}>
           Gönder
         </button>
-        <span className={styles.shortcutHint}>Ctrl + Enter</span>
         <button
           type="button"
           className={styles.secondary}
