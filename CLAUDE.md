@@ -83,7 +83,8 @@ shadcn/ui bileşenleri ihtiyaç oldukça tek tek eklenir, toplu kurulmaz.
 - **Şemayı Flyway yönetir.** `ddl-auto: validate` — Hibernate şema
   üretmez, sadece Flyway migration'larıyla eşleşip eşleşmediğini doğrular.
   Var olan bir migration dosyasına (`V1__...` dahil) asla dokunma; yeni
-  değişiklik yeni `V2__...` dosyasıyla gelir.
+  değişiklik yeni `V2__...` dosyasıyla gelir. İlk deploy'dan sonra
+  uygulanmış migration'a dokunulmaz. Öncesinde düzenlenebilir.
 - **Testler gerçek PostgreSQL'e karşı çalışır (Testcontainers).** H2
   KULLANILMAZ — JSONB ve UUID davranışı H2'de farklı, testler yeşil çıkıp
   canlıda patlayabilir. `TestcontainersConfiguration` (`@ServiceConnection`
