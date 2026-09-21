@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: mulakatslot
+
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  jpa:
+    # true olursa view render edilene kadar connection pool'u meşgul eder,
+    # burada gerek yok çünkü servis katmanı DTO'ları transaction içinde hazırlıyor.
+    open-in-view: false
+    hibernate:
+      # Şemayı Flyway yönetir, Hibernate sadece doğrular.
+      ddl-auto: validate
+
+  flyway:
+    enabled: true
+
+server:
+  port: 8080

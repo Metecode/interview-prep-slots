@@ -54,6 +54,60 @@ shadcn/ui bileşenleri ihtiyaç oldukça tek tek eklenir, toplu kurulmaz.
 - Soru içeriğini başka sitelerden kopyalama. İçerik özgün yazılır,
   `source` alanında türetildiği konu belirtilir.
 
+## Backend (`backend/`)
+
+- **Sadece senkron ve AI kotası için.** Uygulama backend'siz tam çalışır
+  (bkz. yukarıdaki Local-first kararı). Faz 1'de iş endpoint'i yok, sadece
+  çalışan iskelet: `GET /api/health`.
+- **Stack.** Spring Boot 4.x, Java 21, Maven (wrapper ile — geliştirme
+  Windows'ta olduğu için Maven komutları `.\mvnw.cmd` ile çalıştırılır,
+  yerel Maven kurulumuna güvenilmez). Proje Spring Initializr'dan
+  kuruldu; artifactId `mulakatslot`, ana sınıf `MulakatslotApplication`.
+- **Paket yapısı özelliğe göre.** `com.meteucar.mulakatslot` altında
+  `config`, `user`, `question`, `progress`, `health`. `controller/`,
+  `service/`, `repository/` gibi katman klasörleri YOK — her paket kendi
+  entity/repository/controller'ını (varsa) barındırır. `config` paketi
+  henüz boş — adım 3'te security config oraya gelecek.
+- **Spring Security yok, Actuator yok.** Security Faz 3'te (adım 3)
+  gelecek; şimdi eklemek her endpoint'i kilitler ve iskeleti test etmeyi
+  zorlaştırır. `/api/health` Actuator olmadan elle yazıldı.
+- **`question.payload` ve `question_progress.attempts` JSONB kalır.**
+  `keyConcepts`, `anchors`, `followUps` gibi iç içe alanlara SQL sorgusu
+  atmayacağız; bu yüzden ilişkisel olarak parçalanmadılar. `category` ve
+  `topic` ayrı kolon çünkü onlarla filtreleyeceğiz. Hibernate 7'de JSONB
+  eşlemesi `@JdbcTypeCode(SqlTypes.JSON)` ile yapılır, elle
+  serialize/deserialize etme.
+- **`spring.jpa.open-in-view: false`.** Varsayılan `true` sessizce
+  connection pool'u view render edilene kadar meşgul eder. Kapalı kalsın;
+  gerekiyorsa servis katmanında DTO'yu transaction içinde hazırla.
+- **Şemayı Flyway yönetir.** `ddl-auto: validate` — Hibernate şema
+  üretmez, sadece Flyway migration'larıyla eşleşip eşleşmediğini doğrular.
+  Var olan bir migration dosyasına (`V1__...` dahil) asla dokunma; yeni
+  değişiklik yeni `V2__...` dosyasıyla gelir. İlk deploy'dan sonra
+  uygulanmış migration'a dokunulmaz. Öncesinde düzenlenebilir.
+- **Testler gerçek PostgreSQL'e karşı çalışır (Testcontainers).** H2
+  KULLANILMAZ — JSONB ve UUID davranışı H2'de farklı, testler yeşil çıkıp
+  canlıda patlayabilir. `TestcontainersConfiguration` (`@ServiceConnection`
+  ile) ortak Postgres konteynerini sağlar; yeni entegrasyon testleri
+  `@Import(TestcontainersConfiguration.class)` ile ona bağlanır — Spring
+  Boot bu konteyneri test sınıfları arasında context cache üzerinden
+  paylaşır, her sınıf ayrı konteyner açmaz.
+- **DB bilgileri ortam değişkeninden gelir**, `application.yml`'e
+  hardcode edilmez. Yerelde `docker-compose.yml` için `.env` kullan
+  (`.env.example`'dan kopyala); `.env` ve `.idea/` git'e girmez.
+- **Spring Boot 4 + Jackson 3.** Jackson core/databind paketleri
+  `tools.jackson.*` altında, `com.fasterxml.jackson.*` değil.
+  Yalnızca anotasyonlar `com.fasterxml.jackson.annotation`'da kalır.
+  `JsonProcessingException` yerine `JacksonException` (unchecked).
+  Boot 3 örneklerinden kod kopyalarken paketleri kontrol et.
+  Boot 4 modüler yapıda: web, test ve güvenlik otomatik
+  yapılandırmaları ayrı modüllere taşındı, paket adları değişti.
+  Boot 3 örneğinden gelen her import'u gerçek bağımlılıkta doğrula.
+  Özellikle: test anotasyonları (`AutoConfigureMockMvc`
+  `org.springframework.boot.webmvc.test.autoconfigure`'da,
+  `WebMvcTest` aynı paketde — `org.springframework.boot.test.autoconfigure.web.servlet`
+  değil), Spring Security yapılandırması, Jackson.
+
 ## Çalışma bölümü
 
 Mimari ve yeni modüller sohbette yazılır. Claude Code mekanik işleri

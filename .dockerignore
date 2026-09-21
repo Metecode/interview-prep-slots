@@ -1,0 +1,19 @@
+# Bağlam artık repo kökü (backend Docker build'i src/content/tr'yi de
+# görebilsin diye); frontend'in build çıktısı ve bağımlılıkları bağlamı
+# şişirmesin diye burada dışlanıyor.
+node_modules
+dist
+dist-ssr
+coverage
+.git
+
+# Backend tarafında zaten var olan yerel derleme çıktısı; imaj içinde
+# yeniden derleniyor.
+backend/target
+backend/.mvn/wrapper/maven-wrapper.jar
+
+.env
+.env.local
+.idea
+.vscode
+*.log

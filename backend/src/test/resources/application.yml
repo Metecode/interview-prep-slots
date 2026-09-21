@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: mulakatslot
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+
+  flyway:
+    enabled: true
+
+# Testler gerçek içeriğe (frontend'den kopyalanan) bağlı kalmasın diye
+# ayrı, sabit bir taban içerik kullanılır. QuestionSeederTest ve
+# QuestionControllerTest kendi klasörlerini ayrıca override eder.
+app:
+  content:
+    location: classpath:test-content/*.json
+
+server:
+  port: 8080
