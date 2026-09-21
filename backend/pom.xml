@@ -86,6 +86,62 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
+			<!-- maven-resources-plugin, hedef klasör eksik/boşsa sessizce hiçbir
+			     şey kopyalamadan geçer; bu, seeder'ın "içerik yok" durumunu
+			     üretimde ilk fark ettiği an olmasını önlemek için build'i burada
+			     durduruyoruz. -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<version>3.1.0</version>
+				<executions>
+					<execution>
+						<id>verify-frontend-content-exists</id>
+						<phase>validate</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<configuration>
+							<target>
+								<fail message="../src/content/tr bulunamadı ya da içinde .json dosyası yok — build durduruldu, sessizce boş kopyalama yapılmıyor.">
+									<condition>
+										<resourcecount when="equal" count="0">
+											<fileset dir="${project.basedir}/../src/content/tr" includes="*.json"
+												errorOnMissingDir="false" />
+										</resourcecount>
+									</condition>
+								</fail>
+							</target>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<!-- Soru içeriği tek kaynak: frontend'in src/content/tr'si. Elle kopyalama
+			     yok, her build burada tazelenir. -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>copy-frontend-content</id>
+						<phase>generate-resources</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.basedir}/src/main/resources/content</outputDirectory>
+							<resources>
+								<resource>
+									<directory>${project.basedir}/../src/content/tr</directory>
+									<includes>
+										<include>*.json</include>
+									</includes>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
 

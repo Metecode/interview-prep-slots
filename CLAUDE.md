@@ -95,6 +95,18 @@ shadcn/ui bileşenleri ihtiyaç oldukça tek tek eklenir, toplu kurulmaz.
 - **DB bilgileri ortam değişkeninden gelir**, `application.yml`'e
   hardcode edilmez. Yerelde `docker-compose.yml` için `.env` kullan
   (`.env.example`'dan kopyala); `.env` ve `.idea/` git'e girmez.
+- **Spring Boot 4 + Jackson 3.** Jackson core/databind paketleri
+  `tools.jackson.*` altında, `com.fasterxml.jackson.*` değil.
+  Yalnızca anotasyonlar `com.fasterxml.jackson.annotation`'da kalır.
+  `JsonProcessingException` yerine `JacksonException` (unchecked).
+  Boot 3 örneklerinden kod kopyalarken paketleri kontrol et.
+  Boot 4 modüler yapıda: web, test ve güvenlik otomatik
+  yapılandırmaları ayrı modüllere taşındı, paket adları değişti.
+  Boot 3 örneğinden gelen her import'u gerçek bağımlılıkta doğrula.
+  Özellikle: test anotasyonları (`AutoConfigureMockMvc`
+  `org.springframework.boot.webmvc.test.autoconfigure`'da,
+  `WebMvcTest` aynı paketde — `org.springframework.boot.test.autoconfigure.web.servlet`
+  değil), Spring Security yapılandırması, Jackson.
 
 ## Çalışma bölümü
 

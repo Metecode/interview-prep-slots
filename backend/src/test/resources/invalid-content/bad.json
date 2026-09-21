@@ -1,0 +1,15 @@
+{
+  "lang": "tr",
+  "category": "misc",
+  "questions": [
+    {
+      "id": "missing-key-concepts",
+      "category": "misc",
+      "topic": "Geçersiz Soru",
+      "difficulty": 1,
+      "kind": "definition",
+      "prompt": "keyConcepts alanı olmayan bu soru doğrulamayı geçmemeli.",
+      "modelAnswer": "Bu cevabın yeterli uzunlukta olması dışında bir önemi yok, keyConcepts eksik."
+    }
+  ]
+}

@@ -1,13 +1,21 @@
+# Bağlam repo kökü (docker-compose.yml: context: ., dockerfile: backend/Dockerfile)
+# olduğu için tüm COPY kaynakları backend/'e göre değil repo köküne göre.
+
 # ---- Derleme aşaması ----
 FROM eclipse-temurin:21-jdk AS build
 WORKDIR /app
 
-COPY mvnw .
-COPY .mvn .mvn
-COPY pom.xml .
+COPY backend/mvnw .
+COPY backend/.mvn .mvn
+COPY backend/pom.xml .
 RUN chmod +x mvnw && ./mvnw -B dependency:go-offline
 
-COPY src src
+# pom.xml'deki maven-resources-plugin soru içeriğini
+# ${project.basedir}/../src/content/tr'den kopyalıyor; basedir /app olduğu
+# için frontend içeriği /src/content/tr'ye, WORKDIR'in dışına konuyor.
+COPY src/content/tr /src/content/tr
+
+COPY backend/src src
 RUN ./mvnw -B clean package -DskipTests
 
 # ---- Çalıştırma aşaması ----

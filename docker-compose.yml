@@ -16,7 +16,10 @@ services:
 
   backend:
     build:
-      context: ./backend
+      # Bağlam repo kökü: backend'in pom.xml'i soru içeriğini
+      # ../src/content/tr'den kopyalıyor, backend/ tek başına bunu göremez.
+      context: .
+      dockerfile: backend/Dockerfile
     environment:
       DB_URL: jdbc:postgresql://postgres:5432/${DB_NAME}
       DB_USERNAME: ${DB_USERNAME}

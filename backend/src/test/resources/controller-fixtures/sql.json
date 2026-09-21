@@ -1,0 +1,37 @@
+{
+  "lang": "tr",
+  "category": "sql",
+  "questions": [
+    {
+      "id": "controller-sql-question",
+      "category": "sql",
+      "topic": "Index",
+      "difficulty": 2,
+      "kind": "definition",
+      "prompt": "PostgreSQL'de B-Tree index ne zaman kullanılır?",
+      "modelAnswer": "B-Tree eşitlik, aralık ve sıralama sorgularının hepsinde çalışan varsayılan index türüdür.",
+      "keyConcepts": [
+        {
+          "id": "btree-default",
+          "label": "B-Tree varsayılan",
+          "aliases": ["b-tree", "varsayılan"],
+          "anchors": ["B-Tree varsayılan index türüdür ve çoğu sorguda çalışır."]
+        },
+        {
+          "id": "range-support",
+          "label": "Aralık sorgularını destekler",
+          "aliases": ["aralık", "range"],
+          "anchors": ["B-Tree aralık ve sıralama sorgularında da kullanılabilir."]
+        },
+        {
+          "id": "write-cost",
+          "label": "Yazma maliyeti",
+          "aliases": ["yazma", "insert"],
+          "anchors": ["Her index INSERT ve UPDATE sırasında güncellenmek zorundadır."]
+        }
+      ],
+      "followUps": ["Hash index B-Tree'den ne zaman daha iyidir?"],
+      "source": "test fixture"
+    }
+  ]
+}

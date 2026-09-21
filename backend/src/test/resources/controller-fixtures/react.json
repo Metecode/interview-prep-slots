@@ -1,0 +1,35 @@
+{
+  "lang": "tr",
+  "category": "react",
+  "questions": [
+    {
+      "id": "controller-react-question",
+      "category": "react",
+      "topic": "Virtual DOM",
+      "difficulty": 2,
+      "kind": "definition",
+      "prompt": "React'te virtual DOM ne işe yarar?",
+      "modelAnswer": "Virtual DOM, gerçek DOM güncellemelerini azaltmak için bellekte tutulan hafif bir temsildir.",
+      "keyConcepts": [
+        {
+          "id": "diffing",
+          "label": "Diffing",
+          "aliases": ["diff", "fark bulma"],
+          "anchors": ["React iki virtual DOM ağacı arasındaki farkı bulur."]
+        },
+        {
+          "id": "reconciliation",
+          "label": "Reconciliation",
+          "aliases": ["uzlaştırma"],
+          "anchors": ["Bulunan farklar gerçek DOM'a en verimli şekilde uygulanır."]
+        },
+        {
+          "id": "batching",
+          "label": "Batching",
+          "aliases": ["toplu güncelleme"],
+          "anchors": ["Birden çok state güncellemesi tek bir render'da toplanabilir."]
+        }
+      ]
+    }
+  ]
+}

@@ -45,11 +45,22 @@ class PersistenceTests {
 	void writesAndReadsAllThreeTablesWithJsonbPayload() {
 		AppUser user = appUserRepository.save(new AppUser("gh-12345", "metecode"));
 
+		List<Map<String, Object>> keyConcepts = List.of(
+				Map.of(
+						"id", "diffing",
+						"label", "Diffing",
+						"aliases", List.of("diff", "fark bulma"),
+						"anchors", List.of("React iki virtual DOM ağacı arasındaki farkı bulur.")),
+				Map.of(
+						"id", "reconciliation",
+						"label", "Reconciliation",
+						"aliases", List.of("uzlaştırma"),
+						"anchors", List.of("Bulunan farklar gerçek DOM'a en verimli şekilde uygulanır.")));
 		Map<String, Object> payload = Map.of(
 				"prompt", "React'te virtual DOM nedir?",
-				"keyConcepts", List.of("diffing", "reconciliation"));
+				"keyConcepts", keyConcepts);
 		Question question = questionRepository.save(
-				new Question("react-virtual-dom", "frontend", "react", (short) 2, "open-ended", payload));
+				new Question("react-virtual-dom", "react", "react", (short) 2, "definition", payload));
 
 		QuestionProgress progress = new QuestionProgress(user, question, (short) 1, OffsetDateTime.now());
 		progress.setAttempts(List.of(Map.of("selfRating", "partial", "matchedConcepts", List.of("diffing"))));
@@ -67,7 +78,7 @@ class PersistenceTests {
 		assertThat(foundQuestion).isPresent();
 		assertThat(foundQuestion.get().getPayload())
 				.containsEntry("prompt", "React'te virtual DOM nedir?")
-				.containsEntry("keyConcepts", List.of("diffing", "reconciliation"));
+				.containsEntry("keyConcepts", keyConcepts);
 
 		Optional<QuestionProgress> foundProgress = questionProgressRepository
 				.findById(new QuestionProgressId(user.getId(), question.getId()));

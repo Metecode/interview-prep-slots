@@ -1,0 +1,35 @@
+{
+  "lang": "tr",
+  "category": "misc",
+  "questions": [
+    {
+      "id": "baseline-question",
+      "category": "misc",
+      "topic": "Baseline",
+      "difficulty": 1,
+      "kind": "definition",
+      "prompt": "Bu bir taban içerik sorusudur, testler için kullanılır.",
+      "modelAnswer": "Bu soru yalnızca testlerde sabit bir taban veri sağlamak için var, gerçek mülakat içeriği değildir.",
+      "keyConcepts": [
+        {
+          "id": "concept-a",
+          "label": "Kavram A",
+          "aliases": ["a"],
+          "anchors": ["Bu bir test çapasıdır ve on karakterden uzundur."]
+        },
+        {
+          "id": "concept-b",
+          "label": "Kavram B",
+          "aliases": ["b"],
+          "anchors": ["Bu ikinci test çapasıdır ve on karakterden uzundur."]
+        },
+        {
+          "id": "concept-c",
+          "label": "Kavram C",
+          "aliases": ["c"],
+          "anchors": ["Bu üçüncü test çapasıdır ve on karakterden uzundur."]
+        }
+      ]
+    }
+  ]
+}
