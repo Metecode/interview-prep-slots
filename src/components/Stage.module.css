@@ -51,13 +51,8 @@
 
 /* Soru kartı sonuç ekranı kadar geniş değil; kendi sütununda kalır. */
 .narrow {
-  max-width: 620px;
+  max-width: var(--shell-narrow);
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 var(--gutter);
 }
 
-@media (max-width: 560px) {
-  .narrow {
-    padding: 0 16px;
-  }
-}

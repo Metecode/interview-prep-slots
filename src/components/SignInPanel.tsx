@@ -9,6 +9,8 @@ import styles from "./SignInPanel.module.css";
 
 export type SignInPanelProps = {
   open: boolean;
+  /** Backend'e ulaşılamıyor; giriş denemesi boşa gider. */
+  offline: boolean;
   /** Düğmenin aria-controls hedefi. */
   id: string;
   /** Dışarı tıklama tespiti için AuthArea'nın tuttuğu referans. */
@@ -42,7 +44,7 @@ function GithubIcon() {
  * başlangıç ve bitiş değerleri lazım. Kapalıyken `inert`: klavye ve
  * ekran okuyucu görünmeyen içeriğe girmez.
  */
-export function SignInPanel({ open, id, panelRef, onLogin }: SignInPanelProps) {
+export function SignInPanel({ open, offline, id, panelRef, onLogin }: SignInPanelProps) {
   const headingId = `${id}-heading`;
 
   // Açılınca odak panele gelir; buradan Tab ile giriş düğmesine geçilir.
@@ -68,7 +70,24 @@ export function SignInPanel({ open, id, panelRef, onLogin }: SignInPanelProps) {
       </p>
       <p className={styles.line}>Hesapsız da tüm özellikler çalışır.</p>
 
-      <button type="button" className={styles.action} onClick={onLogin}>
+      {/*
+        Sebep + çıkış yolu birlikte yazılır: hata mesajının ne olduğunu
+        söylemesi yetmiyor, ne yapılacağını da söylemeli. Burada yapılacak
+        şey beklemek — ve asıl mesaj, beklerken hiçbir şeyin kaybolmadığı.
+      */}
+      {offline && (
+        <p className={styles.offline}>
+          Sunucuya şu an ulaşılamıyor, giriş yapılamıyor. İlerlemen bu
+          cihazda kayıtlı; bağlantı gelince tekrar dene.
+        </p>
+      )}
+
+      <button
+        type="button"
+        className={styles.action}
+        disabled={offline}
+        onClick={onLogin}
+      >
         <GithubIcon />
         GitHub ile devam et
       </button>

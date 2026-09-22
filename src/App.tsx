@@ -11,7 +11,7 @@ import { Stage } from "./components/Stage";
 import { StepIndicator } from "./components/StepIndicator";
 import { Switch } from "./components/Switch";
 import { TopBar } from "./components/TopBar";
-import { QUESTIONS } from "./content";
+import { AVAILABLE_CATEGORIES, QUESTIONS } from "./content";
 import { evaluateLexical } from "./domain/evaluate";
 import { initialSessionState, sessionReducer, toStore } from "./domain/session";
 import type { SessionState } from "./domain/session";
@@ -19,7 +19,6 @@ import { useStore } from "./storage/useStore";
 import { useProgressSync } from "./sync/useProgressSync";
 import type { ProgressMap } from "./sync/progressSync";
 import type { SelfRating, Store } from "./domain/progress";
-import { CATEGORIES } from "./domain/question";
 import type { Category } from "./domain/question";
 
 /**
@@ -154,8 +153,15 @@ function Session({ store, recovered, save }: SessionProps) {
   }
 
   function handleToggleAllCategories() {
-    const allSelected = state.activeCategories.length === CATEGORIES.length;
-    dispatch({ type: "SET_CATEGORIES", categories: allSelected ? [] : [...CATEGORIES] });
+    // Kıyas görünen kategoriler üzerinden: içeriği olmayan bir kategori
+    // seçimde kalmış olabilir, uzunluk karşılaştırması onu da sayardı.
+    const allSelected = AVAILABLE_CATEGORIES.every((category) =>
+      state.activeCategories.includes(category),
+    );
+    dispatch({
+      type: "SET_CATEGORIES",
+      categories: allSelected ? [] : [...AVAILABLE_CATEGORIES],
+    });
   }
 
   const canSpin =
@@ -171,6 +177,7 @@ function Session({ store, recovered, save }: SessionProps) {
       <main className={styles.shell}>
         <div className={styles.app}>
           <CategoryPicker
+            categories={AVAILABLE_CATEGORIES}
             active={state.activeCategories}
             disabled={state.phase === "spinning"}
             onToggle={handleToggleCategory}
@@ -191,7 +198,9 @@ function Session({ store, recovered, save }: SessionProps) {
 
           {/* Kol zaten disabled ama sebebi görünmüyor; yalnızca seçim boşken çıkar. */}
           {state.activeCategories.length === 0 && (
-            <p className={styles.spinHint}>Çevirmek için en az bir kategori seç.</p>
+            <p className={styles.spinHint} role="status">
+              Çevirmek için en az bir kategori seç.
+            </p>
           )}
 
           {/* Makineye ait ayarlar, soruya değil: yeri makinenin hemen altı.

@@ -8,7 +8,7 @@
 .picker {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 /* Özet düğmesi ve "tümünü seç" aynı satırda, bitişik duruyor — ikisi
@@ -18,17 +18,17 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0.5rem 0.6rem;
+  gap: var(--space-2);
 }
 
 /* Kapalıyken tek satır: sayfa nefes alsın diye çipler varsayılan gizli. */
 .summary {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.35rem 0.8rem;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
   font: inherit;
-  font-size: 0.85rem;
+  font-size: var(--fs-body-sm);
   color: var(--text-dim);
   background: transparent;
   border: 1px solid var(--line);
@@ -36,7 +36,8 @@
   cursor: pointer;
   transition:
     border-color var(--dur-fast) var(--ease-out),
-    background-color var(--dur-fast) var(--ease-out);
+    background-color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
 }
 
 .chevron {
@@ -58,21 +59,37 @@
   }
 }
 
+/*
+  Basma geri bildirimi. Her etkileşimli öğede aynı hareket: 1px aşağı.
+  transform seçildi çünkü düzeni hiç tetiklemiyor — komşu öğeler
+  kıpırdamıyor, yalnızca basılan şey iniyor.
+*/
+.summary:active {
+  transform: translateY(1px);
+}
+
 .selectAll {
   padding: 0;
   font: inherit;
-  font-size: 0.8rem;
+  font-size: var(--fs-body-sm);
   color: var(--text-dim);
   background: none;
   border: 0;
   cursor: pointer;
-  transition: color var(--dur-fast) var(--ease-out);
+  transition:
+    color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
 }
 
 @media (hover: hover) {
   .selectAll:hover:not(:disabled) {
     color: var(--text);
   }
+}
+
+.selectAll:active:not(:disabled) {
+  color: var(--text);
+  transform: translateY(1px);
 }
 
 .selectAll:focus-visible {
@@ -88,17 +105,17 @@
 .list {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: var(--space-2);
   margin: 0;
   /* Üstteki boşluk özet satırından ayırır; açılış hareketi Collapse'in işi. */
-  padding: 0.5rem 0 0;
+  padding: var(--space-2) 0 0;
   list-style: none;
 }
 
 .chip {
-  padding: 0.35rem 0.8rem;
+  padding: var(--space-1) var(--space-3);
   font: inherit;
-  font-size: 0.85rem;
+  font-size: var(--fs-body-sm);
   color: var(--text-dim);
   background: transparent;
   border: 1px solid var(--line);
@@ -107,14 +124,19 @@
   transition:
     border-color var(--dur-fast) var(--ease-out),
     background-color var(--dur-fast) var(--ease-out),
-    color var(--dur-fast) var(--ease-out);
+    color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.chip:active:not(:disabled) {
+  transform: translateY(1px);
 }
 
 .chip[aria-pressed="true"] {
   color: var(--text);
   background: var(--surface-raised);
   border-color: var(--text-dim);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
 }
 
 .chip:disabled {

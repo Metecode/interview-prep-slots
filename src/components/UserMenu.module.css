@@ -11,10 +11,10 @@
 .trigger {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.25rem 0.55rem 0.25rem 0.3rem;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2) var(--space-1) var(--space-1);
   font: inherit;
-  font-size: 0.8rem;
+  font-size: var(--fs-label);
   color: var(--text);
   background: transparent;
   border: 1px solid transparent;
@@ -23,7 +23,12 @@
   max-width: 180px;
   transition:
     border-color var(--dur-fast) var(--ease-out),
-    background-color var(--dur-fast) var(--ease-out);
+    background-color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.trigger:active {
+  transform: translateY(1px);
 }
 
 .trigger:focus-visible {
@@ -58,7 +63,7 @@
   right: 0;
   z-index: 30;
   min-width: 140px;
-  padding: 0.25rem;
+  padding: var(--space-1);
   background: var(--surface-raised);
   border: 1px solid var(--line);
   border-radius: 10px;
@@ -83,9 +88,9 @@
 .item {
   display: block;
   width: 100%;
-  padding: 0.4rem 0.6rem;
+  padding: var(--space-2) var(--space-2);
   font: inherit;
-  font-size: 0.8rem;
+  font-size: var(--fs-label);
   text-align: left;
   color: var(--text);
   background: transparent;
@@ -103,4 +108,9 @@
   .item:hover {
     background: var(--surface);
   }
+}
+
+/* Menü satırı: kayma yerine zemin koyulaşır, satırlar birbirini itmesin. */
+.item:active {
+  background: var(--surface-raised);
 }

@@ -6,6 +6,7 @@ import {
   applyAttempt,
   boxCadenceLabel,
   nextBox,
+  nextReviewLabel,
   reviewIntervalDays,
 } from "./leitner";
 import type { Attempt, Box, QuestionProgress, SelfRating } from "./progress";
@@ -191,6 +192,37 @@ describe("reviewIntervalDays", () => {
     for (const box of [1, 2, 3, 4, 5] as const) {
       for (const rating of [0, 1, 2] as const) {
         expect(BOX_INTERVALS_DAYS).toContain(reviewIntervalDays(box, rating));
+      }
+    }
+  });
+});
+
+describe("nextReviewLabel", () => {
+  it("hedef kutuyu ve aralığı birlikte yazar", () => {
+    expect(nextReviewLabel(3, 2)).toBe("Kutu 4 · 8 gün sonra");
+    expect(nextReviewLabel(3, 1)).toBe("Kutu 3 · 4 gün sonra");
+  });
+
+  it("tek günü 'yarın' diye yazar", () => {
+    expect(nextReviewLabel(3, 0)).toBe("Kutu 1 · yarın");
+    expect(nextReviewLabel(1, 1)).toBe("Kutu 1 · yarın");
+  });
+
+  it("pas geçilen soruda not ne olursa olsun kutu 1'i gösterir", () => {
+    for (const rating of [0, 1, 2] as const) {
+      expect(nextReviewLabel(4, rating, true)).toBe("Kutu 1 · yarın");
+    }
+  });
+
+  it("yazdığı kutu ve gün nextBox ile reviewIntervalDays'in söylediğidir", () => {
+    for (const box of [1, 2, 3, 4, 5] as const) {
+      for (const rating of [0, 1, 2] as const) {
+        const days = reviewIntervalDays(box, rating);
+        const expected =
+          days === 1
+            ? `Kutu ${nextBox(box, rating, false)} · yarın`
+            : `Kutu ${nextBox(box, rating, false)} · ${days} gün sonra`;
+        expect(nextReviewLabel(box, rating)).toBe(expected);
       }
     }
   });

@@ -39,12 +39,17 @@ export type AuthStatus = "unknown" | "anonymous" | "authenticated";
 export type AuthState = {
   status: AuthStatus;
   user: AuthUser | null;
+  /**
+   * Son denemede backend cevap verebildi mi? Uygulama backend'siz tam
+   * çalıştığı için bu bir hata değil, bir durum: yalnızca giriş alanı
+   * okur ve "şu an giremezsin" demek için kullanır. Sunucunun 401
+   * demesi de bir cevaptır — ulaşılabilir sayılır.
+   */
+  reachable: boolean;
 };
 
-const ANONYMOUS: AuthState = { status: "anonymous", user: null };
-
 let accessToken: string | null = null;
-let state: AuthState = { status: "unknown", user: null };
+let state: AuthState = { status: "unknown", user: null, reachable: true };
 
 const listeners = new Set<() => void>();
 
@@ -68,16 +73,28 @@ export function getSnapshot(): AuthState {
   return state;
 }
 
-function setState(next: AuthState): void {
-  state = next;
+/**
+ * Değişen alanları uygular. Hiçbir şey değişmediyse nesne kimliği de
+ * değişmez: useSyncExternalStore kimliğe bakıyor, her çağrıda yeni nesne
+ * üretmek sonsuz render döngüsü olurdu.
+ */
+function patch(next: Partial<AuthState>): void {
+  const merged: AuthState = { ...state, ...next };
+  if (
+    merged.status === state.status &&
+    merged.user === state.user &&
+    merged.reachable === state.reachable
+  ) {
+    return;
+  }
+  state = merged;
   for (const listener of listeners) listener();
 }
 
+/** Sunucu cevap verdi ve oturum yok. Cevap geldiğine göre ulaşılabilir. */
 function setAnonymous(): void {
   accessToken = null;
-  // Zaten anonimsek dinleyicileri boşuna uyandırma.
-  if (state.status === "anonymous") return;
-  setState(ANONYMOUS);
+  patch({ status: "anonymous", user: null, reachable: true });
 }
 
 /**
@@ -92,7 +109,12 @@ function setAnonymous(): void {
  * çalışan bir access token var, kullanıcı çevrimiçi olunca devam eder.
  */
 function settleUnknown(): void {
-  if (state.status === "unknown") setState(ANONYMOUS);
+  patch({
+    reachable: false,
+    // Oturum zaten açıksa düşürülmez; yalnızca açılıştaki belirsizlik
+    // anonime bağlanır.
+    status: state.status === "unknown" ? "anonymous" : state.status,
+  });
 }
 
 /* ------------------------------------------------------------------ */
@@ -155,7 +177,7 @@ async function runRefresh(): Promise<boolean> {
   }
 
   accessToken = parsed.data.accessToken;
-  setState({ status: "authenticated", user: parsed.data.user });
+  patch({ status: "authenticated", user: parsed.data.user, reachable: true });
   return true;
 }
 

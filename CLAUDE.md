@@ -263,7 +263,13 @@ shadcn/ui bileşenleri ihtiyaç oldukça tek tek eklenir, toplu kurulmaz.
   reducer eylemiyle; IndexedDB'ye yazmayı App'teki mevcut efekt zaten
   üstleniyor, doğrudan yazsaydı bir sonraki render onu bellekteki eski
   haliyle ezerdi.
-- **Arayüzde senkron göstergesi YOK.** Tasarım turunda eklenecek.
+- **Senkron göstergesi üst çubukta, sessiz.** Yalnızca istek uçarken
+  ("senkronlanıyor") ve son istek düştüğünde ("senkron bekliyor")
+  görünür; her şey yolundayken hiçbir şey yazmaz. Misafirde hiç istek
+  atılmadığı için hiç çıkmaz. Durum `progressSync` içinde modül
+  seviyesinde tutulur ve `useSyncStatus` ile okunur — App'ten prop
+  olarak inmez. `--warn` kullanılmaz: senkronun düşmesi arıza değil,
+  yerel veri zaten yazıldı.
 
 ## Çalışma bölümü
 

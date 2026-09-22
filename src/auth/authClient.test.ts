@@ -82,6 +82,7 @@ describe("refresh", () => {
     expect(auth.getSnapshot()).toEqual({
       status: "authenticated",
       user: refreshBody().user,
+      reachable: true,
     });
   });
 
@@ -102,7 +103,12 @@ describe("refresh", () => {
     // Backend kapalıyken de giriş düğmesi görünmeli; unknown'da kalırsa
     // arayüz sonsuza kadar boş yer tutucu gösterir.
     await expect(auth.refresh()).resolves.toBe(false);
-    expect(auth.getSnapshot()).toEqual({ status: "anonymous", user: null });
+    // Cevap hiç gelmedi: giriş alanı bunu "şu an giremezsin" diye gösterir.
+    expect(auth.getSnapshot()).toEqual({
+      status: "anonymous",
+      user: null,
+      reachable: false,
+    });
   });
 
   it("açılışta sunucu hatası olursa da anonymous'a geçer", async () => {
@@ -135,6 +141,34 @@ describe("refresh", () => {
     expect(auth.getSnapshot()).toEqual({
       status: "authenticated",
       user: refreshBody().user,
+      reachable: false,
+    });
+  });
+
+  it("ulaşılamayan sunucu geri geldiğinde bayrak da geri döner", async () => {
+    const auth = await loadClient();
+    fetchMock.mockRejectedValueOnce(new TypeError("offline"));
+    await auth.refresh();
+    expect(auth.getSnapshot().reachable).toBe(false);
+
+    fetchMock.mockResolvedValueOnce(jsonResponse(refreshBody()));
+    await auth.refresh();
+
+    expect(auth.getSnapshot().reachable).toBe(true);
+  });
+
+  it("401 de bir cevaptır: sunucu ulaşılabilir sayılır", async () => {
+    const auth = await loadClient();
+    fetchMock.mockRejectedValueOnce(new TypeError("offline"));
+    await auth.refresh();
+
+    fetchMock.mockResolvedValueOnce(new Response(null, { status: 401 }));
+    await auth.refresh();
+
+    expect(auth.getSnapshot()).toEqual({
+      status: "anonymous",
+      user: null,
+      reachable: true,
     });
   });
 });
@@ -172,7 +206,11 @@ describe("apiFetch", () => {
       (call) => urlOf(call[0]) === "/api/auth/refresh",
     );
     expect(refreshCalls).toHaveLength(1);
-    expect(auth.getSnapshot()).toEqual({ status: "anonymous", user: null });
+    expect(auth.getSnapshot()).toEqual({
+      status: "anonymous",
+      user: null,
+      reachable: true,
+    });
   });
 
   it("yenileme de 401 ise ilk yanıtı olduğu gibi döner", async () => {
@@ -208,7 +246,11 @@ describe("bootstrap", () => {
     fetchMock.mockResolvedValue(new Response(null, { status: 401 }));
 
     await expect(auth.bootstrap()).resolves.toBe(false);
-    expect(auth.getSnapshot()).toEqual({ status: "anonymous", user: null });
+    expect(auth.getSnapshot()).toEqual({
+      status: "anonymous",
+      user: null,
+      reachable: true,
+    });
   });
 
   it("backend kapalıysa da durum anonymous'a bağlanır", async () => {
@@ -216,7 +258,11 @@ describe("bootstrap", () => {
     fetchMock.mockRejectedValue(new TypeError("Failed to fetch"));
 
     await expect(auth.bootstrap()).resolves.toBe(false);
-    expect(auth.getSnapshot()).toEqual({ status: "anonymous", user: null });
+    expect(auth.getSnapshot()).toEqual({
+      status: "anonymous",
+      user: null,
+      reachable: false,
+    });
   });
 
   it("iki kez çağrılsa da tek istek atar", async () => {
@@ -240,7 +286,11 @@ describe("logout", () => {
     fetchMock.mockRejectedValueOnce(new TypeError("offline"));
     await auth.logout();
 
-    expect(auth.getSnapshot()).toEqual({ status: "anonymous", user: null });
+    expect(auth.getSnapshot()).toEqual({
+      status: "anonymous",
+      user: null,
+      reachable: true,
+    });
 
     // Token da silindi: sonraki istek Authorization taşımıyor.
     fetchMock.mockResolvedValueOnce(jsonResponse({ ok: true }));

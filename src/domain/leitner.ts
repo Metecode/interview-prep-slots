@@ -62,6 +62,28 @@ export function reviewIntervalDays(
 }
 
 /**
+ * Bir öz-değerlendirmenin SONUCU, tek satırda: soru hangi kutuya gider
+ * ve bir sonraki tekrar ne zaman. Öz-değerlendirme düğmelerinin altındaki
+ * satır bunu yazar.
+ *
+ * Düğmede yalnızca gün sayısı yazınca ("8 gün") alt çubuktaki
+ * "4 günde bir tekrar" ile çelişiyormuş gibi okunuyordu: biri seçimin
+ * sonucunu, diğeri sorunun ŞU ANKİ kutusunu anlatıyor. İkisi de doğru
+ * ama bağlantıları görünmüyordu. Kutu numarasını da yazmak o bağı
+ * kuruyor: "Kutu 4 · 8 gün sonra" hem hedefi hem aralığı söylüyor.
+ */
+export function nextReviewLabel(
+  currentBox: Box,
+  rating: SelfRating,
+  passed = false,
+): string {
+  const box = nextBox(currentBox, rating, passed);
+  const days = reviewIntervalDays(currentBox, rating, passed);
+  // Tek gün "1 gün sonra" değil "yarın" diye yazılır.
+  return days === 1 ? `Kutu ${box} · yarın` : `Kutu ${box} · ${days} gün sonra`;
+}
+
+/**
  * Denemeyi ilerlemeye işler.
  * Saf: gelen nesneyi değiştirmez, yeni bir kayıt döner.
  */

@@ -6,13 +6,13 @@
 .score {
   display: flex;
   align-items: baseline;
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
 .scoreValue {
   font-family: var(--mono);
-  font-size: 2.1rem;
-  font-weight: 700;
+  font-size: var(--fs-score);
+  font-weight: var(--fw-bold);
   line-height: 1;
   /* Sayarken rakam genişliği değişmesin, blok zıplamasın. */
   font-variant-numeric: tabular-nums;
@@ -25,15 +25,15 @@
 }
 
 .scoreCaption {
-  font-size: 0.85rem;
-  line-height: 1.4;
+  font-size: var(--fs-body-sm);
+  line-height: var(--lh-snug);
   color: var(--text-dim);
 }
 
 .conceptsLabel {
-  margin: 1rem 0 0.55rem;
+  margin: var(--space-4) 0 var(--space-2);
   font-family: var(--mono);
-  font-size: 0.68rem;
+  font-size: var(--fs-mono-sm);
   letter-spacing: 0.06em;
   color: var(--text-faint);
 }
@@ -41,7 +41,7 @@
 .chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: var(--space-2);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -54,10 +54,10 @@
 .chip {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.25rem 0.65rem;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-3);
   font-family: var(--mono);
-  font-size: 0.78rem;
+  font-size: var(--fs-mono);
   border-radius: 999px;
   cursor: default;
   animation: chip-in var(--dur-base) var(--ease-out) backwards;

@@ -16,6 +16,14 @@ import styles from "./Machine.module.css";
 /** burada yalnızca duruşta ortaya oturacak yüz sabittir.                */
 const WINNING_INDEX = 6;
 
+/**
+ * Hiç kategori seçili değilken tamburda duran yer tutucu. Boş dize
+ * bırakılınca yuva "yüklenmeyi bekliyor" gibi görünüyordu; çizgi,
+ * gösterilecek bir şey olmadığını söylüyor. Kolun neden kapalı olduğunu
+ * makinenin altındaki ipucu anlatıyor.
+ */
+const EMPTY_FACE = "—";
+
 const NORMAL_TIMING = {
   first: { durationMs: 1300, turns: 3 },
   second: { durationMs: 1600, turns: 4 },
@@ -158,8 +166,8 @@ export function Machine({
   // Havuzda tek değer varsa o tambur dönmez, o değeri sabit gösterir.
   // Etiket havuzdan okunuyor: yüz dizileri dönüş başına üretildiği için
   // kategori seçimi değişince eskimiş kalıyorlar.
-  const frozenLeft = leftPool.length <= 1 ? (leftPool[0] ?? "") : null;
-  const frozenRight = rightPool.length <= 1 ? (rightPool[0] ?? "") : null;
+  const frozenLeft = leftPool.length <= 1 ? (leftPool[0] ?? EMPTY_FACE) : null;
+  const frozenRight = rightPool.length <= 1 ? (rightPool[0] ?? EMPTY_FACE) : null;
   const leftFrozen = frozenLeft !== null;
   const rightFrozen = frozenRight !== null;
 
@@ -183,7 +191,34 @@ export function Machine({
     onSettle();
   }, [spinKey, settleOwner, spinning, onSettle]);
 
+  /*
+    Animasyonu atlamanın klavye yolu. Fare için tamburlara tıklamak
+    yetiyordu ama kol dönüş boyunca disabled olduğu için odak gövdeye
+    düşüyor ve klavyedeki kullanıcının atlayacak bir hedefi kalmıyordu.
+    Dinleyici yalnızca dönüş sürerken bağlanır.
+  */
+  useEffect(() => {
+    if (!spinning) return;
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key !== "Escape") return;
+      leftDrumRef.current?.finish();
+      rightDrumRef.current?.finish();
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [spinning]);
+
   const timing = fastMode ? FAST_TIMING : NORMAL_TIMING;
+
+  // İki tambur da donmuşsa yuva tek satır yüksekliğinde kalır; ödeme
+  // çizgisi sabit yerinden bu satıra çekilmeli.
+  const bayRows = leftFrozen && rightFrozen ? "1" : "3";
+
+  // Havuz boşken ödeme çizgisi hiçbir şeyi işaretlemiyor; accent bütçesi
+  // de boşa gitmesin diye o durumda hiç görünmez.
+  const paylineSettled = !spinning && pool.length > 0;
 
   /** Tamburun oturduğu anda pencereye küçük bir tık verir. */
   function bumpTick(el: HTMLDivElement | null) {
@@ -214,7 +249,7 @@ export function Machine({
             <span className={styles.reelLabel}>KONU</span>
           </div>
 
-          <div className={styles.bay} onClick={handleBayClick}>
+          <div className={styles.bay} data-rows={bayRows} onClick={handleBayClick}>
             <div ref={leftSlotRef} className={styles.drumSlot}>
               <Drum
                 ref={leftDrumRef}
@@ -249,7 +284,7 @@ export function Machine({
             {/* Yalnızca duruşta görünür; üçgenler CSS geçişiyle dışarıdan içeri kayar. */}
             <div
               className={
-                spinning ? styles.payline : `${styles.payline} ${styles.paylineSettled}`
+                paylineSettled ? `${styles.payline} ${styles.paylineSettled}` : styles.payline
               }
               aria-hidden="true"
             >

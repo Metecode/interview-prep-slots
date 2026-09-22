@@ -70,6 +70,19 @@ export const questionFileSchema = z.object({
 });
 export type QuestionFile = z.infer<typeof questionFileSchema>;
 
+/**
+ * İçinde en az bir soru olan kategoriler, CATEGORIES sırasında.
+ *
+ * CATEGORIES ileride eklenecek konuları da sayıyor; içeriği henüz
+ * yazılmamış bir kategori arayüzde seçilebilir duruyordu ama seçilince
+ * havuza hiçbir soru katmıyordu — tıklanabilir ama işe yaramayan bir
+ * çip. Liste bu yüzden sabitten değil, gerçek içerikten türetilir.
+ */
+export function availableCategories(questions: readonly Question[]): Category[] {
+  const filled = new Set(questions.map((question) => question.category));
+  return CATEGORIES.filter((category) => filled.has(category));
+}
+
 /* ------------------------------------------------------------------ */
 /* Değerlendirme — türetilmiş, saklanmaz                               */
 /* ------------------------------------------------------------------ */

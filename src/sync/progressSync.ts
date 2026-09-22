@@ -21,6 +21,38 @@ const MERGE_URL = "/api/progress/merge";
 /** Soru id'sinden ilerlemesine; state ve depo ile aynı şekil. */
 export type ProgressMap = Record<string, QuestionProgress>;
 
+/* ------------------------------------------------------------------ */
+/* Senkron durumu — arayüzde küçük bir göstergeye bakar                */
+/* ------------------------------------------------------------------ */
+
+/**
+ * "error" bir hata ekranı değil: yerel veri zaten yazıldı, bir sonraki
+ * tetik yakalar. Gösterge yalnızca "sunucudaki kopya şu an geride"
+ * demek için var. Misafirde hiç istek atılmadığı için durum hep "idle".
+ */
+export type SyncStatus = "idle" | "syncing" | "error";
+
+const syncListeners = new Set<() => void>();
+let pendingRequests = 0;
+let lastFailed = false;
+
+export function subscribeSync(listener: () => void): () => void {
+  syncListeners.add(listener);
+  return () => {
+    syncListeners.delete(listener);
+  };
+}
+
+/** Değer ilkel; useSyncExternalStore için kimlik derdi yok. */
+export function getSyncStatus(): SyncStatus {
+  if (pendingRequests > 0) return "syncing";
+  return lastFailed ? "error" : "idle";
+}
+
+function publishSync(): void {
+  for (const listener of syncListeners) listener();
+}
+
 /*
   Birleştirmenin hangi kullanıcı için çalıştığı. Tek istek güvencesi burada,
   çağıran tarafta değil: React StrictMode efektleri iki kez çalıştırıyor ve
@@ -62,6 +94,9 @@ export async function syncAfterLogin(local: ProgressMap): Promise<ProgressMap | 
 /** Çıkışta çağrılır: bir sonraki giriş yeniden birleştirmeli. */
 export function resetSync(): void {
   mergedUserId = null;
+  // Çıkan kullanıcının başarısız senkronu yeni oturumda asılı kalmasın.
+  lastFailed = false;
+  publishSync();
 }
 
 /**
@@ -88,6 +123,9 @@ async function send(
   url: string,
   records: QuestionProgress[],
 ): Promise<unknown | null> {
+  pendingRequests += 1;
+  publishSync();
+
   try {
     const response = await apiFetch(url, {
       method,
@@ -97,13 +135,20 @@ async function send(
 
     if (!response.ok) {
       console.warn(`İlerleme senkronu başarısız (${url}):`, response.status);
+      lastFailed = true;
       return null;
     }
 
-    return await response.json();
+    const body = await response.json();
+    lastFailed = false;
+    return body;
   } catch (error) {
     console.warn(`İlerleme senkronu gönderilemedi (${url}):`, error);
+    lastFailed = true;
     return null;
+  } finally {
+    pendingRequests -= 1;
+    publishSync();
   }
 }
 

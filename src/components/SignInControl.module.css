@@ -5,9 +5,9 @@
 
 /* İkincil düğme: accent burada kullanılmaz, giriş birincil eylem değil. */
 .trigger {
-  padding: 0.3rem 0.75rem;
+  padding: var(--space-1) var(--space-3);
   font: inherit;
-  font-size: 0.8rem;
+  font-size: var(--fs-label);
   color: var(--text);
   background: transparent;
   border: 1px solid var(--line);
@@ -16,7 +16,12 @@
   white-space: nowrap;
   transition:
     border-color var(--dur-fast) var(--ease-out),
-    background-color var(--dur-fast) var(--ease-out);
+    background-color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.trigger:active {
+  transform: translateY(1px);
 }
 
 .trigger:focus-visible {

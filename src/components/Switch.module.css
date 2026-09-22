@@ -6,8 +6,8 @@
 .row {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.85rem;
+  gap: var(--space-2);
+  font-size: var(--fs-body-sm);
   color: var(--text-dim);
   cursor: pointer;
 }
@@ -25,7 +25,13 @@
   cursor: pointer;
   transition:
     background-color var(--dur-fast) var(--ease-out),
-    border-color var(--dur-fast) var(--ease-out);
+    border-color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+/* Anahtar küçük; basıldığı, diğer düğmelerle aynı hareketle belli olur. */
+.track:active {
+  transform: translateY(1px);
 }
 
 .track[aria-checked="true"] {
@@ -68,5 +74,9 @@
   .track,
   .knob {
     transition: none;
+  }
+
+  .track:active {
+    transform: none;
   }
 }

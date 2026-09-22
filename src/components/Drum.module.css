@@ -13,6 +13,10 @@
   --row-h: var(--row, 3.5rem);
 
   position: relative;
+  /* Şerit mutlak konumlu, yani pencerenin içerik genişliği sıfır. Yuva
+     (.drumSlot) flex olduğu için genişliğin açıkça verilmesi gerekiyor;
+     yoksa pencere içeriğine göre büzülüp kayboluyor. */
+  width: 100%;
   height: calc(var(--row-h) * 3);
   overflow: hidden;
   background: var(--well);
@@ -58,7 +62,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 0.5rem;
+  padding: 0 var(--space-2);
   font-family: var(--mono);
   /* Pasif satır: --text-faint zemine göre en az 4.5:1 kontrast verir. */
   color: var(--text-faint);
@@ -74,7 +78,7 @@
 
 .label {
   max-width: 100%;
-  font-size: 0.9rem;
+  font-size: var(--fs-body-sm);
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -84,21 +88,27 @@
 .mid {
   background: var(--surface-raised);
   color: var(--text);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
 }
 
 @media (max-width: 560px) {
   .label {
-    font-size: 0.8rem;
+    font-size: var(--fs-label);
   }
 }
 
 /*
-  Donmuş tamburun komşu satırları. Yüz değil, yalnızca yuvanın zemini:
-  gradyan ve dikiş çizgisi olmayınca satır "dönecek bir yüz" gibi
-  okunmuyor.
+  Donmuş tambur: havuzda tek değer var, dönecek bir şey yok.
+  Pencere üç satır yerine tek satır. Komşuları boş bırakmak yerine hiç
+  çizmemek gerekiyordu — boş iki satır "birazdan dolacak" gibi okunuyor,
+  oysa orada gösterilecek ikinci bir değer yok. Kalan boşluğu yuvanın
+  kendi zemini dolduruyor (bkz. Machine.module.css, .drumSlot).
 */
-.blank {
+.window[data-frozen="true"] {
   height: var(--row-h);
-  background: var(--well);
+}
+
+/* Tek satırda alt dikiş çizgisi bir sonraki satırı ima ediyordu. */
+.window[data-frozen="true"] .face {
+  box-shadow: none;
 }

@@ -1,3 +1,4 @@
+import { useId } from "react";
 import type { CSSProperties } from "react";
 
 import { useCountUp } from "../../hooks/useCountUp";
@@ -28,6 +29,14 @@ export type ScoreCardProps = {
 };
 
 export function ScoreCard({ question, evaluation, className, style }: ScoreCardProps) {
+  /*
+    Başlık id'si useId ile üretilir, sabit yazılmaz: sahne geçişi sırasında
+    çıkan ve giren panel bir an birlikte DOM'da duruyor (bkz. Stage.tsx) ve
+    sabit id o anda iki kez geçiyordu. Yinelenen id'de aria-labelledby'nin
+    hangi başlığı gösterdiği belirsiz.
+  */
+  const titleId = useId();
+
   const passed = evaluation === null;
   const hits = evaluation?.hits ?? [];
   const total = question.keyConcepts.length;
@@ -36,8 +45,8 @@ export function ScoreCard({ question, evaluation, className, style }: ScoreCardP
   const shown = useCountUp(passed ? 0 : hits.length);
 
   return (
-    <section className={className} style={style} aria-labelledby="score-title">
-      <h3 className={styles.hidden} id="score-title">
+    <section className={className} style={style} aria-labelledby={titleId}>
+      <h3 className={styles.hidden} id={titleId}>
         Kavram eşleşmesi
       </h3>
 

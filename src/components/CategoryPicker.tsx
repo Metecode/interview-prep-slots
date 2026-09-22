@@ -3,7 +3,6 @@ import { useId, useState } from "react";
 import { ChevronIcon } from "./ChevronIcon";
 import { Collapse } from "./Collapse";
 import { CATEGORY_LABELS } from "../content/labels";
-import { CATEGORIES } from "../domain/question";
 import type { Category } from "../domain/question";
 import styles from "./CategoryPicker.module.css";
 
@@ -12,6 +11,8 @@ import styles from "./CategoryPicker.module.css";
 /* ------------------------------------------------------------------ */
 
 export type CategoryPickerProps = {
+  /** Gösterilecek kategoriler. İçinde soru olmayan kategori buraya hiç gelmez. */
+  categories: Category[];
   active: Category[];
   /** true iken hiçbir çip tıklanamaz (ör. makara dönerken). */
   disabled: boolean;
@@ -20,23 +21,35 @@ export type CategoryPickerProps = {
   onToggleAll: () => void;
 };
 
-/** Kapalı özet metni: hepsi seçiliyse tek kelime, değilse ilk iki etiket + kalan sayı. */
-function summarize(active: Category[]): string {
-  if (active.length === CATEGORIES.length) return "tümü seçili";
-  if (active.length === 0) return "hiçbiri seçili değil";
+/**
+ * Kapalı özet metni: hepsi seçiliyse tek kelime, değilse ilk iki etiket +
+ * kalan sayı. Sayım yalnızca görünen kategoriler üzerinden yapılır —
+ * seçimde kalmış ama içeriği olmayan bir kategori özeti şişirmesin.
+ */
+function summarize(active: Category[], categories: Category[]): string {
+  const shown = categories.filter((category) => active.includes(category));
+  if (shown.length === categories.length && categories.length > 0) return "tümü seçili";
+  if (shown.length === 0) return "hiçbiri seçili değil";
 
-  const labels = CATEGORIES.filter((category) => active.includes(category)).map(
-    (category) => CATEGORY_LABELS[category],
-  );
+  const labels = shown.map((category) => CATEGORY_LABELS[category]);
   if (labels.length <= 2) return labels.join(", ");
   return `${labels.slice(0, 2).join(", ")} +${labels.length - 2}`;
 }
 
-export function CategoryPicker({ active, disabled, onToggle, onToggleAll }: CategoryPickerProps) {
+export function CategoryPicker({
+  categories,
+  active,
+  disabled,
+  onToggle,
+  onToggleAll,
+}: CategoryPickerProps) {
   // Kalıcı olması gerekmiyor: her açılışta kapalı başlar.
   const [open, setOpen] = useState(false);
   const listId = useId();
-  const allSelected = active.length === CATEGORIES.length;
+  // Uzunluk karşılaştırması yetmez: seçimde, artık gösterilmeyen bir
+  // kategori kalmış olabilir.
+  const allSelected =
+    categories.length > 0 && categories.every((category) => active.includes(category));
 
   return (
     <div className={styles.picker}>
@@ -49,7 +62,7 @@ export function CategoryPicker({ active, disabled, onToggle, onToggleAll }: Cate
           onClick={() => setOpen((value) => !value)}
         >
           <span>
-            {CATEGORIES.length} kategori · {summarize(active)}
+            {categories.length} kategori · {summarize(active, categories)}
           </span>
           <ChevronIcon className={styles.chevron} />
         </button>
@@ -68,7 +81,7 @@ export function CategoryPicker({ active, disabled, onToggle, onToggleAll }: Cate
 
       <Collapse open={open} id={listId}>
         <ul className={styles.list}>
-          {CATEGORIES.map((category) => {
+          {categories.map((category) => {
             const selected = active.includes(category);
             return (
               <li key={category}>

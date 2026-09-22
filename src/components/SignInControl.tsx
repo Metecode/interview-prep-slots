@@ -10,12 +10,14 @@ import type { DismissReason } from "../hooks/useDismiss";
 /* ------------------------------------------------------------------ */
 
 export type SignInControlProps = {
+  /** Backend'e ulaşılamıyor: panel giriş yerine sebebi gösterir. */
+  offline: boolean;
   onLogin: () => void;
 };
 
 const PANEL_ID = "sign-in-panel";
 
-export function SignInControl({ onLogin }: SignInControlProps) {
+export function SignInControl({ offline, onLogin }: SignInControlProps) {
   const [open, setOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -42,7 +44,13 @@ export function SignInControl({ onLogin }: SignInControlProps) {
         Giriş yap
       </button>
 
-      <SignInPanel open={open} id={PANEL_ID} panelRef={panelRef} onLogin={onLogin} />
+      <SignInPanel
+        open={open}
+        offline={offline}
+        id={PANEL_ID}
+        panelRef={panelRef}
+        onLogin={onLogin}
+      />
     </div>
   );
 }

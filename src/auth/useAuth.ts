@@ -10,6 +10,8 @@ import type { AuthStatus, AuthUser } from "./authClient";
 export type UseAuth = {
   status: AuthStatus;
   user: AuthUser | null;
+  /** false ise backend'e ulaşılamıyor; giriş alanı buna göre yazı değiştirir. */
+  reachable: boolean;
   login: () => void;
   logout: () => Promise<void>;
 };
@@ -21,5 +23,5 @@ export type UseAuth = {
  */
 export function useAuth(): UseAuth {
   const state = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
-  return { status: state.status, user: state.user, login, logout };
+  return { status: state.status, user: state.user, reachable: state.reachable, login, logout };
 }

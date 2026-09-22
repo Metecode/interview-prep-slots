@@ -12,7 +12,7 @@ import { useAuth } from "../auth/useAuth";
  * uygulamanın tamamı açık, buradaki düğme yalnızca bir teklif.
  */
 export function AuthArea() {
-  const { status, user, login, logout } = useAuth();
+  const { status, user, reachable, login, logout } = useAuth();
 
   // Açılışta yenileme sonuçlanana kadar hiçbir şey gösterilmez: bir an
   // "Giriş yap" yazıp kullanıcı adına dönmek titreme olarak okunuyor.
@@ -25,5 +25,7 @@ export function AuthArea() {
     return <UserMenu user={user} onLogout={() => void logout()} />;
   }
 
-  return <SignInControl onLogin={login} />;
+  // Backend kapalıyken de düğme görünür: kullanıcı neyin çalışmadığını
+  // görmeli, düğmenin kaybolması "böyle bir özellik yok" gibi okunur.
+  return <SignInControl offline={!reachable} onLogin={login} />;
 }
