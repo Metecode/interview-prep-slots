@@ -1,0 +1,127 @@
+/*
+  Giriş paneli. Üst çubuktaki düğmenin altına, sağa yaslı açılır.
+
+  Hareket: opacity + 6px yukarıdan kayma, tokens.css'teki --dur-base ve
+  --ease-out ile. Kapanış süresi açılışın %70'i — giden şeyin gelenden
+  hızlı olması alışılmış davranış. prefers-reduced-motion için ayrıca
+  bir kural yok; tokens.css süreleri 1ms'ye indiriyor.
+
+  visibility de geçişe dahil: kapalıyken panel tıklamayı yakalamasın,
+  ama sönerken de görünür kalsın diye süre sonunda değişir.
+*/
+
+.panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 30;
+  width: 280px;
+  max-width: calc(100vw - 32px);
+  padding: var(--space-4);
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 12px 28px rgba(var(--well-rgb), 0.55);
+  text-align: left;
+
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-6px);
+  transition:
+    opacity calc(var(--dur-base) * 0.7) var(--ease-out),
+    transform calc(var(--dur-base) * 0.7) var(--ease-out),
+    visibility calc(var(--dur-base) * 0.7) var(--ease-out);
+}
+
+.panel[data-open="true"] {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  transition-duration: var(--dur-base);
+}
+
+/* Odak panele programla geliyor; ince bir çerçeve nerede olduğunu söyler. */
+.panel:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+.title {
+  margin: 0 0 var(--space-2);
+  font-size: var(--fs-heading);
+  font-weight: var(--fw-semibold);
+  color: var(--text);
+}
+
+.line {
+  margin: 0 0 var(--space-2);
+  font-size: var(--fs-label);
+  line-height: var(--lh-body);
+  color: var(--text-dim);
+}
+
+/* Panelin tek birincil eylemi; accent bütçesi burada harcanıyor. */
+.action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  width: 100%;
+  margin-top: var(--space-1);
+  padding: var(--space-2) var(--space-4);
+  font: inherit;
+  font-size: var(--fs-body-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--accent-ink);
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  cursor: pointer;
+  transition:
+    opacity var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.action:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+/*
+  Backend'e ulaşılamıyor: düğme duruyor ama çalışmıyor. Kaybolsaydı
+  "böyle bir özellik yok" gibi okunurdu; kapalı hali yukarıdaki notla
+  birlikte neden çalışmadığını söylüyor.
+*/
+.action:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/*
+  Sebep ve ne yapılacağı bir arada. Accent ya da --warn kullanılmıyor:
+  uygulama backend'siz tam çalıştığı için bu bir arıza değil, bir durum.
+*/
+.offline {
+  margin: 0 0 var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--fs-label);
+  line-height: var(--lh-snug);
+  color: var(--text);
+  background: color-mix(in srgb, var(--text) 6%, transparent);
+  border-left: 2px solid var(--text-dim);
+  border-radius: 0 6px 6px 0;
+}
+
+.action:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) {
+  .action:hover {
+    opacity: 0.9;
+  }
+}
+
+.icon {
+  flex-shrink: 0;
+}

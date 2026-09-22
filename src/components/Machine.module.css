@@ -23,15 +23,15 @@
      üst yüzey katlaması (::before, rotateX(90deg)) da bu yüzden
      kenardan bakılınca görünmez bir çizgiye iniyor.
   */
-  padding: 0.5rem 4px;
+  padding: var(--space-2) var(--space-1);
 }
 
 .machine {
   position: relative;
   display: flex;
   align-items: stretch;
-  gap: 1rem;
-  padding: 1rem;
+  gap: var(--space-4);
+  padding: var(--space-4);
   border-radius: 8px;
   background: linear-gradient(to bottom, var(--surface-raised), var(--surface));
   border: 1px solid var(--line);
@@ -79,6 +79,8 @@
   position: relative;
   min-width: 0;
   display: flex;
+  /* Boşluk ölçeğinin dışında ve bilerek: bu bir boşluk değil, iki
+     tamburun arasından görünen ayırıcı çizgi. */
   gap: 1px;
   padding: var(--bay-pad);
   border-radius: 8px;
@@ -103,9 +105,18 @@
   box-shadow: inset 0 3px 8px var(--well-shadow);
 }
 
+/*
+  Tamburun yuvadaki yeri. Donmuş tambur tek satıra indiği için yuva
+  zemini onun üstünde ve altında görünür kalır: yuvanın içi boş
+  görünmeli, satır gibi değil. Dikey ortalama, tek satırın ödeme
+  çizgisiyle aynı hizada durmasını sağlıyor.
+*/
 .drumSlot {
   flex: 1;
   min-width: 0;
+  display: flex;
+  align-items: center;
+  background: var(--well);
 }
 
 /* Etiket satırı + yuva dikey olarak burada birlikte durur; .machine'in
@@ -115,13 +126,20 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
+  /*
+    Dikeyde ortalanır: iki tambur da donduğunda yuva tek satıra iniyor
+    ama kasanın boyu kol panelinden geliyor. Ortalanmazsa yuva tepeye
+    yapışıp altında bir sebebi olmayan boşluk bırakıyor.
+  */
+  justify-content: center;
 }
 
 /* Sütun etiketleri: hangi tamburun ne gösterdiği artık belirsiz kalmaz. */
 .reelLabels {
   display: flex;
+  /* .bay ile aynı ayırıcı: etiketler tamburların tam üstüne düşsün. */
   gap: 1px;
-  margin-bottom: 0.35rem;
+  margin-bottom: var(--space-2);
 }
 
 .reelLabel {
@@ -129,7 +147,7 @@
   min-width: 0;
   text-align: center;
   font-family: var(--mono);
-  font-size: 0.65rem;
+  font-size: var(--fs-mono-sm);
   letter-spacing: 0.06em;
   color: var(--text-dim);
 }
@@ -173,6 +191,15 @@
 
 .paylineSettled {
   opacity: 1;
+}
+
+/*
+  İki tambur da donmuşsa yuva tek satır yüksekliğinde; ödeme çizgisinin
+  bir satır aşağıdaki sabit yeri yuvanın dışında kalıyor ve
+  overflow: hidden onu tamamen kırpıyordu.
+*/
+.bay[data-rows="1"] .payline {
+  top: var(--bay-pad);
 }
 
 /* Ödeme çizgisi: accent'in üç sanctioned kullanımından biri. Dolgu
@@ -221,7 +248,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 0.5rem;
+  padding: var(--space-2);
   border-radius: 6px;
   border: 1px solid var(--line);
   background: linear-gradient(to bottom, var(--surface-raised), var(--surface));

@@ -1,31 +1,36 @@
 /*
-  Üst çubuk: tam sayfa genişliğinde bir şerit. Genişliği sabit tutuyoruz
-  (--shell-narrow) — sonuç ekranı iki sütuna açılıp içerik genişlese
-  bile üst çubuk büyüyüp küçülmesin; adımlar arasında sabit bir çerçeve
-  kalsın diye. Bkz. StepIndicator.module.css ve Footer.module.css, aynı
-  gerekçeyle aynı sabit genişliği kullanıyor.
+  Üst çubuk: tam sayfa genişliğinde bir şerit. İçeriği --shell-bar
+  genişliğinde sabit duruyor — adım değiştikçe büyüyüp küçülmesin,
+  sayfanın çerçevesi sabit kalsın diye. Bkz. StepIndicator.module.css ve
+  Footer.module.css: aynı gerekçeyle aynı token'ı kullanıyorlar, üçü
+  birlikte hareket eder.
 */
 
+/* Konumlu ve yığında yukarıda: oturum alanının açılan paneli aşağıdaki
+   içeriğin üstünde kalsın. Makine CSS 3D dönüşümleriyle kendi yığın
+   bağlamını kuruyor, aradaki sıra kendiliğinden doğru çıkmıyor. */
 .bar {
+  position: relative;
+  z-index: 20;
   border-bottom: 1px solid var(--line);
   background: var(--bg);
 }
 
 .inner {
-  max-width: var(--shell-narrow);
+  max-width: var(--shell-bar);
   margin: 0 auto;
-  padding: 0.7rem 20px;
+  padding: var(--space-3) var(--gutter);
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 0.6rem 1rem;
+  gap: var(--space-2) var(--space-4);
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: var(--space-2);
   min-width: 0;
 }
 
@@ -36,65 +41,81 @@
 .brandText {
   display: flex;
   flex-direction: column;
-  line-height: 1.25;
+  line-height: var(--lh-tight);
   min-width: 0;
 }
 
 .name {
-  font-size: 0.95rem;
-  font-weight: 600;
+  font-size: var(--fs-heading);
+  font-weight: var(--fw-semibold);
   color: var(--text);
 }
 
 .tagline {
-  font-size: 0.7rem;
+  font-size: var(--fs-label);
   color: var(--text-dim);
 }
 
 .meta {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--space-3);
   flex-wrap: wrap;
   justify-content: flex-end;
 }
 
 .version {
   font-family: var(--mono);
-  font-size: 0.65rem;
+  font-size: var(--fs-mono-sm);
   color: var(--text-dim);
-  padding: 1px 6px;
+  padding: var(--space-1) var(--space-2);
   border: 1px solid var(--line);
   border-radius: 4px;
 }
 
 .pool {
   font-family: var(--mono);
-  font-size: 0.75rem;
+  font-size: var(--fs-mono);
   color: var(--text-dim);
   white-space: nowrap;
+}
+
+/*
+  Senkron göstergesi. Bilerek sessiz: mono, en küçük basamak, sönük ton.
+  Yerel veri her hâlükârda yazıldı — bu satır bir uyarı değil, sunucudaki
+  kopyanın durumu. Bu yüzden --warn değil --text-faint/--text-dim.
+*/
+.sync {
+  font-family: var(--mono);
+  font-size: var(--fs-mono-sm);
+  color: var(--text-faint);
+  white-space: nowrap;
+}
+
+.sync[data-state="error"] {
+  color: var(--text-dim);
 }
 
 .quotaBadge {
   display: flex;
   align-items: baseline;
-  gap: 0.35rem;
-  padding: 0.25rem 0.55rem;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
   border-radius: 6px;
   background: var(--well);
 }
 
 .quotaCount {
   font-family: var(--mono);
-  font-weight: 700;
-  font-size: 0.9rem;
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-body-sm);
   color: var(--text);
   font-variant-numeric: tabular-nums;
 }
 
 .quotaLabel {
   font-family: var(--mono);
-  font-size: 0.6rem;
+  font-size: var(--fs-mono-sm);
   letter-spacing: 0.05em;
   color: var(--text-faint);
 }

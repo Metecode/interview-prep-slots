@@ -481,6 +481,39 @@ describe("tam tur", () => {
   });
 });
 
+describe("SYNC_PROGRESS", () => {
+  const merged: Record<string, QuestionProgress> = {
+    q1: { questionId: "q1", box: 4, lastSeenAt: "2026-03-01T10:00:00.000Z", attempts: [] },
+  };
+
+  it("ilerlemeyi sunucudan geleniyle değiştirir", () => {
+    const state = makeState({
+      progress: {
+        q1: { questionId: "q1", box: 1, lastSeenAt: "2026-01-01T10:00:00.000Z", attempts: [] },
+      },
+    });
+
+    const next = sessionReducer(state, { type: "SYNC_PROGRESS", progress: merged });
+
+    expect(next.progress).toEqual(merged);
+  });
+
+  it("tur ortasında da uygulanır, ekrandaki soruya dokunmaz", () => {
+    const question = makeQuestion("q9");
+    const state = makeState({
+      phase: "answering",
+      current: question,
+      activeCategories: ["sql"],
+    });
+
+    const next = sessionReducer(state, { type: "SYNC_PROGRESS", progress: merged });
+
+    expect(next.progress).toEqual(merged);
+    expect(next.phase).toBe("answering");
+    expect(next.current).toBe(question);
+  });
+});
+
 describe("HYDRATE", () => {
   const saved: QuestionProgress = {
     questionId: "q1",

@@ -1,0 +1,116 @@
+/*
+  Kullanıcı menüsü. Hareket dili SignInPanel ile aynı: opacity + 6px
+  kayma, açılış --dur-base, kapanış onun %70'i. Hareket azaltma
+  tercihini tokens.css karşılıyor.
+*/
+
+.wrap {
+  position: relative;
+}
+
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2) var(--space-1) var(--space-1);
+  font: inherit;
+  font-size: var(--fs-label);
+  color: var(--text);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  cursor: pointer;
+  max-width: 180px;
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.trigger:active {
+  transform: translateY(1px);
+}
+
+.trigger:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) {
+  .trigger:hover {
+    border-color: var(--line);
+    background: var(--surface);
+  }
+}
+
+.avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--well);
+}
+
+.username {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 30;
+  min-width: 140px;
+  padding: var(--space-1);
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 12px 28px rgba(var(--well-rgb), 0.55);
+
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-6px);
+  transition:
+    opacity calc(var(--dur-base) * 0.7) var(--ease-out),
+    transform calc(var(--dur-base) * 0.7) var(--ease-out),
+    visibility calc(var(--dur-base) * 0.7) var(--ease-out);
+}
+
+.menu[data-open="true"] {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  transition-duration: var(--dur-base);
+}
+
+.item {
+  display: block;
+  width: 100%;
+  padding: var(--space-2) var(--space-2);
+  font: inherit;
+  font-size: var(--fs-label);
+  text-align: left;
+  color: var(--text);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.item:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: -2px;
+}
+
+@media (hover: hover) {
+  .item:hover {
+    background: var(--surface);
+  }
+}
+
+/* Menü satırı: kayma yerine zemin koyulaşır, satırlar birbirini itmesin. */
+.item:active {
+  background: var(--surface-raised);
+}

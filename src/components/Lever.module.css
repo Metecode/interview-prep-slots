@@ -90,6 +90,15 @@
   }
 }
 
+/*
+  Basma anı. Kol sürüklenerek de çekilebiliyor ama tıklama ve klavye
+  yolunda bastığını gösteren tek şey imleçti. Hover kuralından sonra
+  gelir ki fareyle basıldığında büyüyen değil çöken topuz görünsün.
+*/
+.root:active:not(:disabled) .knob {
+  transform: scale(0.96);
+}
+
 .knobShade {
   fill: var(--knob-shade);
 }
@@ -133,7 +142,8 @@
     transition: none;
   }
 
-  .root:hover:not(:disabled) .knob {
+  .root:hover:not(:disabled) .knob,
+  .root:active:not(:disabled) .knob {
     transform: none;
   }
 }

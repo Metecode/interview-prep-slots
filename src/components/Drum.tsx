@@ -48,8 +48,10 @@ export type DrumProps = {
   /**
    * Havuzda tek değer varsa o değer; yoksa null.
    * Doluyken tambur dönmez: dönüş, hepsi aynı yazan üç satırın kayması
-   * olurdu. Tek satır sabit durur, komşular boş kalır ve oturma bildirimi
-   * hiç gelmez — turu açma işini Machine gerçekten dönen tambura veriyor.
+   * olurdu. Pencere tek satıra iner — komşu satırlar boş bırakılmaz,
+   * hiç çizilmez; boş iki satır "dolmayı bekleyen yer" gibi okunuyordu.
+   * Oturma bildirimi de hiç gelmez: turu açma işini Machine gerçekten
+   * dönen tambura veriyor.
    *
    * Etiket ayrı bir alan olarak geliyor, `labels` üzerinden değil:
    * `labels` dönüş başına bir kez üretiliyor ve turlar arasında bilerek
@@ -241,14 +243,11 @@ export const Drum = forwardRef<DrumHandle, DrumProps>(function Drum(
 
   if (frozen) {
     return (
-      <div className={styles.window} aria-hidden="true">
+      <div className={styles.window} data-frozen="true" aria-hidden="true">
         <div ref={stripRef} className={styles.strip}>
-          {/* Komşu satırlar yalnızca zemin: dönmeyeceği belli olsun. */}
-          <div className={styles.blank} />
           <div className={`${styles.face} ${styles.mid}`}>
             <span className={styles.label}>{frozenLabel}</span>
           </div>
-          <div className={styles.blank} />
         </div>
       </div>
     );

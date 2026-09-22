@@ -202,6 +202,75 @@ shadcn/ui bileşenleri ihtiyaç oldukça tek tek eklenir, toplu kurulmaz.
   alır, böylece hangi uçların var olduğu sızmaz. 404'ü görmek için
   geçerli token gerekir.
 
+## İlerleme senkronu
+
+- **IndexedDB birincil, sunucu ikinci kopya.** Local-first kararının
+  karşılığı: backend erişilemezken uygulama tam çalışır, senkron sessizce
+  başarısız olur. `GET /api/progress`, `PUT /api/progress` (kısmi liste,
+  tam değişim değil) ve `POST /api/progress/merge` (ilk girişte bir kez,
+  birleşmiş tam sonucu döner).
+- **box ve lastSeenAt için yeni kazanır, attempts HER ZAMAN birleşir.**
+  attempts kullanıcının yazdığı cevapları tutuyor; en değerli veri o.
+  "Eski kayıt" diye atılsaydı iki cihazda çalışan biri denemelerini
+  kalıcı olarak kaybederdi. Birleştirme `at` alanına göre tekilleştirir,
+  sıralar ve son `MAX_ATTEMPTS` tanesini tutar; `at`'i olmayan deneme
+  atlanır (tekilleştirme de sıralama da ona dayanıyor). `at`,
+  `Date#toISOString()` ile yazıldığı için sözlük sırası zaman sırasıdır.
+- **Üç sayaç.** `applied` box+lastSeenAt yazıldı, `merged` kayıt eskiydi
+  ama geçmiş birleşti, `ignored` hiçbir şey değişmedi. Üçü de normal
+  sonuç, hata değil.
+- **Geçersiz kayıt 400 değil, atlanan kayıttır.** Tek bozuk kayıt tüm
+  senkronu düşürmesin. Bilinmeyen `questionId` de atlanır (içerik
+  sürümleri arasında fark olabilir), sayısı loglanır. `lastSeenAt` bu
+  yüzden DTO'da `String`: Jackson ayrıştırsaydı bozuk bir tarih tüm
+  isteği 400'e çevirirdi. Şimdiden 1 günden fazla ileri tarihler
+  reddedilir — istemci saati yanlışsa sunucudaki doğruyu ezmesin.
+- **Yanıtta `lastSeenAt` UTC.** `toInstant().toString()` ile yazılır;
+  sürücünün döndürdüğü yerel offset (`+03:00`) Zod'un `.datetime()`
+  şemasından geçmez.
+- **Kilit ilerleme satırında değil, `app_user` satırında.** Senkron yeni
+  satır da ekliyor ve var olmayan satır kilitlenemez: iki sekme aynı
+  soruyu ilk kez aynı anda gönderdiğinde satır kilidi hiçbir şeyi
+  kilitlemez, ikisi de INSERT eder ve biri birincil anahtar çakışmasıyla
+  düşer. `AppUserRepository.findForUpdateById` PESSIMISTIC_WRITE alır,
+  kullanıcı başına senkronlar sıraya girer. "İdempotent, kilide gerek
+  yok" yalnızca AYNI veri için doğruydu.
+- **Karar ile yazma ayrı.** `ProgressMerger` saf: veritabanı, entity,
+  repository ve Spring bilmez, yalnızca hangi durumun kazanacağına karar
+  verir. `ProgressSyncService` transaction, kilit, okuma ve entity'ye
+  yazmayı üstlenir. Birleştirme kuralları bu yüzden Testcontainers'sız
+  test ediliyor (`ProgressMergerTest`); uçlar ve eşzamanlılık
+  Testcontainers'ta kalıyor.
+- **Yeni satır `entityManager.persist` ile girer.** Mevcut satırlar dirty
+  checking ile güncelleniyor; `repository.save` ile karışık iki yaklaşım
+  olmasın diye yeni satır da persistence context'e bırakılır, yazma anını
+  flush belirler.
+- **Frontend kuyruk TUTMAZ.** Hata durumunda sessiz kalınır: yerel veri
+  zaten yazıldı, bir sonraki senkron `lastSeenAt` ile yakalar. Kuyruk
+  tutulsaydı çevrimdışı kullanıcının kuyruğu sınırsız büyürdü.
+  Zamanlayıcıyla periyodik senkron yok; üç tetik var: giriş (bir kez
+  merge), RATE (tek soru) ve `visibilitychange: hidden`. Misafirde hiç
+  istek atılmaz.
+- **"Bir kez birleştir" güvencesi modül seviyesinde**, hook'ta değil —
+  StrictMode efektleri iki kez çalıştırıyor (`authClient.bootstrap` da
+  aynı sebeple orada). Yan faydası: React test kütüphanesi olmadan test
+  edilebiliyor.
+- **Merge sonucu yerele `{ ...local, ...merged }` yazılır.** Sunucu
+  tanımadığı `questionId`'leri atlıyor; dönen listeyi olduğu gibi
+  yazsaydık o sorulara ait yerel ilerleme silinirdi. Sunucunun bildiği
+  her kayıt zaten yanıtta olduğu için üstte o kazanır.
+- **Senkron oturuma yazılır, doğrudan diske değil.** `SYNC_PROGRESS`
+  reducer eylemiyle; IndexedDB'ye yazmayı App'teki mevcut efekt zaten
+  üstleniyor, doğrudan yazsaydı bir sonraki render onu bellekteki eski
+  haliyle ezerdi.
+- **Senkron göstergesi üst çubukta, sessiz.** Yalnızca istek uçarken
+  ("senkronlanıyor") ve son istek düştüğünde ("senkron bekliyor")
+  görünür; her şey yolundayken hiçbir şey yazmaz. Misafirde hiç istek
+  atılmadığı için hiç çıkmaz. Durum `progressSync` içinde modül
+  seviyesinde tutulur ve `useSyncStatus` ile okunur — App'ten prop
+  olarak inmez. `--warn` kullanılmaz: senkronun düşmesi arıza değil,
+  yerel veri zaten yazıldı.
+
 ## Çalışma bölümü
 
 Mimari ve yeni modüller sohbette yazılır. Claude Code mekanik işleri

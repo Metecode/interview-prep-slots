@@ -1,6 +1,6 @@
 /*
-  Alt bilgi: tam sayfa genişliğinde ayırıcı, sabit 620px sütuna
-  hizalanır — üst çubukla aynı gerekçeyle (bkz. TopBar.module.css).
+  Alt bilgi: tam sayfa genişliğinde ayırıcı, krom sütununa hizalanır —
+  üst çubukla aynı gerekçeyle (bkz. TopBar.module.css).
   Renkler tokens.css'ten gelir.
 */
 
@@ -9,16 +9,16 @@
 }
 
 .inner {
-  /* Üst çubukla aynı sabit sütun; bkz. TopBar.module.css */
-  max-width: var(--shell-narrow);
+  /* Üst çubukla aynı krom sütunu; bkz. TopBar.module.css */
+  max-width: var(--shell-bar);
   margin: 0 auto;
-  padding: 0.9rem 20px;
+  padding: var(--space-4) var(--gutter);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: var(--space-3);
   font-family: var(--mono);
-  font-size: 0.75rem;
+  font-size: var(--fs-mono);
   color: var(--text-faint);
 }
 
@@ -32,6 +32,10 @@
   .link:hover {
     color: var(--text-dim);
   }
+}
+
+.link:active {
+  color: var(--text);
 }
 
 .link:focus-visible {

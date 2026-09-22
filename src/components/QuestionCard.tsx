@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { KeyboardEvent as ReactKeyboardEvent } from "react";
 
 import { evaluateLexical } from "../domain/evaluate";
@@ -33,6 +33,7 @@ export type QuestionCardProps = {
  * çağıran tarafın işi: key={question.id} verilir, bileşen yeniden kurulur.
  */
 export function QuestionCard({ question, progress, onSubmit, onPass }: QuestionCardProps) {
+  const cardRef = useRef<HTMLElement>(null);
   const [answer, setAnswer] = useState("");
   const [hintVisible, setHintVisible] = useState(false);
   const box = progress?.box ?? 1;
@@ -43,6 +44,23 @@ export function QuestionCard({ question, progress, onSubmit, onPass }: QuestionC
   const { missing } = evaluateLexical(question, answer);
   const nextMissing = question.keyConcepts.find((concept) => missing.includes(concept.id));
 
+  /*
+    Tur ilerleyince odak, ekrana yeni gelen bölüme taşınır. Kol dönüş
+    boyunca disabled olduğu için odak gövdeye düşüyordu: klavyedeki
+    kullanıcı her çevirişten sonra cevap alanına ulaşmak için sayfanın
+    başından Tab'lamak zorunda kalıyordu.
+
+    Odaklanan, ilk alan değil bölümün kendisi (tabIndex -1): ekran
+    okuyucu önce soruyu okur, sonraki Tab yazı alanına girer — ve
+    dokunmatik cihazda klavye kendiliğinden açılmaz.
+
+    preventScroll: fareyle çalışan kullanıcı için sayfa kendiliğinden
+    kaymasın; odak zaten görünür alanın içinde.
+  */
+  useEffect(() => {
+    cardRef.current?.focus({ preventScroll: true });
+  }, []);
+
   function handleKeyDown(event: ReactKeyboardEvent<HTMLTextAreaElement>) {
     if (event.key !== "Enter" || !(event.ctrlKey || event.metaKey)) return;
     // Varsayılan davranış satır başı ekler, gönderdikten sonra gereksiz.
@@ -51,8 +69,11 @@ export function QuestionCard({ question, progress, onSubmit, onPass }: QuestionC
   }
 
   return (
-    <section className={styles.card}>
+    <section ref={cardRef} className={styles.card} tabIndex={-1}>
       <div className={styles.meta}>
+        {/* Kutu numarası tekrar aralığından önce: aralık kutunun sonucu,
+            kullanıcının izlediği sayı kutunun kendisi. */}
+        <span className={`${styles.metaBadge} ${styles.metaBadgeBox}`}>Kutu {box}</span>
         <span className={styles.metaBadge}>{boxCadenceLabel(box)}</span>
         <span className={styles.metaBadge}>
           {attempts > 0 ? `${attempts} deneme` : "ilk kez"}

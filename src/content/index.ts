@@ -1,5 +1,5 @@
-import { parseQuestionFile } from "../domain/question";
-import type { Question } from "../domain/question";
+import { availableCategories, parseQuestionFile } from "../domain/question";
+import type { Category, Question } from "../domain/question";
 import cybersecurity from "./tr/content-cybersecurity.json";
 import docker from "./tr/content-docker.json";
 import dotnet from "./tr/content-dotnet.json";
@@ -41,3 +41,10 @@ function loadQuestions(): Question[] {
 }
 
 export const QUESTIONS: Question[] = loadQuestions();
+
+/**
+ * Arayüzün göstereceği kategoriler. CATEGORIES ileride eklenecekleri de
+ * sayıyor; içeriği olmayan bir kategori seçilebilir görünüp havuza hiçbir
+ * soru katmıyordu. Liste bu yüzden içerikten türetilir.
+ */
+export const AVAILABLE_CATEGORIES: Category[] = availableCategories(QUESTIONS);

@@ -21,19 +21,20 @@
   display: flex;
   flex-direction: column;
   flex: 1;
-  gap: 1.25rem;
-  padding-bottom: 90px;
+  gap: var(--space-6);
+  /* Sayfanın altındaki nefes payı; ölçeğin son basamağının iki katı. */
+  padding-bottom: calc(var(--space-12) * 2);
 }
 
 .app {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 1.25rem;
+  gap: var(--space-6);
   max-width: var(--shell-narrow);
   width: 100%;
   margin: 0 auto;
-  padding: 34px 20px 0;
+  padding: var(--space-8) var(--gutter) 0;
 }
 
 /*
@@ -42,22 +43,29 @@
   yerine tek bir yer.
 */
 .settings {
-  font-size: 0.85rem;
+  font-size: var(--fs-body-sm);
   color: var(--text-dim);
 }
 
 .settingsToggle {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: var(--space-1);
   padding: 0;
   font: inherit;
-  font-size: 0.85rem;
+  font-size: var(--fs-body-sm);
   color: var(--text-dim);
   background: none;
   border: 0;
   cursor: pointer;
-  transition: color var(--dur-fast) var(--ease-out);
+  transition:
+    color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.settingsToggle:active {
+  color: var(--text);
+  transform: translateY(1px);
 }
 
 @media (hover: hover) {
@@ -80,20 +88,20 @@
 }
 
 .controls {
-  margin-top: 0.6rem;
+  margin-top: var(--space-2);
 }
 
 /* Hidrasyon aralığındaki tek satır: boş ekran hiçbir zaman metinsiz kalmasın. */
 .loadingText {
   margin: 0;
-  font-size: 0.85rem;
+  font-size: var(--fs-body-sm);
   color: var(--text-dim);
 }
 
 /* Kol neden devre dışı belli olsun diye; yalnızca seçim boşken görünür. */
 .spinHint {
   margin: 0;
-  font-size: 0.85rem;
+  font-size: var(--fs-body-sm);
   color: var(--text-dim);
 }
 
@@ -104,9 +112,9 @@
 .warning {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.6rem 0.75rem;
-  font-size: 0.85rem;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--fs-body-sm);
   color: var(--text);
   background: color-mix(in srgb, var(--warn) 10%, transparent);
   border-left: 2px solid var(--warn);
@@ -115,9 +123,9 @@
 
 .warningClose {
   margin-left: auto;
-  padding: 0 0.25rem;
+  padding: 0 var(--space-1);
   font: inherit;
-  font-size: 1.1rem;
+  font-size: var(--fs-heading);
   line-height: 1;
   color: var(--text-dim);
   background: none;

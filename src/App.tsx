@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 
 import styles from "./App.module.css";
+import { useAuth } from "./auth/useAuth";
 import { CategoryPicker } from "./components/CategoryPicker";
 import { ChevronIcon } from "./components/ChevronIcon";
 import { Collapse } from "./components/Collapse";
@@ -10,13 +11,14 @@ import { Stage } from "./components/Stage";
 import { StepIndicator } from "./components/StepIndicator";
 import { Switch } from "./components/Switch";
 import { TopBar } from "./components/TopBar";
-import { QUESTIONS } from "./content";
+import { AVAILABLE_CATEGORIES, QUESTIONS } from "./content";
 import { evaluateLexical } from "./domain/evaluate";
 import { initialSessionState, sessionReducer, toStore } from "./domain/session";
 import type { SessionState } from "./domain/session";
 import { useStore } from "./storage/useStore";
+import { useProgressSync } from "./sync/useProgressSync";
+import type { ProgressMap } from "./sync/progressSync";
 import type { SelfRating, Store } from "./domain/progress";
-import { CATEGORIES } from "./domain/question";
 import type { Category } from "./domain/question";
 
 /**
@@ -86,6 +88,20 @@ function Session({ store, recovered, save }: SessionProps) {
     save(toStore({ progress, activeCategories }, { fastMode }));
   }, [progress, activeCategories, fastMode, save]);
 
+  // Sunucu ikinci kopya: senkron oturuma yazar, diske yazmayı yukarıdaki
+  // efekt zaten üstleniyor. Doğrudan IndexedDB'ye yazsaydı bu efekt bir
+  // sonraki render'da onu bellekteki eski haliyle ezerdi.
+  const { status, user } = useAuth();
+  const handleMerged = useCallback((merged: ProgressMap) => {
+    dispatch({ type: "SYNC_PROGRESS", progress: merged });
+  }, []);
+  const { pushQuestion } = useProgressSync({
+    progress,
+    // Misafirde null: senkron modülü hiç istek atmaz.
+    userId: status === "authenticated" && user ? user.id : null,
+    onMerged: handleMerged,
+  });
+
   // TopBar'daki havuz bilgisi: aktif kategorilerdeki soru sayısı.
   const activeQuestionCount = useMemo(
     () => QUESTIONS.filter((q) => activeCategories.includes(q.category)).length,
@@ -123,6 +139,8 @@ function Session({ store, recovered, save }: SessionProps) {
   }
 
   function handleRate(rating: SelfRating) {
+    // Soru id'si dispatch'ten önce alınır: RATE turu kapatınca current null olur.
+    if (state.current) pushQuestion(state.current.id);
     dispatch({ type: "RATE", rating, answer: lastAnswer, now: new Date() });
   }
 
@@ -135,8 +153,15 @@ function Session({ store, recovered, save }: SessionProps) {
   }
 
   function handleToggleAllCategories() {
-    const allSelected = state.activeCategories.length === CATEGORIES.length;
-    dispatch({ type: "SET_CATEGORIES", categories: allSelected ? [] : [...CATEGORIES] });
+    // Kıyas görünen kategoriler üzerinden: içeriği olmayan bir kategori
+    // seçimde kalmış olabilir, uzunluk karşılaştırması onu da sayardı.
+    const allSelected = AVAILABLE_CATEGORIES.every((category) =>
+      state.activeCategories.includes(category),
+    );
+    dispatch({
+      type: "SET_CATEGORIES",
+      categories: allSelected ? [] : [...AVAILABLE_CATEGORIES],
+    });
   }
 
   const canSpin =
@@ -152,6 +177,7 @@ function Session({ store, recovered, save }: SessionProps) {
       <main className={styles.shell}>
         <div className={styles.app}>
           <CategoryPicker
+            categories={AVAILABLE_CATEGORIES}
             active={state.activeCategories}
             disabled={state.phase === "spinning"}
             onToggle={handleToggleCategory}
@@ -172,7 +198,9 @@ function Session({ store, recovered, save }: SessionProps) {
 
           {/* Kol zaten disabled ama sebebi görünmüyor; yalnızca seçim boşken çıkar. */}
           {state.activeCategories.length === 0 && (
-            <p className={styles.spinHint}>Çevirmek için en az bir kategori seç.</p>
+            <p className={styles.spinHint} role="status">
+              Çevirmek için en az bir kategori seç.
+            </p>
           )}
 
           {/* Makineye ait ayarlar, soruya değil: yeri makinenin hemen altı.

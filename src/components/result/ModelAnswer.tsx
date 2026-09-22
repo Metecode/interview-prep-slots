@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useId, useMemo } from "react";
 import type { CSSProperties, ReactNode } from "react";
 
 import { parseInline, parseModelAnswer } from "../../domain/modelAnswer";
@@ -31,13 +31,21 @@ export type ModelAnswerProps = {
 };
 
 export function ModelAnswer({ markdown, className, style }: ModelAnswerProps) {
+  /*
+    Başlık id'si useId ile üretilir, sabit yazılmaz: sahne geçişi sırasında
+    çıkan ve giren panel bir an birlikte DOM'da duruyor (bkz. Stage.tsx) ve
+    sabit id o anda iki kez geçiyordu. Yinelenen id'de aria-labelledby'nin
+    hangi başlığı gösterdiği belirsiz.
+  */
+  const titleId = useId();
+
   // Ayrıştırma saf ve ucuz ama her render'da tekrarlanmasın.
   const blocks = useMemo(() => parseModelAnswer(markdown), [markdown]);
 
   return (
-    <section className={className} style={style} aria-labelledby="model-title">
+    <section className={className} style={style} aria-labelledby={titleId}>
       <div className={styles.modelHead}>
-        <h3 className={styles.modelTitle} id="model-title">
+        <h3 className={styles.modelTitle} id={titleId}>
           Model cevap
         </h3>
         <span className={styles.modelBadge}>Referans</span>

@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import type { CSSProperties } from "react";
 
 import { CATEGORY_LABELS } from "../../content/labels";
@@ -45,6 +46,7 @@ export function ResultPanel({
   onRate,
   onAskAi,
 }: ResultPanelProps) {
+  const panelRef = useRef<HTMLDivElement>(null);
   const passed = evaluation === null;
   const box = progress?.box ?? 1;
   const attempts = progress?.attempts.length ?? 0;
@@ -57,11 +59,32 @@ export function ResultPanel({
       ? "hakkın kalmadı"
       : null;
 
+  /*
+    Tur ilerleyince odak, ekrana yeni gelen bölüme taşınır. Kol dönüş
+    boyunca disabled olduğu için odak gövdeye düşüyordu: klavyedeki
+    kullanıcı her çevirişten sonra değerlendirme düğmelerine ulaşmak için sayfanın
+    başından Tab'lamak zorunda kalıyordu.
+
+    Odaklanan, ilk alan değil bölümün kendisi (tabIndex -1): ekran
+    okuyucu önce soruyu okur, sonraki Tab yazı alanına girer — ve
+    dokunmatik cihazda klavye kendiliğinden açılmaz.
+
+    preventScroll: fareyle çalışan kullanıcı için sayfa kendiliğinden
+    kaymasın; odak zaten görünür alanın içinde.
+  */
+  useEffect(() => {
+    panelRef.current?.focus({ preventScroll: true });
+  }, []);
+
   return (
-    <div className={styles.panel}>
+    <div ref={panelRef} className={styles.panel} tabIndex={-1}>
       {/* Soru iki sütunun üzerinde, tam genişlikte kalır. */}
       <section className={styles.card} style={rise(0)}>
         <div className={styles.meta}>
+          {/* Kutu uygulamanın çekirdek mekanizması ama hiçbir yerde
+              görünmüyordu. Meta satırının başında ve diğerlerinden bir
+              ton parlak duruyor: renk değil, kontrast farkıyla öne çıkar. */}
+          <span className={`${styles.metaBadge} ${styles.metaBadgeBox}`}>Kutu {box}</span>
           <span className={styles.metaBadge}>{CATEGORY_LABELS[question.category]}</span>
           <span className={styles.metaBadge}>
             {DIFFICULTY_LABELS[question.difficulty]}
