@@ -1,3 +1,4 @@
+import { AuthArea } from "./AuthArea";
 import styles from "./TopBar.module.css";
 
 /* ------------------------------------------------------------------ */
@@ -47,6 +48,11 @@ export function TopBar({ questionCount, quotaRemaining }: TopBarProps) {
             <span className={styles.quotaCount}>{quotaRemaining}</span>
             <span className={styles.quotaLabel}>YZ HAKKI</span>
           </div>
+
+          {/* Oturum alanı en sağda: kendi durumunu kendi okur, TopBar'a
+              prop olarak geçirilmiyor — üst çubuğun geri kalanı oturumla
+              ilgilenmiyor. */}
+          <AuthArea />
         </div>
       </div>
     </header>

@@ -1,0 +1,9 @@
+/*
+  Oturum alanı yer tutucusu. Genişlik "Giriş yap" düğmesiyle kabaca
+  aynı; yükseklik de sabit ki üst çubuk durum değişince zıplamasın.
+*/
+
+.placeholder {
+  width: 84px;
+  height: 28px;
+}

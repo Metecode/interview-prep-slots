@@ -6,7 +6,12 @@
   gerekçeyle aynı sabit genişliği kullanıyor.
 */
 
+/* Konumlu ve yığında yukarıda: oturum alanının açılan paneli aşağıdaki
+   içeriğin üstünde kalsın. Makine CSS 3D dönüşümleriyle kendi yığın
+   bağlamını kuruyor, aradaki sıra kendiliğinden doğru çıkmıyor. */
 .bar {
+  position: relative;
+  z-index: 20;
   border-bottom: 1px solid var(--line);
   background: var(--bg);
 }

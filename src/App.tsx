@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 
 import styles from "./App.module.css";
+import { useAuth } from "./auth/useAuth";
 import { CategoryPicker } from "./components/CategoryPicker";
 import { ChevronIcon } from "./components/ChevronIcon";
 import { Collapse } from "./components/Collapse";
@@ -15,6 +16,8 @@ import { evaluateLexical } from "./domain/evaluate";
 import { initialSessionState, sessionReducer, toStore } from "./domain/session";
 import type { SessionState } from "./domain/session";
 import { useStore } from "./storage/useStore";
+import { useProgressSync } from "./sync/useProgressSync";
+import type { ProgressMap } from "./sync/progressSync";
 import type { SelfRating, Store } from "./domain/progress";
 import { CATEGORIES } from "./domain/question";
 import type { Category } from "./domain/question";
@@ -86,6 +89,20 @@ function Session({ store, recovered, save }: SessionProps) {
     save(toStore({ progress, activeCategories }, { fastMode }));
   }, [progress, activeCategories, fastMode, save]);
 
+  // Sunucu ikinci kopya: senkron oturuma yazar, diske yazmayı yukarıdaki
+  // efekt zaten üstleniyor. Doğrudan IndexedDB'ye yazsaydı bu efekt bir
+  // sonraki render'da onu bellekteki eski haliyle ezerdi.
+  const { status, user } = useAuth();
+  const handleMerged = useCallback((merged: ProgressMap) => {
+    dispatch({ type: "SYNC_PROGRESS", progress: merged });
+  }, []);
+  const { pushQuestion } = useProgressSync({
+    progress,
+    // Misafirde null: senkron modülü hiç istek atmaz.
+    userId: status === "authenticated" && user ? user.id : null,
+    onMerged: handleMerged,
+  });
+
   // TopBar'daki havuz bilgisi: aktif kategorilerdeki soru sayısı.
   const activeQuestionCount = useMemo(
     () => QUESTIONS.filter((q) => activeCategories.includes(q.category)).length,
@@ -123,6 +140,8 @@ function Session({ store, recovered, save }: SessionProps) {
   }
 
   function handleRate(rating: SelfRating) {
+    // Soru id'si dispatch'ten önce alınır: RATE turu kapatınca current null olur.
+    if (state.current) pushQuestion(state.current.id);
     dispatch({ type: "RATE", rating, answer: lastAnswer, now: new Date() });
   }
 

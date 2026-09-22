@@ -40,6 +40,15 @@ export type SessionAction =
        */
       quotaRemaining?: number;
     }
+  | {
+      /**
+       * Sunucudan dönen birleşmiş ilerleme. HYDRATE'ten ayrı bir eylem:
+       * o yalnızca açılışta anlamlı ve kategori seçimine de karışıyor,
+       * bu ise yalnızca ilerlemeyi değiştirir.
+       */
+      type: "SYNC_PROGRESS";
+      progress: Record<string, QuestionProgress>;
+    }
   | { type: "TOGGLE_CATEGORY"; category: Category }
   | { type: "SET_CATEGORIES"; categories: Category[] }
   | {
@@ -109,6 +118,13 @@ export function sessionReducer(
         activeCategories,
         quotaRemaining: action.quotaRemaining ?? state.quotaRemaining,
       };
+    }
+
+    case "SYNC_PROGRESS": {
+      // Tur ortasında da uygulanabilir, HYDRATE'in aksine: reducer
+      // ilerlemeyi yalnızca RATE anında okuyor, ekrandaki soru ve
+      // kullanıcının yazdığı cevap bundan etkilenmiyor.
+      return { ...state, progress: action.progress };
     }
 
     case "TOGGLE_CATEGORY": {
