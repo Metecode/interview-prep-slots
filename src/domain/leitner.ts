@@ -107,26 +107,56 @@ export function reviewIntervalDays(
 }
 
 /**
- * Bir öz-değerlendirmenin SONUCU, tek satırda: soru hangi aşamaya geçer
- * ve bir sonraki tekrar ne zaman. Öz-değerlendirme düğmelerinin altındaki
- * satır bunu yazar: "Pekişiyor · 4 gün sonra".
+ * Öz-değerlendirme düğmesinin alt yazısı: yalnızca ne zaman döneceği
+ * ("2 gün sonra", "yarın").
  *
- * Yalnızca gün sayısı yazınca alt çubuktaki "sonraki tekrar" ile
- * çelişiyormuş gibi okunuyordu: biri seçimin sonucunu, diğeri sorunun
- * ŞU ANKİ durumunu anlatıyor. Hedef aşamayı da yazmak o bağı kuruyor.
- *
- * Aşama stageOf'tan gelir. Deneme sayısı 1 verilir: değerlendirme
- * kaydedildiği anda soru en az bir kez denenmiş olur, yani kutu 1'e
- * düşen soru "Yeni" değil "Öğreniliyor"dur.
+ * Önceden hedef aşama da yazıyordu ("Öğreniliyor · yarın"); üç düğmede
+ * çoğu zaman aynı aşama adı tekrar ettiği için gürültüydü. Aşama
+ * değişikliği artık seçimden SONRA, ratingSavedLabel ile gösteriliyor.
  */
-export function nextReviewLabel(
+export function reviewWhenLabel(
   currentBox: Box,
   rating: SelfRating,
   passed = false,
 ): string {
-  const stage = stageOf(nextBox(currentBox, rating, passed), 1);
-  const days = reviewIntervalDays(currentBox, rating, passed);
-  return `${stage.name} · ${daysAheadText(days)}`;
+  return daysAheadText(reviewIntervalDays(currentBox, rating, passed));
+}
+
+/** Aşama adının yönelme hâli; ünlü uyumu ve kaynaştırma harfi elle. */
+const STAGE_DATIVE: Record<StageName, string> = {
+  Yeni: "Yeni'ye",
+  Öğreniliyor: "Öğreniliyor'a",
+  Pekişiyor: "Pekişiyor'a",
+  "İyi biliniyor": "İyi biliniyor'a",
+  Oturdu: "Oturdu'ya",
+};
+
+/**
+ * Seçim yapıldıktan sonra düğmelerin altında beliren satır:
+ * "Kaydedildi · 2 gün sonra tekrar" ya da aşama yükseldiyse
+ * "Pekişiyor'a çıktı · 4 gün sonra tekrar".
+ *
+ * "Yükseldi" iki şartla sayılır: kutu ilerledi VE aşama adı değişti.
+ * Kutu 1'den 2'ye geçen soru iki kutuda da "Öğreniliyor" — adı aynı
+ * kalan bir aşamaya "çıktı" demek yanıltıcı olurdu.
+ *
+ * Yeni aşama stageOf'a deneme sayısı 1 verilerek bulunur: değerlendirme
+ * kaydedildiği anda soru en az bir kez denenmiş olur.
+ */
+export function ratingSavedLabel(
+  currentBox: Box,
+  attemptCount: number,
+  rating: SelfRating,
+  passed = false,
+): string {
+  const targetBox = nextBox(currentBox, rating, passed);
+  const when = `${reviewWhenLabel(currentBox, rating, passed)} tekrar`;
+
+  const from = stageOf(currentBox, attemptCount);
+  const to = stageOf(targetBox, 1);
+  const promoted = targetBox > currentBox && to.name !== from.name;
+
+  return promoted ? `${STAGE_DATIVE[to.name]} çıktı · ${when}` : `Kaydedildi · ${when}`;
 }
 
 /**

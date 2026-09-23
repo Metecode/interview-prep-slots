@@ -115,6 +115,7 @@ export function ResultPanel({
 
         <SelfRating
           box={box}
+          attemptCount={attempts}
           passed={passed}
           onRate={onRate}
           className={`${styles.card} ${styles.colRating}`}
