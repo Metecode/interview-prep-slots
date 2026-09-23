@@ -476,6 +476,7 @@ describe("HYDRATE", () => {
     return {
       fastMode: false,
       soundEnabled: false,
+      soundHintShown: false,
       lang: "tr",
       activeCategories: ["sql"],
       initialized: true,
@@ -555,7 +556,7 @@ describe("toStore", () => {
       progress,
     });
 
-    const store = toStore(state, { fastMode: true, soundEnabled: true });
+    const store = toStore(state, { fastMode: true, soundEnabled: true, soundHintShown: true });
 
     expect(store).toEqual({
       schemaVersion: SCHEMA_VERSION,
@@ -563,6 +564,7 @@ describe("toStore", () => {
       settings: {
         fastMode: true,
         soundEnabled: true,
+        soundHintShown: true,
         lang: "tr",
         activeCategories: ["sql"],
         initialized: true,
@@ -572,7 +574,7 @@ describe("toStore", () => {
 
   it("initialized'ı her zaman true yazar", () => {
     // toStore'a giren state bir oturumdan geldiği için "ilk açılış" artık geçmişte.
-    const store = toStore(makeState(), { fastMode: false, soundEnabled: false });
+    const store = toStore(makeState(), { fastMode: false, soundEnabled: false, soundHintShown: false });
 
     expect(store.settings.initialized).toBe(true);
   });

@@ -96,6 +96,7 @@ export function ResultPanel({
         <ScoreCard
           question={question}
           evaluation={evaluation}
+          answer={answer}
           className={`${styles.card} ${styles.colScore}`}
           style={rise(0)}
         >

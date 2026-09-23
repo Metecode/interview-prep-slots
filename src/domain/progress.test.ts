@@ -26,6 +26,15 @@ describe("readStore", () => {
 
     expect(readStore(saved).store.settings.soundEnabled).toBe(false);
   });
+
+  it("soundHintShown alanı olmayan eski kayıtta ipucu gösterilmemiş sayılır", () => {
+    const old = { schemaVersion: SCHEMA_VERSION, progress: {}, settings: {} };
+
+    const { store, recovered } = readStore(old);
+
+    expect(recovered).toBe(false);
+    expect(store.settings.soundHintShown).toBe(false);
+  });
 });
 
 describe("emptyStore", () => {

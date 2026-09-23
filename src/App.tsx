@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "r
 
 import styles from "./App.module.css";
 import { ensureAudioReady } from "./audio/audioContext";
-import { playTick } from "./audio/sounds";
+import { playLever } from "./audio/sounds";
 import { useAuth } from "./auth/useAuth";
 import { CategoryPicker } from "./components/CategoryPicker";
 import { ChevronIcon } from "./components/ChevronIcon";
@@ -13,6 +13,7 @@ import { Stage } from "./components/Stage";
 import { StepIndicator } from "./components/StepIndicator";
 import { Switch } from "./components/Switch";
 import { TopBar } from "./components/TopBar";
+import { IS_APPLE_TOUCH_DEVICE, useSoundHint } from "./hooks/useSoundHint";
 import { AVAILABLE_CATEGORIES, QUESTIONS } from "./content";
 import { evaluateLexical } from "./domain/evaluate";
 import { initialSessionState, sessionReducer, toStore } from "./domain/session";
@@ -72,6 +73,8 @@ function Session({ store, recovered, save }: SessionProps) {
   const [spinKey, setSpinKey] = useState(0);
   const [fastMode, setFastMode] = useState(store.settings.fastMode);
   const [soundEnabled, setSoundEnabled] = useState(store.settings.soundEnabled);
+  const soundHint = useSoundHint(store.settings.soundHintShown);
+  const soundHintShown = soundHint.hintShown;
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [lastAnswer, setLastAnswer] = useState("");
   const [warningDismissed, setWarningDismissed] = useState(false);
@@ -81,8 +84,8 @@ function Session({ store, recovered, save }: SessionProps) {
   // yapıyoruz: hangi eylemin yazdırdığını bilmek gerekmiyor.
   const { progress, activeCategories } = state;
   useEffect(() => {
-    save(toStore({ progress, activeCategories }, { fastMode, soundEnabled }));
-  }, [progress, activeCategories, fastMode, soundEnabled, save]);
+    save(toStore({ progress, activeCategories }, { fastMode, soundEnabled, soundHintShown }));
+  }, [progress, activeCategories, fastMode, soundEnabled, soundHintShown, save]);
 
   // Sunucu ikinci kopya: senkron oturuma yazar, diske yazmayı yukarıdaki
   // efekt zaten üstleniyor. Doğrudan IndexedDB'ye yazsaydı bu efekt bir
@@ -144,15 +147,24 @@ function Session({ store, recovered, save }: SessionProps) {
     Ses açılırken context de açılır: bu fonksiyon tıklamanın içinde
     çalışıyor, yani tarayıcının istediği kullanıcı hareketi tam burada.
     Açık kayıtla gelen kullanıcıda ilk kol çekişi aynı işi görür.
-    Kısa bir tık hem "ses açıldı" geri bildirimi hem de iOS'ta kilidi en
-    güvenilir açan yol: hareketin içinde gerçekten ses çalmak.
+    Kol sesi onay olarak çalar: hem "ses açıldı" geri bildirimi (duymayan
+    kullanıcı sorunu hemen fark eder) hem de iOS'ta kilidi en güvenilir
+    açan yol — hareketin içinde gerçekten ses çalmak. Tık bunun için fazla
+    kısa ve kısıktı.
   */
   function handleSoundChange(enabled: boolean) {
     if (enabled) {
       ensureAudioReady();
-      playTick();
+      playLever();
     }
     setSoundEnabled(enabled);
+  }
+
+  // Sessiz anahtar ipucu yalnızca hoparlör düğmesinde: ipucu onun yanında
+  // çıkıyor. Ayarlar panelindeki anahtarın altında kalıcı not zaten var.
+  function handleSpeakerSoundChange(enabled: boolean) {
+    handleSoundChange(enabled);
+    if (enabled) soundHint.noteSoundEnabled();
   }
 
   function handleToggleCategory(category: Category) {
@@ -200,7 +212,8 @@ function Session({ store, recovered, save }: SessionProps) {
             canSpin={canSpin}
             fastMode={fastMode}
             soundEnabled={soundEnabled}
-            onSoundChange={handleSoundChange}
+            onSoundChange={handleSpeakerSoundChange}
+            soundHintKey={soundHint.hintKey}
             onPull={handlePull}
             onSettle={handleSettle}
           />
@@ -229,7 +242,20 @@ function Session({ store, recovered, save }: SessionProps) {
             <Collapse open={settingsOpen} id="settings-panel">
               <div className={styles.controls}>
                 <Switch checked={fastMode} onChange={setFastMode} label="Hızlı mod" />
-                <Switch checked={soundEnabled} onChange={handleSoundChange} label="Ses" />
+                <span className={styles.soundControl}>
+                  <Switch
+                    checked={soundEnabled}
+                    onChange={handleSoundChange}
+                    label="Ses"
+                    describedBy={IS_APPLE_TOUCH_DEVICE ? "silent-switch-note" : undefined}
+                  />
+                  {/* Web'den sessiz anahtar okunamıyor; iOS'ta kalıcı hatırlatma. */}
+                  {IS_APPLE_TOUCH_DEVICE && (
+                    <span id="silent-switch-note" className={styles.settingsNote}>
+                      iPhone sessiz moddayken ses çalmaz.
+                    </span>
+                  )}
+                </span>
               </div>
             </Collapse>
           </div>

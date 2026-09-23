@@ -1,0 +1,39 @@
+/*
+  Hoparlör düğmesinin soluna açılan kısa not. Kol sütunu dar (7rem);
+  not tamburların üstüne taşar ama yalnızca 4 saniye durur ve
+  dokunmayı engellemez (pointer-events: none).
+*/
+
+.root {
+  position: absolute;
+  top: 50%;
+  right: calc(100% + var(--space-2));
+  z-index: 4;
+  width: max-content;
+  max-width: min(14rem, 60vw);
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  /* Kapsayıcı line-height: 0; metin için geri alınır. */
+  line-height: 1.4;
+  font-size: var(--fs-body-sm);
+  color: var(--text);
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  pointer-events: none;
+  transform: translateY(-50%);
+  animation: hint-in var(--dur-base) var(--ease-out);
+}
+
+@keyframes hint-in {
+  from {
+    opacity: 0;
+    transform: translate(4px, -50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .root {
+    animation: none;
+  }
+}
