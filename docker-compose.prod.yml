@@ -1,0 +1,75 @@
+# Canlı ortam. Sunucuda /opt/mulakat altında, .env ile yan yana durur.
+# Image'lar CI'da derlenip ghcr.io'ya itilir; burada build yok.
+# Kullanım: IMAGE_TAG=<commit sha> docker compose -f docker-compose.prod.yml up -d
+#
+# Portlar YALNIZCA 127.0.0.1'e bağlanır. Docker kendi iptables kurallarını
+# yazdığı için 0.0.0.0'a bağlanan port UFW'yi atlar ve dışarıya açılır.
+# Dışarıdan tek giriş host nginx'i (443).
+
+# Log rotasyonu: json-file sürücüsü varsayılan olarak sınırsız büyür ve
+# diski doldurur; aynı sunucuda başka bir site de çalışıyor. Servis başına
+# en fazla 3 x 10 MB.
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    logging: *default-logging
+    # env_file bilinçli olarak yok: .env'deki JWT ve GitHub sırlarının
+    # veritabanı konteynerinde işi yok. ${...} değerleri compose tarafından
+    # aynı dizindeki .env'den okunur.
+    environment:
+      # Postgres imajı kendi değişken adlarını bekliyor, .env'dekileri eşliyoruz.
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    # Port açılmıyor; yalnızca compose ağı içinden erişilir.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    image: ghcr.io/metecode/slot-backend:${IMAGE_TAG:?IMAGE_TAG verilmeli}
+    restart: unless-stopped
+    logging: *default-logging
+    env_file: .env
+    environment:
+      # Veritabanı adresi compose ağındaki servis adından türetilir,
+      # .env'de ayrıca yazılmasına gerek yok.
+      DB_URL: jdbc:postgresql://postgres:5432/${DB_NAME}
+    ports:
+      - "127.0.0.1:8082:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      # localhost bazı imajlarda ::1'e çözülüyor; IPv4 adresi açıkça yazıldı.
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8080/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+  frontend:
+    image: ghcr.io/metecode/slot-frontend:${IMAGE_TAG:?IMAGE_TAG verilmeli}
+    restart: unless-stopped
+    logging: *default-logging
+    ports:
+      - "127.0.0.1:8081:80"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  postgres_data:
