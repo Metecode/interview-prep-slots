@@ -26,7 +26,6 @@ export type SessionState = {
   /** Son sorulanlar, eskiden yeniye. Çekilişte soğutma için kullanılır. */
   recentIds: string[];
   activeCategories: Category[];
-  quotaRemaining: number;
 };
 
 export type SessionAction =
@@ -34,11 +33,6 @@ export type SessionAction =
       type: "HYDRATE";
       progress: Record<string, QuestionProgress>;
       settings: Store["settings"];
-      /**
-       * Kota diske yazılmaz — hesaba bağlı, sunucudan gelir. Yükleyen taraf
-       * elinde bir değer varsa buradan verir, yoksa mevcut kota korunur.
-       */
-      quotaRemaining?: number;
     }
   | {
       /**
@@ -60,8 +54,7 @@ export type SessionAction =
   | { type: "SETTLE" }
   | { type: "SUBMIT"; evaluation: Evaluation }
   | { type: "PASS" }
-  | { type: "RATE"; rating: SelfRating; answer: string; now: Date }
-  | { type: "SPEND_QUOTA" };
+  | { type: "RATE"; rating: SelfRating; answer: string; now: Date };
 
 /** Geçmişte tutulan soru sayısı. Soğutma penceresinden geniş olmalı. */
 export const MAX_RECENT_IDS = 10;
@@ -75,8 +68,6 @@ export function initialSessionState(): SessionState {
     progress: {},
     recentIds: [],
     activeCategories: [],
-    // AI isteğe bağlı yol; kota dışarıdan yüklenene kadar kapalı.
-    quotaRemaining: 0,
   };
 }
 
@@ -116,7 +107,6 @@ export function sessionReducer(
         ...state,
         progress: action.progress,
         activeCategories,
-        quotaRemaining: action.quotaRemaining ?? state.quotaRemaining,
       };
     }
 
@@ -224,12 +214,6 @@ export function sessionReducer(
       };
     }
 
-    case "SPEND_QUOTA": {
-      // Pas geçilen soruya AI harcanmaz; kota kullanıcının cebinden çıkar.
-      if (state.quotaRemaining <= 0 || state.passed) return state;
-      return { ...state, quotaRemaining: state.quotaRemaining - 1 };
-    }
-
     default:
       return state;
   }
@@ -246,8 +230,6 @@ export function sessionReducer(
  *
  * fastMode ve soundEnabled state'te tutulmuyor (HYDRATE de doldurmuyor),
  * o yüzden dışarıdan geliyor — App'te düz React state, reducer'ın işi değil.
- * Kota bilerek yok: hesaba bağlı, kullanıcı diskte düzenleyebilseydi
- * AI hakkı sınırsız olurdu.
  */
 export function toStore(
   state: Pick<SessionState, "progress" | "activeCategories">,

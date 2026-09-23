@@ -87,30 +87,6 @@
   color: var(--text-dim);
 }
 
-.quotaBadge {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-1);
-  padding: var(--space-1) var(--space-2);
-  border-radius: 6px;
-  background: var(--well);
-}
-
-.quotaCount {
-  font-family: var(--mono);
-  font-weight: var(--fw-bold);
-  font-size: var(--fs-body-sm);
-  color: var(--text);
-  font-variant-numeric: tabular-nums;
-}
-
-.quotaLabel {
-  font-family: var(--mono);
-  font-size: var(--fs-mono-sm);
-  letter-spacing: 0.05em;
-  color: var(--text-faint);
-}
-
 @media (max-width: 560px) {
   .tagline {
     display: none;

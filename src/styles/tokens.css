@@ -8,8 +8,7 @@
   gibi çoklu-seçim listelerinde kullanılmaz — hepsi seçiliyken dokuz
   accent çipi bu kuralı anında çiğner.
   --ok ve --warn yalnız gerçek bir durum bildirirken kullanılır:
-  --ok sonuç panelinde yakalanan kavram, --warn kota bittiğinde ve
-  ilerleme okunamadığında.
+  --ok sonuç panelinde yakalanan kavram, --warn ilerleme okunamadığında.
 */
 
 :root {
@@ -136,7 +135,7 @@
     Önce --shell-narrow'a bağlıydılar; gerekçe adımlar arasında sabit bir
     çerçeve bırakmaktı ve o gerekçe hâlâ geçerli — ama sabitlik dar
     olmayı gerektirmiyor. 620px, okuma sütununun ölçüsü; üst çubuğun
-    içindeyse marka, sürüm, havuz sayısı, kota ve oturum var. Geniş
+    içindeyse marka, sürüm, havuz sayısı, senkron ve oturum var. Geniş
     ekranda bu kadar öğe 620px'e sıkışınca çubuk sayfaya ait bir şerit
     değil, ortada unutulmuş bir ada gibi duruyordu.
 

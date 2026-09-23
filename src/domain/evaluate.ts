@@ -50,10 +50,10 @@ export function evaluateLexical(question: Question, answer: string): Evaluation 
 /*                                                                      */
 /* e5-small ile ölçüldü: alakasız çapalar 0.88, doğru kavramlar         */
 /* 0.88-0.91 skor alıyordu — Türkçede aradaki fark eşik koyacak kadar    */
-/* ayrışmıyor. Aşağıdaki fonksiyonlar bu yüzden silinmedi: Faz 3'te AI   */
-/* rubriği için benzer bir skorlama + eşikleme yapısı gerekecek, o      */
-/* zaman buradan devralınacak. Hiçbir çağıran yok, testleri bilerek     */
-/* kalıyor. Bkz. CLAUDE.md "Değerlendirme katmanlı" notu.               */
+/* ayrışmıyor. Aşağıdaki fonksiyonlar silinmedi: semantik eşleştirme    */
+/* yeniden denenirse ölçüm ve eşikleme buradan devralınır. Uygulama içi */
+/* yapay zekâ değerlendirmesi de denenip kaldırıldı (bkz. CLAUDE.md).   */
+/* Hiçbir çağıran yok, testleri bilerek kalıyor.                        */
 /* ------------------------------------------------------------------ */
 
 /**

@@ -32,14 +32,7 @@ import type { Category } from "./domain/question";
  * reducer kendisi karar veriyor — bkz. session.ts HYDRATE dalı.
  */
 function initState(store: Store): SessionState {
-  const base: SessionState = {
-    ...initialSessionState(),
-    // GEÇİCİ: kota gerçekte dışarıdan yüklenecek. Sıfır kalırsa yapay zekâ
-    // düğmesinin açık hali denenemiyor.
-    quotaRemaining: 3,
-  };
-
-  return sessionReducer(base, {
+  return sessionReducer(initialSessionState(), {
     type: "HYDRATE",
     progress: store.progress,
     settings: store.settings,
@@ -156,10 +149,6 @@ function Session({ store, recovered, save }: SessionProps) {
     setSoundEnabled(enabled);
   }
 
-  function handleAskAi() {
-    dispatch({ type: "SPEND_QUOTA" });
-  }
-
   function handleToggleCategory(category: Category) {
     dispatch({ type: "TOGGLE_CATEGORY", category });
   }
@@ -182,7 +171,7 @@ function Session({ store, recovered, save }: SessionProps) {
 
   return (
     <div className={styles.root}>
-      <TopBar questionCount={activeQuestionCount} quotaRemaining={state.quotaRemaining} />
+      <TopBar questionCount={activeQuestionCount} />
       {/* Adım göstergesi üst çubuğun altında, ince bir ayırıcıyla. */}
       <StepIndicator phase={state.phase} />
 
@@ -260,7 +249,7 @@ function Session({ store, recovered, save }: SessionProps) {
           onSubmit={handleSubmit}
           onPass={handlePass}
           onRate={handleRate}
-          onAskAi={handleAskAi}
+          lastAnswer={lastAnswer}
         />
       </main>
 

@@ -1,17 +1,15 @@
 import { AuthArea } from "./AuthArea";
 import styles from "./TopBar.module.css";
-import { AI_ENABLED } from "../config/features";
 import { useSyncStatus } from "../sync/useProgressSync";
 
 /* ------------------------------------------------------------------ */
-/* Üst çubuk — marka, aktif havuz büyüklüğü ve (Faz 3'te) YZ kotası     */
+/* Üst çubuk — marka, aktif havuz büyüklüğü, senkron ve oturum        */
 /* Sürüm alt bilgide (bkz. Footer).                                     */
 /* ------------------------------------------------------------------ */
 
 export type TopBarProps = {
   /** Aktif kategorilerdeki soru sayısı. */
   questionCount: number;
-  quotaRemaining: number;
 };
 
 /** Basit bir işaret: kare çerçeve + kol topuzunu andıran nokta. */
@@ -41,7 +39,7 @@ const SYNC_LABELS = {
   error: "senkron bekliyor",
 } as const;
 
-export function TopBar({ questionCount, quotaRemaining }: TopBarProps) {
+export function TopBar({ questionCount }: TopBarProps) {
   // Misafirde hiç istek atılmadığı için durum "idle" kalır ve gösterge
   // hiç çizilmez; giriş yapmamış kullanıcı senkron diye bir şey görmez.
   const syncStatus = useSyncStatus();
@@ -70,12 +68,6 @@ export function TopBar({ questionCount, quotaRemaining }: TopBarProps) {
             </span>
           )}
           <span className={styles.pool}>Havuzda {questionCount} soru</span>
-          {AI_ENABLED && (
-            <div className={styles.quotaBadge}>
-              <span className={styles.quotaCount}>{quotaRemaining}</span>
-              <span className={styles.quotaLabel}>YZ HAKKI</span>
-            </div>
-          )}
 
           {/* Oturum alanı en sağda: kendi durumunu kendi okur, TopBar'a
               prop olarak geçirilmiyor — üst çubuğun geri kalanı oturumla
