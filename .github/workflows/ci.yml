@@ -1,0 +1,65 @@
+# PR'larda frontend ve backend testleri. deploy.yml de testleri buradan
+# çağırır (workflow_call), aynı adımlar iki yerde yazılmasın diye.
+name: CI
+
+on:
+  pull_request:
+    # Yalnızca kodu etkileyen değişikliklerde çalışır; docs/ ya da README
+    # değişikliği test koşturmaz. src/content/ backend'i de etkiliyor:
+    # soru içeriği backend jar'ına kopyalanıyor (bkz. backend/pom.xml).
+    paths:
+      - "src/**"
+      - "public/**"
+      - "index.html"
+      - "package.json"
+      - "package-lock.json"
+      - "vite.config.ts"
+      - "tsconfig*.json"
+      - "eslint.config.js"
+      - "backend/**"
+      - "Dockerfile.frontend"
+      - "deploy/**"
+      - "docker-compose.prod.yml"
+      - ".github/workflows/**"
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  frontend:
+    name: Frontend testleri
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      # tsc -b tip hatalarını da yakalar; derlenemeyen kod image'a gitmesin.
+      - run: npm run build
+
+  backend:
+    name: Backend testleri
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+          cache-dependency-path: backend/pom.xml
+
+      # mvnw Windows'ta commit'lendiği için git'te çalıştırma izni yok.
+      # Testcontainers runner'daki Docker'ı kullanır, ek kurulum gerekmez.
+      - run: chmod +x mvnw && ./mvnw -B verify
