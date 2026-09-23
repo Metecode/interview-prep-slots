@@ -320,10 +320,13 @@ export function Machine({
             Lever onPull'u kol animasyonu bitince rAF içinden çağırıyor; o an
             artık hareket sayılmıyor. Kilit bu yüzden kola dokunulduğu anda
             (pointerup, keydown) sarmalayıcıda açılır, Lever'ın sözleşmesi aynı kalır.
+            touchend ek güvence: eski iOS WebKit pointerup'ı her zaman kullanıcı
+            hareketi saymıyor; iki kez çağrılması zararsız.
           */}
           <div
             className={styles.leverSlot}
             onPointerUpCapture={sound.unlock}
+            onTouchEndCapture={sound.unlock}
             onKeyDownCapture={sound.unlock}
           >
             <Lever

@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 
 import styles from "./App.module.css";
-import { unlockAudio } from "./audio/audioContext";
+import { ensureAudioReady } from "./audio/audioContext";
+import { playTick } from "./audio/sounds";
 import { useAuth } from "./auth/useAuth";
 import { CategoryPicker } from "./components/CategoryPicker";
 import { ChevronIcon } from "./components/ChevronIcon";
@@ -143,9 +144,14 @@ function Session({ store, recovered, save }: SessionProps) {
     Ses açılırken context de açılır: bu fonksiyon tıklamanın içinde
     çalışıyor, yani tarayıcının istediği kullanıcı hareketi tam burada.
     Açık kayıtla gelen kullanıcıda ilk kol çekişi aynı işi görür.
+    Kısa bir tık hem "ses açıldı" geri bildirimi hem de iOS'ta kilidi en
+    güvenilir açan yol: hareketin içinde gerçekten ses çalmak.
   */
   function handleSoundChange(enabled: boolean) {
-    if (enabled) unlockAudio();
+    if (enabled) {
+      ensureAudioReady();
+      playTick();
+    }
     setSoundEnabled(enabled);
   }
 
