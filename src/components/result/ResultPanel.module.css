@@ -84,18 +84,6 @@
   border-radius: 999px;
 }
 
-/*
-  Kutu rozeti. Diğer rozetlerle aynı biçim, bir ton daha okunur: kutu
-  numarası kategoriden ya da zorluktan daha çok izlenen sayı. Ayrım
-  renkle değil kontrast ve dolu yüzeyle yapılıyor — accent bütçesi bu
-  ekranda öz-değerlendirme ve adım göstergesi için ayrılmış durumda.
-*/
-.metaBadgeBox {
-  color: var(--text);
-  background: var(--surface-raised);
-  border-color: var(--text-faint);
-}
-
 .prompt {
   margin: 0;
   font-size: var(--fs-title);

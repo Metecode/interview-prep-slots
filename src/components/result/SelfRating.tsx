@@ -79,9 +79,8 @@ export function SelfRating({ box, passed, onRate, className, style }: SelfRating
             onClick={() => handleChoose(rating)}
           >
             <span>{label}</span>
-            {/* Gerçek veri: seçimin sorunu hangi kutuya ve hangi aralığa
-                taşıdığı. Yalnızca gün sayısı, alt çubuktaki "şu an N günde
-                bir" ile çelişiyormuş gibi okunuyordu. */}
+            {/* Gerçek veri: seçimin sorunu hangi aşamaya ve ne zamana
+                taşıdığı ("Pekişiyor · 4 gün sonra"). Hesap leitner.ts'te. */}
             <span className={styles.ratingInterval}>
               {nextReviewLabel(box, rating, passed)}
             </span>

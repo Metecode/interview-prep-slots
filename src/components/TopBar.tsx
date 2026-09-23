@@ -50,7 +50,7 @@ export function TopBar({ questionCount, quotaRemaining }: TopBarProps) {
         <div className={styles.brand}>
           <LogoMark />
           <div className={styles.brandText}>
-            <span className={styles.name}>Mülakat Slot</span>
+            <span className={styles.name}>Slot</span>
             <span className={styles.tagline}>Teorik soru pratiği</span>
           </div>
         </div>

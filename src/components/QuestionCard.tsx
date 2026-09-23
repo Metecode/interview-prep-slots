@@ -2,9 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import type { KeyboardEvent as ReactKeyboardEvent } from "react";
 
 import { evaluateLexical } from "../domain/evaluate";
-import { boxCadenceLabel } from "../domain/leitner";
 import type { QuestionProgress } from "../domain/progress";
 import type { Question } from "../domain/question";
+import { StageBadge } from "./StageBadge";
 import styles from "./QuestionCard.module.css";
 
 /* ------------------------------------------------------------------ */
@@ -70,14 +70,10 @@ export function QuestionCard({ question, progress, onSubmit, onPass }: QuestionC
 
   return (
     <section ref={cardRef} className={styles.card} tabIndex={-1}>
+      {/* Aşama rozeti kutuyu, tekrar sıklığını ve "ilk kez"i tek başına
+          anlatıyor; ayrı rozetleri kalktı. */}
       <div className={styles.meta}>
-        {/* Kutu numarası tekrar aralığından önce: aralık kutunun sonucu,
-            kullanıcının izlediği sayı kutunun kendisi. */}
-        <span className={`${styles.metaBadge} ${styles.metaBadgeBox}`}>Kutu {box}</span>
-        <span className={styles.metaBadge}>{boxCadenceLabel(box)}</span>
-        <span className={styles.metaBadge}>
-          {attempts > 0 ? `${attempts} deneme` : "ilk kez"}
-        </span>
+        <StageBadge box={box} attemptCount={attempts} />
         <span className={styles.metaBadge}>{DIFFICULTY_LABELS[question.difficulty]}</span>
       </div>
 

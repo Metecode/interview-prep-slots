@@ -2,9 +2,10 @@ import { useEffect, useRef } from "react";
 import type { CSSProperties } from "react";
 
 import { CATEGORY_LABELS } from "../../content/labels";
-import { boxCadenceLabel } from "../../domain/leitner";
+import { nextReviewInLabel } from "../../domain/leitner";
 import type { QuestionProgress, SelfRating as Rating } from "../../domain/progress";
 import type { Evaluation, Question } from "../../domain/question";
+import { StageBadge } from "../StageBadge";
 import { FollowUps } from "./FollowUps";
 import { ModelAnswer } from "./ModelAnswer";
 import { ScoreCard } from "./ScoreCard";
@@ -81,10 +82,9 @@ export function ResultPanel({
       {/* Soru iki sütunun üzerinde, tam genişlikte kalır. */}
       <section className={styles.card} style={rise(0)}>
         <div className={styles.meta}>
-          {/* Kutu uygulamanın çekirdek mekanizması ama hiçbir yerde
-              görünmüyordu. Meta satırının başında ve diğerlerinden bir
-              ton parlak duruyor: renk değil, kontrast farkıyla öne çıkar. */}
-          <span className={`${styles.metaBadge} ${styles.metaBadgeBox}`}>Kutu {box}</span>
+          {/* Kutu uygulamanın çekirdek mekanizması; "Kutu N" yerine aşama
+              olarak, meta satırının başında gösterilir. */}
+          <StageBadge box={box} attemptCount={attempts} />
           <span className={styles.metaBadge}>{CATEGORY_LABELS[question.category]}</span>
           <span className={styles.metaBadge}>
             {DIFFICULTY_LABELS[question.difficulty]}
@@ -132,7 +132,7 @@ export function ResultPanel({
 
       <div className={styles.statusBar}>
         <span className={styles.statusText}>
-          {boxCadenceLabel(box)} · {attempts > 0 ? `${attempts} deneme` : "ilk kez"} ·{" "}
+          {nextReviewInLabel(box)} · {attempts > 0 ? `${attempts} deneme` : "ilk kez"} ·{" "}
           {CATEGORY_LABELS[question.category]}
         </span>
 

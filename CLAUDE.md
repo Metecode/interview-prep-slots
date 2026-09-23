@@ -1,4 +1,4 @@
-# Mülakat Slot
+# Slot
 
 Teknik mülakatlardaki teorik/kategorik soruları çalışmak için açık kaynak
 web uygulaması. Slot makinesi mekaniğiyle rastgele soru gelir, kullanıcı

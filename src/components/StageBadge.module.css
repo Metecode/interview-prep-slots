@@ -1,0 +1,88 @@
+/*
+  Aşama rozeti. Diğer meta rozetleriyle aynı biçim; accent almaz —
+  bu ekranda accent bütçesi dolu. Ayrım yalnızca kontrastta: ad --text,
+  dolu noktalar --text, boş noktalar --line.
+*/
+
+.root {
+  position: relative;
+  display: inline-flex;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  font: inherit;
+  font-family: var(--mono);
+  font-size: var(--fs-mono-sm);
+  letter-spacing: 0.02em;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: help;
+  transition: border-color var(--dur-fast) var(--ease-out);
+}
+
+@media (hover: hover) {
+  .badge:hover {
+    border-color: var(--text-faint);
+  }
+}
+
+.badge:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+.dots {
+  display: inline-flex;
+  gap: 3px;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--line);
+}
+
+.dotFilled {
+  background: var(--text);
+}
+
+/* Kapalıyken yer tutmaz ve tıklanmaz; açılışta opacity + 2px kayma. */
+.tip {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  left: 0;
+  z-index: 10;
+  width: max-content;
+  max-width: 240px;
+  padding: var(--space-2) var(--space-3);
+  font-family: var(--sans);
+  font-size: var(--fs-label);
+  line-height: var(--lh-snug);
+  color: var(--text);
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--bg) 70%, transparent);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-2px);
+  pointer-events: none;
+  transition:
+    opacity var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out),
+    visibility var(--dur-fast);
+}
+
+.root[data-open="true"] .tip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+}
