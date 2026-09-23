@@ -1,5 +1,5 @@
 import { useId } from "react";
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 import { useCountUp } from "../../hooks/useCountUp";
 import type { Evaluation, Question } from "../../domain/question";
@@ -26,9 +26,11 @@ export type ScoreCardProps = {
   evaluation: Evaluation | null;
   className: string;
   style: CSSProperties;
+  /** Çiplerin altına gelen ikincil eylem (ör. "Kendi yapay zekâna sor"). */
+  children?: ReactNode;
 };
 
-export function ScoreCard({ question, evaluation, className, style }: ScoreCardProps) {
+export function ScoreCard({ question, evaluation, className, style, children }: ScoreCardProps) {
   /*
     Başlık id'si useId ile üretilir, sabit yazılmaz: sahne geçişi sırasında
     çıkan ve giren panel bir an birlikte DOM'da duruyor (bkz. Stage.tsx) ve
@@ -93,6 +95,8 @@ export function ScoreCard({ question, evaluation, className, style }: ScoreCardP
           );
         })}
       </ul>
+
+      {children}
     </section>
   );
 }

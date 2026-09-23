@@ -1,6 +1,6 @@
 import { useCallback, useLayoutEffect, useRef } from "react";
 
-import { unlockAudio } from "../audio/audioContext";
+import { ensureAudioReady } from "../audio/audioContext";
 import { playLever, playStop, playTick } from "../audio/sounds";
 
 /* ------------------------------------------------------------------ */
@@ -32,7 +32,7 @@ export function useMachineSound(enabled: boolean): MachineSound {
   }, [enabled]);
 
   const unlock = useCallback(() => {
-    if (enabledRef.current) unlockAudio();
+    if (enabledRef.current) ensureAudioReady();
   }, []);
   const lever = useCallback(() => {
     if (enabledRef.current) playLever();

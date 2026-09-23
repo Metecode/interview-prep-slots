@@ -63,10 +63,11 @@ export type StageProps = {
   onSubmit: (answer: string) => void;
   onPass: () => void;
   onRate: (rating: SelfRating) => void;
-  onAskAi: () => void;
+  /** Son gönderilen cevap; sonuç ekranı "Kendi yapay zekâna sor"a koyar. */
+  lastAnswer: string;
 };
 
-export function Stage({ state, onSubmit, onPass, onRate, onAskAi }: StageProps) {
+export function Stage({ state, onSubmit, onPass, onRate, lastAnswer }: StageProps) {
   const stage = stageOf(state);
   const key = stageKey(stage);
   const exiting = useExitTransition(key, stage, EXIT_MS);
@@ -89,9 +90,8 @@ export function Stage({ state, onSubmit, onPass, onRate, onAskAi }: StageProps) 
         question={item.question}
         evaluation={item.evaluation}
         progress={item.progress}
-        quotaRemaining={state.quotaRemaining}
+        answer={lastAnswer}
         onRate={onRate}
-        onAskAi={onAskAi}
       />
     );
   }

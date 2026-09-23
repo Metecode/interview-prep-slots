@@ -7,17 +7,18 @@ cevabını yazar, kavram bazlı geri bildirim alır.
 ## Mimari kararlar — bunları değiştirme, önce sor
 
 - **Local-first.** Uygulama hesapsız ve backend'siz tam çalışır. Giriş
-  yalnızca senkron ve AI kotası için. Faz 1'de backend yok.
-- **Değerlendirme katmanlı.** v1: alias kelime eşleşmesi + kullanıcının
-  öz-değerlendirmesi. İsteğe bağlı: AI (Faz 3, henüz yok).
-  AI hiçbir zaman zorunlu yol değil.
-  Tarayıcıda embedding ile kavram eşleştirme denendi ve çıkarıldı:
+  yalnızca senkron için. Faz 1'de backend yok.
+- **Değerlendirme: kelime eşleşmesi + öz-değerlendirme.** Alias kelime
+  eşleşmesi ve kullanıcının öz-değerlendirmesi. Uygulama hiçbir yapay
+  zekâ sağlayıcısını çağırmaz; kullanıcı isterse "Kendi yapay zekâna sor"
+  ile istemi kendi aracına taşır (bkz. "Yapay zekâ değerlendirmesi —
+  denendi, kaldırıldı").
+  Tarayıcıda embedding ile kavram eşleştirme de denendi ve çıkarıldı:
   e5-small ile alakasız çapalar 0.88, doğru kavramlar 0.88-0.91 skor
   alıyordu — Türkçede eşik koyacak kadar ayrışmıyor. Kod silinmedi,
-  `domain/evaluate.ts`'te kullanılmıyor olarak duruyor; Faz 3'te AI
-  rubriği için benzer bir skorlama/eşikleme yapısı gerekecek.
+  `domain/evaluate.ts`'te kullanılmıyor olarak duruyor.
 - **Kutuyu kullanıcı belirler.** Leitner kutusu öz-değerlendirmeyle
-  güncellenir, AI skoruyla değil.
+  güncellenir, hiçbir otomatik skorla değil.
 - **Kazanan animasyondan önce belirlenir.** Soru ağırlıklı çekilişle
   seçilir, makara animasyonu yalnızca sonucu gösterir. Animasyonun
   sonucu belirlemesine izin veren bir değişiklik ağırlıklandırmayı bozar.
@@ -56,7 +57,7 @@ shadcn/ui bileşenleri ihtiyaç oldukça tek tek eklenir, toplu kurulmaz.
 
 ## Backend (`backend/`)
 
-- **Sadece senkron ve AI kotası için.** Uygulama backend'siz tam çalışır
+- **Sadece senkron için.** Uygulama backend'siz tam çalışır
   (bkz. yukarıdaki Local-first kararı). Faz 1'de iş endpoint'i yok, sadece
   çalışan iskelet: `GET /api/health`.
 - **Stack.** Spring Boot 4.x, Java 21, Maven (wrapper ile — geliştirme
@@ -270,6 +271,34 @@ shadcn/ui bileşenleri ihtiyaç oldukça tek tek eklenir, toplu kurulmaz.
   seviyesinde tutulur ve `useSyncStatus` ile okunur — App'ten prop
   olarak inmez. `--warn` kullanılmaz: senkronun düşmesi arıza değil,
   yerel veri zaten yazıldı.
+
+## Yapay zekâ değerlendirmesi — denendi, kaldırıldı
+
+- **Ne denendi.** Sunucu tarafında sağlayıcıdan bağımsız bir
+  değerlendirici (Gemini Interactions API ile): rubriğe göre kavram
+  kararı, öğretici geri bildirim, devam sorusu; kullanıcı başına haftalık
+  kota, hız sınırı, önbellek. Çalışan hali, testleriyle birlikte
+  `experiment/ai-evaluation` dalında. Dal kalıcıdır, silinmez, main'e
+  birleşmez.
+- **Neden kaldırıldı.**
+  1. Ücretsiz katmanda günlük sınır PROJE başına ve tüm kullanıcılar
+     arasında paylaşılıyor (Flash günde 20, Flash-Lite günde 500 istek).
+     Kullanıcı başına kota bununla tutarlı olamıyor: tek kullanıcı herkesin
+     gününü bitirebiliyor.
+  2. Ücretsiz katmanda gönderilen içerik sağlayıcı tarafından ürün
+     geliştirmek için kullanılabiliyor; kullanıcının cevabını buna açmak
+     onay ekranıyla bile iyi bir varsayılan değil.
+  3. Kullanıcıların zaten kendi yapay zekâ araçları var.
+- **Yerine: "Kendi yapay zekâna sor".** Sonuç panelinde, kavram
+  çiplerinin altında ikincil bir düğme; API çağırmaz. Panoya soru,
+  kullanıcının cevabı ve kriterler (kavram adı + ilk çapa cümlesi) ile bir
+  değerlendirme istemi kopyalar. Metni `domain/ownAiPrompt.ts` üretir
+  (saf, testli). Model cevap isteme konmaz — istem kısa kalsın; isteyen
+  yanında görüyor. Pas geçilen soruda düğme yok.
+- **Geri getirmeden önce** yukarıdaki üç sebep yeniden değerlendirilir
+  (ücretli katman, kendi anahtarını getirme vb.). Deney dalındaki CLAUDE.md
+  sağlayıcıyla ilgili doğrulanmış bulguları (zaman aşımı, düşünme
+  seviyeleri, token sınırı) içeriyor.
 
 ## Çalışma bölümü
 

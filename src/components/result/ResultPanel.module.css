@@ -170,56 +170,6 @@
   color: var(--text-dim);
 }
 
-.statusActions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2);
-  margin-left: auto;
-}
-
-.aiButton {
-  padding: var(--space-2) var(--space-4);
-  font: inherit;
-  font-size: var(--fs-body-sm);
-  color: var(--text);
-  background: transparent;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  cursor: pointer;
-  transition:
-    transform var(--dur-fast) var(--ease-out),
-    border-color var(--dur-fast) var(--ease-out),
-    background-color var(--dur-fast) var(--ease-out);
-}
-
-@media (hover: hover) {
-  .aiButton:hover:not(:disabled) {
-    transform: translateY(-1px);
-    border-color: var(--text-dim);
-    background: color-mix(in srgb, var(--text) 5%, transparent);
-  }
-}
-
-.aiButton:active:not(:disabled) {
-  transform: translateY(1px);
-}
-
-.aiButton:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.aiButton:focus-visible {
-  outline: 2px solid var(--text);
-  outline-offset: 2px;
-}
-
-.aiNote {
-  font-size: var(--fs-label);
-  color: var(--text-dim);
-}
-
 /*
   Dar ekranda ayrı bir başlık boyutu yok: 18px ölçek dışıydı ve bir
   basamak aşağısı (--fs-heading) soruyu gövde metninden ayırmaya

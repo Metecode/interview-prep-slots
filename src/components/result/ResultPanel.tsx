@@ -1,12 +1,12 @@
 import { useEffect, useRef } from "react";
 import type { CSSProperties } from "react";
 
-import { AI_ENABLED } from "../../config/features";
 import { CATEGORY_LABELS } from "../../content/labels";
 import { nextReviewInLabel } from "../../domain/leitner";
 import type { QuestionProgress, SelfRating as Rating } from "../../domain/progress";
 import type { Evaluation, Question } from "../../domain/question";
 import { StageBadge } from "../StageBadge";
+import { AskOwnAi } from "./AskOwnAi";
 import { FollowUps } from "./FollowUps";
 import { ModelAnswer } from "./ModelAnswer";
 import { ScoreCard } from "./ScoreCard";
@@ -35,31 +35,23 @@ export type ResultPanelProps = {
   evaluation: Evaluation | null;
   /** Sorunun kayıtlı ilerlemesi; ilk kez soruluyorsa null. */
   progress: QuestionProgress | null;
-  quotaRemaining: number;
+  /** Kullanıcının gönderdiği cevap; "Kendi yapay zekâna sor" istemine girer. */
+  answer: string;
   onRate: (rating: Rating) => void;
-  onAskAi: () => void;
 };
 
 export function ResultPanel({
   question,
   evaluation,
   progress,
-  quotaRemaining,
+  answer,
   onRate,
-  onAskAi,
 }: ResultPanelProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const passed = evaluation === null;
   const box = progress?.box ?? 1;
   const attempts = progress?.attempts.length ?? 0;
   const followUps = question.followUps ?? [];
-
-  // Pas geçilen soruya yapay zekâ harcanmaz; kota kullanıcının cebinden çıkıyor.
-  const blockedReason = passed
-    ? "pas geçilen soruya harcanmaz"
-    : quotaRemaining <= 0
-      ? "hakkın kalmadı"
-      : null;
 
   /*
     Tur ilerleyince odak, ekrana yeni gelen bölüme taşınır. Kol dönüş
@@ -106,7 +98,10 @@ export function ResultPanel({
           evaluation={evaluation}
           className={`${styles.card} ${styles.colScore}`}
           style={rise(0)}
-        />
+        >
+          {/* Pas geçilen soruda değerlendirilecek bir cevap yok. */}
+          {!passed && <AskOwnAi question={question} answer={answer} />}
+        </ScoreCard>
 
         <ModelAnswer
           markdown={question.modelAnswer}
@@ -138,22 +133,6 @@ export function ResultPanel({
           {CATEGORY_LABELS[question.category]}
         </span>
 
-        {/* Faz 3'e kadar kapalı; bkz. config/features.ts. */}
-        {AI_ENABLED && (
-          <div className={styles.statusActions}>
-            {/* Kalan hak tek yerde duruyor: üst çubuktaki sayaç.
-                Burada yalnızca düğmenin neden kapalı olduğu yazar. */}
-            {blockedReason && <span className={styles.aiNote}>{blockedReason}</span>}
-            <button
-              type="button"
-              className={styles.aiButton}
-              disabled={blockedReason !== null}
-              onClick={onAskAi}
-            >
-              Yapay zekâya sor
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );

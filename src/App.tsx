@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 
 import styles from "./App.module.css";
-import { unlockAudio } from "./audio/audioContext";
+import { ensureAudioReady } from "./audio/audioContext";
+import { playTick } from "./audio/sounds";
 import { useAuth } from "./auth/useAuth";
 import { CategoryPicker } from "./components/CategoryPicker";
 import { ChevronIcon } from "./components/ChevronIcon";
@@ -32,14 +33,7 @@ import type { Category } from "./domain/question";
  * reducer kendisi karar veriyor — bkz. session.ts HYDRATE dalı.
  */
 function initState(store: Store): SessionState {
-  const base: SessionState = {
-    ...initialSessionState(),
-    // GEÇİCİ: kota gerçekte dışarıdan yüklenecek. Sıfır kalırsa yapay zekâ
-    // düğmesinin açık hali denenemiyor.
-    quotaRemaining: 3,
-  };
-
-  return sessionReducer(base, {
+  return sessionReducer(initialSessionState(), {
     type: "HYDRATE",
     progress: store.progress,
     settings: store.settings,
@@ -150,14 +144,15 @@ function Session({ store, recovered, save }: SessionProps) {
     Ses açılırken context de açılır: bu fonksiyon tıklamanın içinde
     çalışıyor, yani tarayıcının istediği kullanıcı hareketi tam burada.
     Açık kayıtla gelen kullanıcıda ilk kol çekişi aynı işi görür.
+    Kısa bir tık hem "ses açıldı" geri bildirimi hem de iOS'ta kilidi en
+    güvenilir açan yol: hareketin içinde gerçekten ses çalmak.
   */
   function handleSoundChange(enabled: boolean) {
-    if (enabled) unlockAudio();
+    if (enabled) {
+      ensureAudioReady();
+      playTick();
+    }
     setSoundEnabled(enabled);
-  }
-
-  function handleAskAi() {
-    dispatch({ type: "SPEND_QUOTA" });
   }
 
   function handleToggleCategory(category: Category) {
@@ -182,7 +177,7 @@ function Session({ store, recovered, save }: SessionProps) {
 
   return (
     <div className={styles.root}>
-      <TopBar questionCount={activeQuestionCount} quotaRemaining={state.quotaRemaining} />
+      <TopBar questionCount={activeQuestionCount} />
       {/* Adım göstergesi üst çubuğun altında, ince bir ayırıcıyla. */}
       <StepIndicator phase={state.phase} />
 
@@ -260,7 +255,7 @@ function Session({ store, recovered, save }: SessionProps) {
           onSubmit={handleSubmit}
           onPass={handlePass}
           onRate={handleRate}
-          onAskAi={handleAskAi}
+          lastAnswer={lastAnswer}
         />
       </main>
 
