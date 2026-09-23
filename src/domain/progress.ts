@@ -50,6 +50,13 @@ export const storeSchema = z.object({
   progress: z.record(z.string(), questionProgressSchema),
   settings: z.object({
     fastMode: z.boolean().default(false),
+    /**
+     * Makine sesi. Varsayılan açık: ses makinenin hissinin parçası, kapatmak
+     * isteyen köşedeki düğmeyi görüyor. Tarayıcı zaten ilk kol çekişine
+     * kadar ses açmıyor, sayfa kendiliğinden ses çıkarmaz. Eski kayıtta
+     * alan yok, default doldurur — kırıcı değil, schemaVersion artmıyor.
+     */
+    soundEnabled: z.boolean().default(true),
     lang: z.enum(["tr", "en"]).default("tr"),
     activeCategories: z.array(z.string()).default([]),
     /**
@@ -68,6 +75,7 @@ export const emptyStore = (): Store => ({
   progress: {},
   settings: {
     fastMode: false,
+    soundEnabled: true,
     lang: "tr",
     activeCategories: [],
     initialized: false,

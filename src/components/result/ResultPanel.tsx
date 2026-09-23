@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import type { CSSProperties } from "react";
 
+import { AI_ENABLED } from "../../config/features";
 import { CATEGORY_LABELS } from "../../content/labels";
 import { nextReviewInLabel } from "../../domain/leitner";
 import type { QuestionProgress, SelfRating as Rating } from "../../domain/progress";
@@ -137,19 +138,22 @@ export function ResultPanel({
           {CATEGORY_LABELS[question.category]}
         </span>
 
-        <div className={styles.statusActions}>
-          {/* Kalan hak tek yerde duruyor: üst çubuktaki sayaç.
-              Burada yalnızca düğmenin neden kapalı olduğu yazar. */}
-          {blockedReason && <span className={styles.aiNote}>{blockedReason}</span>}
-          <button
-            type="button"
-            className={styles.aiButton}
-            disabled={blockedReason !== null}
-            onClick={onAskAi}
-          >
-            Yapay zekâya sor
-          </button>
-        </div>
+        {/* Faz 3'e kadar kapalı; bkz. config/features.ts. */}
+        {AI_ENABLED && (
+          <div className={styles.statusActions}>
+            {/* Kalan hak tek yerde duruyor: üst çubuktaki sayaç.
+                Burada yalnızca düğmenin neden kapalı olduğu yazar. */}
+            {blockedReason && <span className={styles.aiNote}>{blockedReason}</span>}
+            <button
+              type="button"
+              className={styles.aiButton}
+              disabled={blockedReason !== null}
+              onClick={onAskAi}
+            >
+              Yapay zekâya sor
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

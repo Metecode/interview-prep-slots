@@ -22,6 +22,19 @@
   color: var(--text-faint);
 }
 
+.end {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* Sürüm satırı bilgi, bağlantı değil: bir basamak küçük ve hep sönük. */
+.version {
+  font-size: var(--fs-mono-sm);
+  color: var(--text-faint);
+  white-space: nowrap;
+}
+
 .link {
   color: var(--text-faint);
   text-decoration: none;

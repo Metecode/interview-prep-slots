@@ -244,20 +244,21 @@ export function sessionReducer(
  * evaluation gibi oturuma özel alanlar diske hiç ulaşmasın diye imza
  * bunlara bakmadığını kendi söylüyor.
  *
- * fastMode state'te tutulmuyor (HYDRATE de doldurmuyor), o yüzden
- * dışarıdan geliyor — App'te düz React state, reducer'ın işi değil.
+ * fastMode ve soundEnabled state'te tutulmuyor (HYDRATE de doldurmuyor),
+ * o yüzden dışarıdan geliyor — App'te düz React state, reducer'ın işi değil.
  * Kota bilerek yok: hesaba bağlı, kullanıcı diskte düzenleyebilseydi
  * AI hakkı sınırsız olurdu.
  */
 export function toStore(
   state: Pick<SessionState, "progress" | "activeCategories">,
-  settings: { fastMode: boolean },
+  settings: { fastMode: boolean; soundEnabled: boolean },
 ): Store {
   return {
     schemaVersion: SCHEMA_VERSION,
     progress: state.progress,
     settings: {
       fastMode: settings.fastMode,
+      soundEnabled: settings.soundEnabled,
       // Dil seçimi henüz hiçbir yerde tutulmuyor; şema varsayılanı kalıyor.
       lang: "tr",
       activeCategories: state.activeCategories,

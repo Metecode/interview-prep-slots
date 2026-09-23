@@ -3,6 +3,8 @@ import { useEffect, useMemo, useRef } from "react";
 import { Drum, FACES } from "./Drum";
 import type { DrumHandle } from "./Drum";
 import { Lever } from "./Lever";
+import { SoundToggle } from "./SoundToggle";
+import { useMachineSound } from "../hooks/useMachineSound";
 import { CATEGORY_LABELS } from "../content/labels";
 import type { Category, Question } from "../domain/question";
 import styles from "./Machine.module.css";
@@ -47,6 +49,9 @@ export type MachineProps = {
   /** false ise kol devre dışı. */
   canSpin: boolean;
   fastMode: boolean;
+  /** Makine sesi açık mı; varsayılan açık, tercih settings'te. */
+  soundEnabled: boolean;
+  onSoundChange: (enabled: boolean) => void;
   onPull: () => void;
   onSettle: () => void;
 };
@@ -116,9 +121,15 @@ export function Machine({
   spinning,
   canSpin,
   fastMode,
+  soundEnabled,
+  onSoundChange,
   onPull,
   onSettle,
 }: MachineProps) {
+  const sound = useMachineSound(soundEnabled);
+  // Dinleyen yoksa Drum şeridi hiç izlemiyor; ses kapalıyken kare başı iş yok.
+  const onRowPass = soundEnabled ? sound.tick : undefined;
+
   const leftDrumRef = useRef<DrumHandle>(null);
   const rightDrumRef = useRef<DrumHandle>(null);
   const leftSlotRef = useRef<HTMLDivElement>(null);
@@ -259,7 +270,9 @@ export function Machine({
                 durationMs={timing.first.durationMs}
                 turns={timing.first.turns}
                 frozenLabel={frozenLeft}
+                onRowPass={onRowPass}
                 onSettle={() => {
+                  sound.stop();
                   bumpTick(leftSlotRef.current);
                   if (settleOwner === "left") onSettle();
                 }}
@@ -274,7 +287,9 @@ export function Machine({
                 durationMs={timing.second.durationMs}
                 turns={timing.second.turns}
                 frozenLabel={frozenRight}
+                onRowPass={onRowPass}
                 onSettle={() => {
+                  sound.stop();
                   bumpTick(rightSlotRef.current);
                   if (settleOwner === "right") onSettle();
                 }}
@@ -296,8 +311,28 @@ export function Machine({
         </div>
 
         <div className={styles.leverColumn}>
-          <div className={styles.leverSlot}>
-            <Lever disabled={spinning || !canSpin} onPull={onPull} />
+          <div className={styles.soundToggle}>
+            <SoundToggle enabled={soundEnabled} onChange={onSoundChange} />
+          </div>
+
+          {/*
+            Ses context'i ancak bir kullanıcı hareketinin içinde açılabiliyor.
+            Lever onPull'u kol animasyonu bitince rAF içinden çağırıyor; o an
+            artık hareket sayılmıyor. Kilit bu yüzden kola dokunulduğu anda
+            (pointerup, keydown) sarmalayıcıda açılır, Lever'ın sözleşmesi aynı kalır.
+          */}
+          <div
+            className={styles.leverSlot}
+            onPointerUpCapture={sound.unlock}
+            onKeyDownCapture={sound.unlock}
+          >
+            <Lever
+              disabled={spinning || !canSpin}
+              onPull={() => {
+                sound.lever();
+                onPull();
+              }}
+            />
           </div>
         </div>
       </div>
