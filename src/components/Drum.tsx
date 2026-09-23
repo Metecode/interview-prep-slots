@@ -1,5 +1,6 @@
 import { forwardRef, useImperativeHandle, useLayoutEffect, useMemo, useRef } from "react";
 
+import { paylineRowIndex, parseTranslateY } from "../audio/reelTicks";
 import styles from "./Drum.module.css";
 
 /* ------------------------------------------------------------------ */
@@ -60,6 +61,12 @@ export type DrumProps = {
    */
   frozenLabel?: string | null;
   onSettle?: () => void;
+  /**
+   * Dönüş sırasında ödeme çizgisindeki satır her değiştiğinde çağrılır
+   * (ses tıkı için). Verilmezse şerit hiç izlenmez. Dönüş başında
+   * okunur; dönüş ortasında verilmesi o dönüşü etkilemez.
+   */
+  onRowPass?: () => void;
 };
 
 function prefersReducedMotion(): boolean {
@@ -127,7 +134,16 @@ function readRowHeight(el: HTMLElement): number {
 }
 
 export const Drum = forwardRef<DrumHandle, DrumProps>(function Drum(
-  { labels, targetIndex, spinKey, durationMs, turns, frozenLabel = null, onSettle },
+  {
+    labels,
+    targetIndex,
+    spinKey,
+    durationMs,
+    turns,
+    frozenLabel = null,
+    onSettle,
+    onRowPass,
+  },
   ref,
 ) {
   const frozen = frozenLabel !== null;
@@ -139,8 +155,8 @@ export const Drum = forwardRef<DrumHandle, DrumProps>(function Drum(
   const restLabelRef = useRef<string>(labels[targetIndex] ?? "");
   const lastSpunKeyRef = useRef<number | null>(null);
 
-  const latest = useRef({ targetIndex, durationMs, turns, onSettle, labels });
-  latest.current = { targetIndex, durationMs, turns, onSettle, labels };
+  const latest = useRef({ targetIndex, durationMs, turns, onSettle, onRowPass, labels });
+  latest.current = { targetIndex, durationMs, turns, onSettle, onRowPass, labels };
 
   /**
    * Şerit yalnızca spinKey değişince yeniden kurulur. Dönüş bittikten
@@ -204,9 +220,16 @@ export const Drum = forwardRef<DrumHandle, DrumProps>(function Drum(
     }
 
     let settled = false;
+    let watchFrame: number | null = null;
+    const stopWatching = () => {
+      if (watchFrame !== null) cancelAnimationFrame(watchFrame);
+      watchFrame = null;
+    };
+
     const settle = () => {
       if (settled) return;
       settled = true;
+      stopWatching();
       restLabelRef.current = items[winnerPos] ?? "";
       latest.current.onSettle?.();
     };
@@ -233,7 +256,30 @@ export const Drum = forwardRef<DrumHandle, DrumProps>(function Drum(
     animationRef.current = animation;
     animation.onfinish = settle;
 
+    /*
+      Satır izleme: her karede şeridin o anki ötelemesi okunur, ödeme
+      çizgisindeki satır değiştiyse bildirilir. Zamanlayıcı yerine konum:
+      tık sıklığı dönüş hızını kendiliğinden izler, finish() ile atlanan
+      dönüşte de kalan satırlar için tık yağmuru olmaz — izleme settle'da
+      durur. getComputedStyle her karede stil hesaplatır; yalnızca
+      dinleyen varken ve dönüş sürerken çalıştığı için kabul edilebilir.
+    */
+    if (latest.current.onRowPass) {
+      let lastRow = paylineRowIndex(0, row, CENTER);
+      const watch = () => {
+        const y = parseTranslateY(getComputedStyle(strip).transform);
+        const current = paylineRowIndex(y, row, CENTER);
+        if (current !== lastRow) {
+          lastRow = current;
+          latest.current.onRowPass?.();
+        }
+        watchFrame = requestAnimationFrame(watch);
+      };
+      watchFrame = requestAnimationFrame(watch);
+    }
+
     return () => {
+      stopWatching();
       animation.cancel();
       if (animationRef.current === animation) animationRef.current = null;
       // İptal edilse bile şerit hedefte kalsın, pencere boş görünmesin.

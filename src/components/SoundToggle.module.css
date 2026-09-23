@@ -1,0 +1,65 @@
+/*
+  Makinenin sağ üst köşesindeki ses düğmesi. Sessiz bir kontrol:
+  accent yok, durumu ikon anlatıyor (dalgalı / üstü çizili), renk değil.
+
+  Görünen düğme 28px'lik bir daire; köşede 44px'lik kare zemin panelin
+  çerçevesine yapışıp yamalı duruyordu. Tıklama alanı yine 44px:
+  ::before görünmez biçimde her yöne 8px taşıyor.
+*/
+
+.root {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  color: var(--text-faint);
+  /* Kol panelinin gradyanından bir ton koyu çukur: düğme panele oturmuş
+     bir yuva gibi dursun, üstüne yapıştırılmış bir kart gibi değil. */
+  background: color-mix(in srgb, var(--well) 60%, transparent);
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+/* Görünmez genişletilmiş dokunma alanı. */
+.root::before {
+  content: "";
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+}
+
+.root[aria-pressed="true"] {
+  color: var(--text-dim);
+}
+
+@media (hover: hover) {
+  .root:hover {
+    color: var(--text);
+    border-color: var(--text-faint);
+    background: var(--surface-raised);
+  }
+}
+
+.root:active {
+  transform: scale(0.94);
+}
+
+.root:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+.icon {
+  display: block;
+  width: 14px;
+  height: 14px;
+}

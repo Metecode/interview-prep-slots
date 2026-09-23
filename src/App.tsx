@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 
 import styles from "./App.module.css";
+import { unlockAudio } from "./audio/audioContext";
 import { useAuth } from "./auth/useAuth";
 import { CategoryPicker } from "./components/CategoryPicker";
 import { ChevronIcon } from "./components/ChevronIcon";
@@ -76,6 +77,7 @@ function Session({ store, recovered, save }: SessionProps) {
   const [state, dispatch] = useReducer(sessionReducer, store, initState);
   const [spinKey, setSpinKey] = useState(0);
   const [fastMode, setFastMode] = useState(store.settings.fastMode);
+  const [soundEnabled, setSoundEnabled] = useState(store.settings.soundEnabled);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [lastAnswer, setLastAnswer] = useState("");
   const [warningDismissed, setWarningDismissed] = useState(false);
@@ -85,8 +87,8 @@ function Session({ store, recovered, save }: SessionProps) {
   // yapıyoruz: hangi eylemin yazdırdığını bilmek gerekmiyor.
   const { progress, activeCategories } = state;
   useEffect(() => {
-    save(toStore({ progress, activeCategories }, { fastMode }));
-  }, [progress, activeCategories, fastMode, save]);
+    save(toStore({ progress, activeCategories }, { fastMode, soundEnabled }));
+  }, [progress, activeCategories, fastMode, soundEnabled, save]);
 
   // Sunucu ikinci kopya: senkron oturuma yazar, diske yazmayı yukarıdaki
   // efekt zaten üstleniyor. Doğrudan IndexedDB'ye yazsaydı bu efekt bir
@@ -144,6 +146,16 @@ function Session({ store, recovered, save }: SessionProps) {
     dispatch({ type: "RATE", rating, answer: lastAnswer, now: new Date() });
   }
 
+  /*
+    Ses açılırken context de açılır: bu fonksiyon tıklamanın içinde
+    çalışıyor, yani tarayıcının istediği kullanıcı hareketi tam burada.
+    Açık kayıtla gelen kullanıcıda ilk kol çekişi aynı işi görür.
+  */
+  function handleSoundChange(enabled: boolean) {
+    if (enabled) unlockAudio();
+    setSoundEnabled(enabled);
+  }
+
   function handleAskAi() {
     dispatch({ type: "SPEND_QUOTA" });
   }
@@ -192,6 +204,8 @@ function Session({ store, recovered, save }: SessionProps) {
             spinning={state.phase === "spinning"}
             canSpin={canSpin}
             fastMode={fastMode}
+            soundEnabled={soundEnabled}
+            onSoundChange={handleSoundChange}
             onPull={handlePull}
             onSettle={handleSettle}
           />
@@ -220,6 +234,7 @@ function Session({ store, recovered, save }: SessionProps) {
             <Collapse open={settingsOpen} id="settings-panel">
               <div className={styles.controls}>
                 <Switch checked={fastMode} onChange={setFastMode} label="Hızlı mod" />
+                <Switch checked={soundEnabled} onChange={handleSoundChange} label="Ses" />
               </div>
             </Collapse>
           </div>

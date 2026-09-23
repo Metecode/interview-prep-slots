@@ -527,6 +527,7 @@ describe("HYDRATE", () => {
   function makeSettings(over: Partial<Store["settings"]> = {}): Store["settings"] {
     return {
       fastMode: false,
+      soundEnabled: false,
       lang: "tr",
       activeCategories: ["sql"],
       initialized: true,
@@ -628,13 +629,14 @@ describe("toStore", () => {
       progress,
     });
 
-    const store = toStore(state, { fastMode: true });
+    const store = toStore(state, { fastMode: true, soundEnabled: true });
 
     expect(store).toEqual({
       schemaVersion: SCHEMA_VERSION,
       progress,
       settings: {
         fastMode: true,
+        soundEnabled: true,
         lang: "tr",
         activeCategories: ["sql"],
         initialized: true,
@@ -644,13 +646,16 @@ describe("toStore", () => {
 
   it("initialized'ı her zaman true yazar", () => {
     // toStore'a giren state bir oturumdan geldiği için "ilk açılış" artık geçmişte.
-    const store = toStore(makeState(), { fastMode: false });
+    const store = toStore(makeState(), { fastMode: false, soundEnabled: false });
 
     expect(store.settings.initialized).toBe(true);
   });
 
   it("kotayı diske yazmaz", () => {
-    const store = toStore(makeState({ quotaRemaining: 9 }), { fastMode: false });
+    const store = toStore(makeState({ quotaRemaining: 9 }), {
+      fastMode: false,
+      soundEnabled: false,
+    });
 
     // Kota hesaba bağlı; diskte tutulsa kullanıcı elle artırabilirdi.
     expect(JSON.stringify(store)).not.toContain("9");

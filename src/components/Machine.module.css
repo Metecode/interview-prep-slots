@@ -242,6 +242,7 @@
    panel tek başına kola kaldığı için biraz genişletildi ve kol
    dikeyde ortalandı. */
 .leverColumn {
+  position: relative;
   flex-shrink: 0;
   width: 7rem;
   display: flex;
@@ -257,6 +258,20 @@
 
 .leverSlot {
   width: 100%;
+}
+
+/*
+  Ses düğmesi makinenin sağ üst köşesinde, kol panelinin içinde: panel
+  translateZ ile öne alınmış, kasaya konan bir düğme onun altında
+  kalırdı. Kol dikeyde ortalandığı için üstte yer boş. Panel kenarından
+  --space-2 içeride: çerçeveye yapışmasın, dokunma alanı (28 + 2×8px)
+  yine panelin içinde kalsın.
+*/
+.soundToggle {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  line-height: 0;
 }
 
 @media (max-width: 560px) {
