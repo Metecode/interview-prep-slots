@@ -7,8 +7,9 @@ import {
   applyAttempt,
   nextBox,
   nextReviewInLabel,
-  nextReviewLabel,
+  ratingSavedLabel,
   reviewIntervalDays,
+  reviewWhenLabel,
   stageOf,
 } from "./leitner";
 import type { Attempt, Box, QuestionProgress, SelfRating } from "./progress";
@@ -226,39 +227,67 @@ describe("reviewIntervalDays", () => {
   });
 });
 
-describe("nextReviewLabel", () => {
-  it("kutu 2'deki soru için düğme etiketleri", () => {
-    expect(nextReviewLabel(2, 2)).toBe("Pekişiyor · 4 gün sonra");
-    expect(nextReviewLabel(2, 1)).toBe("Öğreniliyor · 2 gün sonra");
-    expect(nextReviewLabel(2, 0)).toBe("Öğreniliyor · yarın");
+describe("reviewWhenLabel", () => {
+  it("kutu 1'deki soru için düğme alt yazıları", () => {
+    expect(reviewWhenLabel(1, 2)).toBe("2 gün sonra");
+    expect(reviewWhenLabel(1, 1)).toBe("yarın");
+    expect(reviewWhenLabel(1, 0)).toBe("yarın");
   });
 
-  it("hedef aşamayı ve aralığı birlikte yazar", () => {
-    expect(nextReviewLabel(3, 2)).toBe("İyi biliniyor · 8 gün sonra");
-    expect(nextReviewLabel(4, 2)).toBe("Oturdu · 16 gün sonra");
-    expect(nextReviewLabel(5, 2)).toBe("Oturdu · 16 gün sonra");
+  it("aşama adı yazmaz, yalnızca ne zaman", () => {
+    expect(reviewWhenLabel(3, 2)).toBe("8 gün sonra");
+    expect(reviewWhenLabel(5, 2)).toBe("16 gün sonra");
   });
 
-  it("kutu 1'e düşen ya da orada kalan soru 'Yeni' değil 'Öğreniliyor'dur", () => {
-    // Değerlendirme kaydedildiği anda soru denenmiş sayılır.
-    expect(nextReviewLabel(1, 1)).toBe("Öğreniliyor · yarın");
-    expect(nextReviewLabel(1, 0)).toBe("Öğreniliyor · yarın");
-  });
-
-  it("pas geçilen soruda not ne olursa olsun ilk aşamaya döner", () => {
+  it("pas geçilen soruda not ne olursa olsun yarın döner", () => {
     for (const rating of [0, 1, 2] as const) {
-      expect(nextReviewLabel(4, rating, true)).toBe("Öğreniliyor · yarın");
+      expect(reviewWhenLabel(4, rating, true)).toBe("yarın");
     }
   });
 
-  it("yazdığı aşama ve gün stageOf, nextBox ve reviewIntervalDays'in söylediğidir", () => {
+  it("yazdığı gün reviewIntervalDays'in söylediğidir", () => {
     for (const box of ALL_BOXES) {
       for (const rating of [0, 1, 2] as const) {
-        const stage = stageOf(nextBox(box, rating, false), 1);
         const days = reviewIntervalDays(box, rating);
         const when = days === 1 ? "yarın" : `${days} gün sonra`;
-        expect(nextReviewLabel(box, rating)).toBe(`${stage.name} · ${when}`);
+        expect(reviewWhenLabel(box, rating)).toBe(when);
       }
+    }
+  });
+});
+
+describe("ratingSavedLabel", () => {
+  it("aşama yükselince yeni aşamayı yönelme hâliyle yazar", () => {
+    expect(ratingSavedLabel(2, 3, 2)).toBe("Pekişiyor'a çıktı · 4 gün sonra tekrar");
+    expect(ratingSavedLabel(3, 3, 2)).toBe("İyi biliniyor'a çıktı · 8 gün sonra tekrar");
+    expect(ratingSavedLabel(4, 3, 2)).toBe("Oturdu'ya çıktı · 16 gün sonra tekrar");
+  });
+
+  it("aşama değişmeyince yalnızca kaydedildi der", () => {
+    expect(ratingSavedLabel(2, 3, 1)).toBe("Kaydedildi · 2 gün sonra tekrar");
+    expect(ratingSavedLabel(2, 3, 0)).toBe("Kaydedildi · yarın tekrar");
+    // Tavanda "biliyordum" kutuyu ilerletmez.
+    expect(ratingSavedLabel(5, 3, 2)).toBe("Kaydedildi · 16 gün sonra tekrar");
+  });
+
+  it("kutu ilerlese de aşama adı aynı kalıyorsa 'çıktı' demez", () => {
+    // Kutu 1 → 2: denenmiş soru iki kutuda da "Öğreniliyor".
+    expect(ratingSavedLabel(1, 2, 2)).toBe("Kaydedildi · 2 gün sonra tekrar");
+  });
+
+  it("ilk kez sorulan soru 'Yeni'den 'Öğreniliyor'a çıkar", () => {
+    expect(ratingSavedLabel(1, 0, 2)).toBe("Öğreniliyor'a çıktı · 2 gün sonra tekrar");
+  });
+
+  it("kutu 1'de kalan yeni soru yükselmiş sayılmaz", () => {
+    // Aşama adı Yeni → Öğreniliyor değişiyor ama kutu ilerlemedi.
+    expect(ratingSavedLabel(1, 0, 0)).toBe("Kaydedildi · yarın tekrar");
+    expect(ratingSavedLabel(1, 0, 1)).toBe("Kaydedildi · yarın tekrar");
+  });
+
+  it("pas geçilen soru hiçbir notta yükselmez", () => {
+    for (const rating of [0, 1, 2] as const) {
+      expect(ratingSavedLabel(3, 2, rating, true)).toBe("Kaydedildi · yarın tekrar");
     }
   });
 });
