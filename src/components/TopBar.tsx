@@ -1,9 +1,11 @@
 import { AuthArea } from "./AuthArea";
 import styles from "./TopBar.module.css";
+import { AI_ENABLED } from "../config/features";
 import { useSyncStatus } from "../sync/useProgressSync";
 
 /* ------------------------------------------------------------------ */
-/* Üst çubuk — marka, sürüm, aktif havuz büyüklüğü ve YZ kotası         */
+/* Üst çubuk — marka, aktif havuz büyüklüğü ve (Faz 3'te) YZ kotası     */
+/* Sürüm alt bilgide (bkz. Footer).                                     */
 /* ------------------------------------------------------------------ */
 
 export type TopBarProps = {
@@ -56,8 +58,6 @@ export function TopBar({ questionCount, quotaRemaining }: TopBarProps) {
         </div>
 
         <div className={styles.meta}>
-          <span className={styles.version}>v{__APP_VERSION__}</span>
-
           {/*
             Küçük ve sessiz: yerel veri her hâlükârda yazıldı, senkron
             ikinci kopya. Canlı bölge değil — başarısız senkron kullanıcıyı
@@ -69,11 +69,13 @@ export function TopBar({ questionCount, quotaRemaining }: TopBarProps) {
               {SYNC_LABELS[syncStatus]}
             </span>
           )}
-          <span className={styles.pool}>{questionCount} soru</span>
-          <div className={styles.quotaBadge}>
-            <span className={styles.quotaCount}>{quotaRemaining}</span>
-            <span className={styles.quotaLabel}>YZ HAKKI</span>
-          </div>
+          <span className={styles.pool}>Havuzda {questionCount} soru</span>
+          {AI_ENABLED && (
+            <div className={styles.quotaBadge}>
+              <span className={styles.quotaCount}>{quotaRemaining}</span>
+              <span className={styles.quotaLabel}>YZ HAKKI</span>
+            </div>
+          )}
 
           {/* Oturum alanı en sağda: kendi durumunu kendi okur, TopBar'a
               prop olarak geçirilmiyor — üst çubuğun geri kalanı oturumla

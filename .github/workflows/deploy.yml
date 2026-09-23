@@ -62,6 +62,9 @@ jobs:
           file: ${{ matrix.dockerfile }}
           push: true
           tags: ${{ steps.meta.outputs.name }}:${{ github.sha }}
+          # Frontend alt bilgideki commit kısaltması için okuyor; backend
+          # Dockerfile'ı bu arg'ı tanımlamıyor, orada etkisiz.
+          build-args: GITHUB_SHA=${{ github.sha }}
           cache-from: type=gha,scope=${{ matrix.image }}
           cache-to: type=gha,mode=max,scope=${{ matrix.image }}
 

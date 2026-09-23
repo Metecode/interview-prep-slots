@@ -64,15 +64,6 @@
   justify-content: flex-end;
 }
 
-.version {
-  font-family: var(--mono);
-  font-size: var(--fs-mono-sm);
-  color: var(--text-dim);
-  padding: var(--space-1) var(--space-2);
-  border: 1px solid var(--line);
-  border-radius: 4px;
-}
-
 .pool {
   font-family: var(--mono);
   font-size: var(--fs-mono);

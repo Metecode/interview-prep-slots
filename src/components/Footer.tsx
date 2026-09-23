@@ -1,7 +1,7 @@
 import styles from "./Footer.module.css";
 
 /* ------------------------------------------------------------------ */
-/* Alt bilgi — lisans notu ve kaynak koduna bağlantı                    */
+/* Alt bilgi — lisans notu, sürüm ve kaynak koduna bağlantı             */
 /* ------------------------------------------------------------------ */
 
 const REPO_URL = "https://github.com/Metecode/interview-prep-slots";
@@ -11,9 +11,15 @@ export function Footer() {
     <footer className={styles.footer}>
       <div className={styles.inner}>
         <span>Açık kaynak · MIT</span>
-        <a className={styles.link} href={REPO_URL} target="_blank" rel="noreferrer">
-          GitHub
-        </a>
+        <div className={styles.end}>
+          {/* Hangi derlemenin çalıştığını söyler; hata bildiriminde işe yarar. */}
+          <span className={styles.version}>
+            v{__APP_VERSION__} · {__COMMIT_SHA__}
+          </span>
+          <a className={styles.link} href={REPO_URL} target="_blank" rel="noreferrer">
+            GitHub
+          </a>
+        </div>
       </div>
     </footer>
   );
