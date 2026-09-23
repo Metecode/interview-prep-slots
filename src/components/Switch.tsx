@@ -10,6 +10,8 @@ export type SwitchProps = {
   checked: boolean;
   onChange: (checked: boolean) => void;
   label: string;
+  /** Anahtarın altındaki açıklama gibi ek metnin id'si; ekran okuyucu etiketten sonra okur. */
+  describedBy?: string;
 };
 
 /**
@@ -18,7 +20,7 @@ export type SwitchProps = {
  * Sarmalayan label yerine açık bağ: VoiceOver role="switch" taşıyan bir
  * button'da örtük label'ı her zaman okumuyor.
  */
-export function Switch({ checked, onChange, label }: SwitchProps) {
+export function Switch({ checked, onChange, label, describedBy }: SwitchProps) {
   const id = useId();
 
   return (
@@ -28,6 +30,7 @@ export function Switch({ checked, onChange, label }: SwitchProps) {
         type="button"
         role="switch"
         aria-checked={checked}
+        aria-describedby={describedBy}
         className={styles.track}
         onClick={() => onChange(!checked)}
       >

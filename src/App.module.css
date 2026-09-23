@@ -91,9 +91,23 @@
 .controls {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  /* Üste hizalı: iOS'ta ses anahtarının altındaki not sütunu uzatır,
+     ortalı olsaydı "Hızlı mod" aşağı kayardı. */
+  align-items: flex-start;
   gap: var(--space-2) var(--space-6);
   margin-top: var(--space-2);
+}
+
+/* Ses anahtarı ve iOS notu alt alta; not anahtarın hemen altında kalsın. */
+.soundControl {
+  display: inline-flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.settingsNote {
+  font-size: var(--fs-label);
+  color: var(--text-faint);
 }
 
 /* Hidrasyon aralığındaki tek satır: boş ekran hiçbir zaman metinsiz kalmasın. */

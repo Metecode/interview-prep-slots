@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { Drum, FACES } from "./Drum";
 import type { DrumHandle } from "./Drum";
 import { Lever } from "./Lever";
+import { SoundHint } from "./SoundHint";
 import { SoundToggle } from "./SoundToggle";
 import { useMachineSound } from "../hooks/useMachineSound";
 import { CATEGORY_LABELS } from "../content/labels";
@@ -51,7 +52,10 @@ export type MachineProps = {
   fastMode: boolean;
   /** Makine sesi açık mı; varsayılan açık, tercih settings'te. */
   soundEnabled: boolean;
+  /** Makinenin köşesindeki hoparlör düğmesi; ayarlar anahtarı ayrı yoldan gelir. */
   onSoundChange: (enabled: boolean) => void;
+  /** iOS sessiz anahtar ipucu: 0 hiç, her artış ipucunu yeniden gösterir. */
+  soundHintKey: number;
   onPull: () => void;
   onSettle: () => void;
 };
@@ -123,6 +127,7 @@ export function Machine({
   fastMode,
   soundEnabled,
   onSoundChange,
+  soundHintKey,
   onPull,
   onSettle,
 }: MachineProps) {
@@ -313,6 +318,10 @@ export function Machine({
         <div className={styles.leverColumn}>
           <div className={styles.soundToggle}>
             <SoundToggle enabled={soundEnabled} onChange={onSoundChange} />
+            {/* Canlı bölge hep yerinde; ipucu ses kapanınca hemen kalkar. */}
+            <div role="status">
+              {soundEnabled && soundHintKey > 0 && <SoundHint key={soundHintKey} />}
+            </div>
           </div>
 
           {/*

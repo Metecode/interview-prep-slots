@@ -57,6 +57,11 @@ export const storeSchema = z.object({
      * alan yok, default doldurur — kırıcı değil, schemaVersion artmıyor.
      */
     soundEnabled: z.boolean().default(true),
+    /**
+     * iOS sessiz anahtar ipucu bir kez gösterildi mi? Eski kayıtta alan yok,
+     * default false: ipucu bir kez daha çıkar, kırıcı değil.
+     */
+    soundHintShown: z.boolean().default(false),
     lang: z.enum(["tr", "en"]).default("tr"),
     activeCategories: z.array(z.string()).default([]),
     /**
@@ -76,6 +81,7 @@ export const emptyStore = (): Store => ({
   settings: {
     fastMode: false,
     soundEnabled: true,
+    soundHintShown: false,
     lang: "tr",
     activeCategories: [],
     initialized: false,

@@ -19,6 +19,12 @@
   color: var(--text);
 }
 
+/* Tam skor ödüllendirilir; kısmi ve sıfır --text'te nötr kalır. */
+.scoreComplete {
+  color: var(--ok);
+  transition: color var(--dur-base) var(--ease-out);
+}
+
 /* Bölen sönük: asıl okunan sol taraftaki sayı. */
 .scoreTotal {
   color: var(--text-dim);
@@ -28,6 +34,42 @@
   font-size: var(--fs-body-sm);
   line-height: var(--lh-snug);
   color: var(--text-dim);
+}
+
+/*
+  Kavram çubuğu: aşama rozetindeki noktalarla aynı dil (3px aralık,
+  dolu/boş). Kırmızı ya da sarı yok — eksik bölme yalnızca --line.
+*/
+.bar {
+  display: flex;
+  gap: 3px;
+  margin-top: var(--space-3);
+}
+
+.segment {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--line);
+}
+
+/* Dolu bölmeler --line'dan --ok'a soldan sağa, 40ms arayla geçer. */
+.segmentFilled {
+  background: var(--ok);
+  animation: segment-fill var(--dur-base) var(--ease-out) backwards;
+  animation-delay: calc(var(--enter-offset, 0ms) + var(--i, 0) * var(--stagger-chip));
+}
+
+@keyframes segment-fill {
+  from {
+    background: var(--line);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .segmentFilled {
+    animation: none;
+  }
 }
 
 .conceptsLabel {
