@@ -1,12 +1,13 @@
 import { useEffect, useRef } from "react";
 import type { CSSProperties } from "react";
 
-import { AI_ENABLED } from "../../config/features";
+import { useAiEvaluation } from "../../ai/useAi";
 import { CATEGORY_LABELS } from "../../content/labels";
 import { nextReviewInLabel } from "../../domain/leitner";
 import type { QuestionProgress, SelfRating as Rating } from "../../domain/progress";
 import type { Evaluation, Question } from "../../domain/question";
 import { StageBadge } from "../StageBadge";
+import { AiReview } from "./AiReview";
 import { FollowUps } from "./FollowUps";
 import { ModelAnswer } from "./ModelAnswer";
 import { ScoreCard } from "./ScoreCard";
@@ -35,18 +36,22 @@ export type ResultPanelProps = {
   evaluation: Evaluation | null;
   /** Sorunun kayıtlı ilerlemesi; ilk kez soruluyorsa null. */
   progress: QuestionProgress | null;
-  quotaRemaining: number;
+  /** Kullanıcının yazdığı cevap; yapay zekâya bu gönderilir. */
+  answer: string;
+  /** Yapay zekâ için bir kez verilen onay (settings.aiConsent). */
+  aiConsent: boolean;
+  onAiConsent: () => void;
   onRate: (rating: Rating) => void;
-  onAskAi: () => void;
 };
 
 export function ResultPanel({
   question,
   evaluation,
   progress,
-  quotaRemaining,
+  answer,
+  aiConsent,
+  onAiConsent,
   onRate,
-  onAskAi,
 }: ResultPanelProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const passed = evaluation === null;
@@ -54,12 +59,10 @@ export function ResultPanel({
   const attempts = progress?.attempts.length ?? 0;
   const followUps = question.followUps ?? [];
 
-  // Pas geçilen soruya yapay zekâ harcanmaz; kota kullanıcının cebinden çıkıyor.
-  const blockedReason = passed
-    ? "pas geçilen soruya harcanmaz"
-    : quotaRemaining <= 0
-      ? "hakkın kalmadı"
-      : null;
+  // Yapay zekânın kararı yalnızca gösterilir: kutuyu yine öz-değerlendirme
+  // belirliyor, RATE bu sonuca bakmıyor.
+  const ai = useAiEvaluation(question.id, answer);
+  const aiEvaluation = ai.state.kind === "done" ? ai.state.evaluation : null;
 
   /*
     Tur ilerleyince odak, ekrana yeni gelen bölüme taşınır. Kol dönüş
@@ -104,6 +107,7 @@ export function ResultPanel({
         <ScoreCard
           question={question}
           evaluation={evaluation}
+          aiEvaluation={aiEvaluation}
           className={`${styles.card} ${styles.colScore}`}
           style={rise(0)}
         />
@@ -138,22 +142,14 @@ export function ResultPanel({
           {CATEGORY_LABELS[question.category]}
         </span>
 
-        {/* Faz 3'e kadar kapalı; bkz. config/features.ts. */}
-        {AI_ENABLED && (
-          <div className={styles.statusActions}>
-            {/* Kalan hak tek yerde duruyor: üst çubuktaki sayaç.
-                Burada yalnızca düğmenin neden kapalı olduğu yazar. */}
-            {blockedReason && <span className={styles.aiNote}>{blockedReason}</span>}
-            <button
-              type="button"
-              className={styles.aiButton}
-              disabled={blockedReason !== null}
-              onClick={onAskAi}
-            >
-              Yapay zekâya sor
-            </button>
-          </div>
-        )}
+        <AiReview
+          passed={passed}
+          answer={answer}
+          aiConsent={aiConsent}
+          onConsent={onAiConsent}
+          state={ai.state}
+          onRequest={ai.request}
+        />
       </div>
     </div>
   );

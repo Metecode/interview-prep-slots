@@ -1,0 +1,133 @@
+/*
+  Yapay zekâ alanı. Durum çubuğunun (ResultPanel.module.css .statusBar)
+  içinde duruyor; çubuk flex-wrap, düğme sağa yaslanır, onay ve mesaj
+  satırları tam genişlikte alta iner.
+
+  Accent kullanılmıyor: bu ekranda accent öz-değerlendirmeye ayrılmış.
+  --warn yalnızca kota bittiğinde (tokens.css'teki kural).
+*/
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+
+.note,
+.noteWarn {
+  font-size: var(--fs-label);
+  color: var(--text-dim);
+}
+
+/* Kota bitti: --warn'un bu ekrandaki tek meşru kullanımı. */
+.noteWarn {
+  color: var(--warn);
+}
+
+.askButton,
+.primaryButton,
+.secondaryButton {
+  padding: var(--space-2) var(--space-4);
+  font: inherit;
+  font-size: var(--fs-body-sm);
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+  transition:
+    transform var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out);
+}
+
+/* Onay düğmesi tek birincil eylem: çerçeve metin renginde. */
+.primaryButton {
+  border-color: var(--text-dim);
+}
+
+.secondaryButton {
+  color: var(--text-dim);
+  border-color: transparent;
+}
+
+@media (hover: hover) {
+  .askButton:hover:not(:disabled, [aria-disabled="true"]),
+  .primaryButton:hover,
+  .secondaryButton:hover {
+    transform: translateY(-1px);
+    border-color: var(--text-dim);
+    background: color-mix(in srgb, var(--text) 5%, transparent);
+  }
+}
+
+.askButton:active:not(:disabled, [aria-disabled="true"]),
+.primaryButton:active,
+.secondaryButton:active {
+  transform: translateY(1px);
+}
+
+.askButton:disabled,
+.askButton[aria-disabled="true"] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Yüklenirken sönük ama "yasak" değil: bekleniyor. */
+.askButton[aria-busy="true"] {
+  cursor: progress;
+}
+
+.askButton:focus-visible,
+.primaryButton:focus-visible,
+.secondaryButton:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+/* Hata satırı: tam genişlik, sakin. Senkronda olduğu gibi arıza değil. */
+.message {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: var(--fs-label);
+  line-height: var(--lh-snug);
+  color: var(--text-dim);
+}
+
+/* Onay ve giriş ipucu: çubuğun altında tam genişlik bir satır. */
+.panel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  flex-basis: 100%;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--line);
+}
+
+.panelText {
+  flex: 1 1 280px;
+  margin: 0;
+  font-size: var(--fs-body-sm);
+  line-height: var(--lh-snug);
+  color: var(--text);
+}
+
+.panelActions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* Canlı bölge boşken ya da yalnızca okuyucu içinken görünmez. */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

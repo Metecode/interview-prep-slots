@@ -1,0 +1,37 @@
+{
+  "created": "2026-09-23T09:14:02Z",
+  "id": "v1_ChdrQzZvYVp2QkZzT2Q1ZThQeWN2Q2dRNBIXa0M2b2FadkJGc09kNWU4UHljdkNnUTQ",
+  "model": "gemini-3.5-flash",
+  "object": "interaction",
+  "status": "completed",
+  "steps": [
+    {
+      "type": "thought",
+      "signature": "Cr4BAXLI2nxN0y0M0vQy1lqJk1i9Qw=="
+    },
+    {
+      "type": "model_output",
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"hits\":[\"concept-a\",\"concept-c\"],\"missing\":[\"concept-b\"],\"feedback\":\"Kavram A ve C doğru anlatılmış; B'nin neden gerektiği eksik kalmış.\",\"followUp\":\"Kavram B olmasaydı hangi sorun ortaya çıkardı?\"}"
+        }
+      ]
+    }
+  ],
+  "updated": "2026-09-23T09:14:02Z",
+  "usage": {
+    "input_tokens_by_modality": [
+      {
+        "modality": "text",
+        "tokens": 612
+      }
+    ],
+    "total_cached_tokens": 0,
+    "total_input_tokens": 612,
+    "total_output_tokens": 71,
+    "total_thought_tokens": 38,
+    "total_tokens": 721,
+    "total_tool_use_tokens": 0
+  }
+}

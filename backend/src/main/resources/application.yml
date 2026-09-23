@@ -35,6 +35,14 @@ app:
     app-base-url: ${APP_BASE_URL:http://localhost:5173}
     # Varsayılan true; yalnızca HTTPS olmayan yerel geliştirmede kapatılır.
     cookie-secure: ${COOKIE_SECURE:true}
+  # Yapay zekâ değerlendirmesi isteğe bağlı: sağlayıcı ya da anahtar yoksa
+  # özellik kapalı sayılır, uygulama açılmaya devam eder.
+  ai:
+    provider: ${AI_PROVIDER:}
+    weekly-limit: ${AI_WEEKLY_LIMIT:20}
+    gemini:
+      api-key: ${GEMINI_API_KEY:}
+      model: ${GEMINI_MODEL:gemini-3.5-flash}
 
 server:
   port: 8080

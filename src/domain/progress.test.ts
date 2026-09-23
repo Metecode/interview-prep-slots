@@ -26,6 +26,25 @@ describe("readStore", () => {
 
     expect(readStore(saved).store.settings.soundEnabled).toBe(false);
   });
+
+  it("aiConsent alanı olmayan eski kayıtta onay verilmemiş sayılır", () => {
+    const old = {
+      schemaVersion: SCHEMA_VERSION,
+      progress: {},
+      settings: { fastMode: false, lang: "tr", activeCategories: [], initialized: true },
+    };
+
+    const { store, recovered } = readStore(old);
+
+    expect(recovered).toBe(false);
+    expect(store.settings.aiConsent).toBe(false);
+  });
+
+  it("verilmiş yapay zekâ onayını korur", () => {
+    const saved = { schemaVersion: SCHEMA_VERSION, progress: {}, settings: { aiConsent: true } };
+
+    expect(readStore(saved).store.settings.aiConsent).toBe(true);
+  });
 });
 
 describe("emptyStore", () => {

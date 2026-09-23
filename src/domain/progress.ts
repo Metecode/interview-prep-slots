@@ -57,6 +57,12 @@ export const storeSchema = z.object({
      * alan yok, default doldurur — kırıcı değil, schemaVersion artmıyor.
      */
     soundEnabled: z.boolean().default(true),
+    /**
+     * Yapay zekâ değerlendirmesi için bir kez verilen onay: cevap Google'a
+     * gönderiliyor. Eski kayıtta alan yok, default false — onay hiç
+     * verilmemiş sayılır, ilk kullanımda sorulur. Kırıcı değil.
+     */
+    aiConsent: z.boolean().default(false),
     lang: z.enum(["tr", "en"]).default("tr"),
     activeCategories: z.array(z.string()).default([]),
     /**
@@ -76,6 +82,7 @@ export const emptyStore = (): Store => ({
   settings: {
     fastMode: false,
     soundEnabled: true,
+    aiConsent: false,
     lang: "tr",
     activeCategories: [],
     initialized: false,

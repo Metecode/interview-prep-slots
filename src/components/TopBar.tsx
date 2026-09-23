@@ -1,17 +1,16 @@
 import { AuthArea } from "./AuthArea";
 import styles from "./TopBar.module.css";
-import { AI_ENABLED } from "../config/features";
+import { useAiAvailability } from "../ai/useAi";
 import { useSyncStatus } from "../sync/useProgressSync";
 
 /* ------------------------------------------------------------------ */
-/* Üst çubuk — marka, aktif havuz büyüklüğü ve (Faz 3'te) YZ kotası     */
+/* Üst çubuk — marka, aktif havuz büyüklüğü ve yapay zekâ kotası      */
 /* Sürüm alt bilgide (bkz. Footer).                                     */
 /* ------------------------------------------------------------------ */
 
 export type TopBarProps = {
   /** Aktif kategorilerdeki soru sayısı. */
   questionCount: number;
-  quotaRemaining: number;
 };
 
 /** Basit bir işaret: kare çerçeve + kol topuzunu andıran nokta. */
@@ -41,10 +40,18 @@ const SYNC_LABELS = {
   error: "senkron bekliyor",
 } as const;
 
-export function TopBar({ questionCount, quotaRemaining }: TopBarProps) {
+/** "28 Eylül Pazartesi" gibi; kullanıcının yerel saatine göre. */
+function resetLabel(iso: string): string {
+  return new Date(iso).toLocaleDateString("tr-TR", { day: "numeric", month: "long", weekday: "long" });
+}
+
+export function TopBar({ questionCount }: TopBarProps) {
   // Misafirde hiç istek atılmadığı için durum "idle" kalır ve gösterge
   // hiç çizilmez; giriş yapmamış kullanıcı senkron diye bir şey görmez.
   const syncStatus = useSyncStatus();
+  // Sayaç yalnızca sunucu cevap verdiyse ve özellik açıksa: misafirde,
+  // yüklenirken ya da hata varken uydurma bir sayı göstermiyoruz.
+  const ai = useAiAvailability();
 
   return (
     <header className={styles.bar}>
@@ -70,9 +77,12 @@ export function TopBar({ questionCount, quotaRemaining }: TopBarProps) {
             </span>
           )}
           <span className={styles.pool}>Havuzda {questionCount} soru</span>
-          {AI_ENABLED && (
-            <div className={styles.quotaBadge}>
-              <span className={styles.quotaCount}>{quotaRemaining}</span>
+          {ai.kind === "ready" && ai.enabled && (
+            <div
+              className={styles.quotaBadge}
+              title={`Haftalık hak; ${resetLabel(ai.weekResetsAt)} yenilenir`}
+            >
+              <span className={styles.quotaCount}>{ai.remaining}</span>
               <span className={styles.quotaLabel}>YZ HAKKI</span>
             </div>
           )}

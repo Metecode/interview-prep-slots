@@ -28,6 +28,10 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       APP_BASE_URL: ${APP_BASE_URL}
       COOKIE_SECURE: ${COOKIE_SECURE}
+      AI_PROVIDER: ${AI_PROVIDER:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3.5-flash}
+      AI_WEEKLY_LIMIT: ${AI_WEEKLY_LIMIT:-20}
     ports:
       - "8080:8080"
     depends_on:

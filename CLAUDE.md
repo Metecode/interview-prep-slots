@@ -9,8 +9,8 @@ cevabını yazar, kavram bazlı geri bildirim alır.
 - **Local-first.** Uygulama hesapsız ve backend'siz tam çalışır. Giriş
   yalnızca senkron ve AI kotası için. Faz 1'de backend yok.
 - **Değerlendirme katmanlı.** v1: alias kelime eşleşmesi + kullanıcının
-  öz-değerlendirmesi. İsteğe bağlı: AI (Faz 3, henüz yok).
-  AI hiçbir zaman zorunlu yol değil.
+  öz-değerlendirmesi. İsteğe bağlı: AI (Faz 3, bkz. "Yapay zekâ
+  değerlendirmesi"). AI hiçbir zaman zorunlu yol değil.
   Tarayıcıda embedding ile kavram eşleştirme denendi ve çıkarıldı:
   e5-small ile alakasız çapalar 0.88, doğru kavramlar 0.88-0.91 skor
   alıyordu — Türkçede eşik koyacak kadar ayrışmıyor. Kod silinmedi,
@@ -64,7 +64,7 @@ shadcn/ui bileşenleri ihtiyaç oldukça tek tek eklenir, toplu kurulmaz.
   yerel Maven kurulumuna güvenilmez). Proje Spring Initializr'dan
   kuruldu; artifactId `mulakatslot`, ana sınıf `MulakatslotApplication`.
 - **Paket yapısı özelliğe göre.** `com.meteucar.mulakatslot` altında
-  `config`, `auth`, `user`, `question`, `progress`, `health`. `controller/`,
+  `config`, `auth`, `user`, `question`, `progress`, `ai`, `health`. `controller/`,
   `service/`, `repository/` gibi katman klasörleri YOK — her paket kendi
   entity/repository/controller'ını (varsa) barındırır. `config` yalnızca
   çapraz kesen yapılandırmayı tutar (güvenlik zincirleri, JWT anahtarı);
@@ -270,6 +270,88 @@ shadcn/ui bileşenleri ihtiyaç oldukça tek tek eklenir, toplu kurulmaz.
   seviyesinde tutulur ve `useSyncStatus` ile okunur — App'ten prop
   olarak inmez. `--warn` kullanılmaz: senkronun düşmesi arıza değil,
   yerel veri zaten yazıldı.
+
+## Yapay zekâ değerlendirmesi
+
+- **Sağlayıcıdan bağımsız.** `ai.AiEvaluator` tek arayüz; `GeminiEvaluator`
+  onun bir uygulaması. Kota, önbellek, hız sınırı ve doğrulama
+  (`AiService`) sağlayıcı bilmez. Seçim `AI_PROVIDER` ile (`AiConfig`);
+  sağlayıcı ya da anahtar yoksa hiçbir `AiEvaluator` bean'i kurulmaz,
+  uygulama açılır, `/api/ai/status` `enabled: false` döner.
+- **Gemini Interactions API.** `POST /v1beta/interactions`, yapılandırılmış
+  çıktı `response_format: { type: text, mime_type: application/json,
+  schema }`, yanıt `steps[type=model_output].content[type=text].text`.
+  Biçim `Api-Revision: 2026-05-20` başlığıyla sabit; Google yeni revizyon
+  çıkarınca başlık ve `GeminiResponseParser` birlikte güncellenir.
+  `store: false`. Biçimi tahminle değiştirme, resmi dokümandan doğrula.
+- **Zaman aşımları ayrı: bağlantı 5 sn, okuma 30 sn.** v2 prompt'uyla
+  20 saniyelik tek zaman aşımı yetmedi (`HttpTimeoutException: Request
+  cancelled`). Zaman aşımına düşen istek Google'da çalışmaya devam eder ve
+  sağlayıcı kotasından yer.
+- **Düşünme en düşük seviyede, modele göre.** `generation_config.
+  thinking_level`; `GeminiThinking` resmi tablodan: 3.5/3.6-flash ve
+  3.5-flash-lite `minimal`, 3.7/3.8-flash en fazla `low` (minimal
+  desteklenmiyor, gönderilirse istek reddedilir). Hiçbir seviye düşünmeyi
+  kapatmaz. `max_output_tokens` GÖNDERİLMEZ: düşünme token'ları da ona
+  sayılıyor, sınıra takılan istek `status: incomplete` ile boş/yarım döner.
+- **Her sağlayıcı çağrısı tek satır loglanır:** model, süre (ms), sonuç ve
+  token sayıları (input/output/thought) ya da ağ hatasının kök sebebi
+  (`getMostSpecificCause`). Prompt, cevap ve sağlayıcının hata gövdesi
+  loglanmaz.
+- **Sağlayıcı kotası uygulama kotasından dar olabilir.** Gözlem
+  (2026-09-23): `gemini-3.8-flash` ücretsiz katmanda PROJE başına günde 20
+  istek; günlük sayaç Pasifik gece yarısı sıfırlanır. Kullanıcı başına
+  haftalık 20 hak bununla tutarlı değil — tek kullanıcı herkesin gününü
+  bitirebilir. Model ya da limit seçerken AI Studio'daki gerçek sınırlara bak.
+- **Rubrik istemciden alınmaz.** İstek yalnızca `{ questionId, answer }`;
+  soru sunucunun veritabanından yüklenir. Sağlayıcıya kullanıcı kimliği
+  gitmez. Cevap metni hiçbir log satırına girmez; sağlayıcının hata
+  gövdeleri de (isteği yansıtabilir) loglanmaz, istisna zincirine eklenmez.
+- **Prompt `EvaluationPrompt`'ta, sağlayıcıdan bağımsız.** Kullanıcı cevabı
+  `<kullanici_cevabi>` bloğunda; blok etiketleri cevabın içinden
+  etkisizleştirilir. Prompt, şema ya da sıcaklık anlamlı değişince
+  `PROMPT_VERSION` artırılır — önbellek anahtarına giriyor.
+- **Geri bildirim öğretici, liste değil.** Rol: deneyimli teknik
+  mülakatçı. Sıra: doğru olanı adayın ifadesine atıfla teslim et → eksik
+  kavramlardan EN ÖNEMLİ tek birini seç, neden önemli ve mülakatta neden
+  sorulduğunu açıkla → gerekirse kısa ipucu. Eksik listesi yok (çipler
+  gösteriyor), model cevap tekrarı yok (yanında duruyor). "Sen" dili.
+  Devam sorusu seçilen eksiğe yönelir, soru işaretiyle biter. Boş/kısa/
+  konu dışı cevapta tek cümlelik başlangıç noktası. En fazla 600 karakter,
+  arayüz kesmez. Sıcaklık 0.3 (`EvaluationPrompt.TEMPERATURE`).
+- **Few-shot örneği bankanın DIŞINDAN** (HashMap çarpışması). Bankadaki
+  bir soru olsaydı model ezberleyip tekrar edebilirdi;
+  `EvaluationPromptTest` bankada "hashmap" geçmediğini doğruluyor. Bankaya
+  HashMap sorusu eklenirse örnek değiştirilir.
+- **Modele güvenilmez.** `AiEvaluationValidator` saf: bilinmeyen id atılır,
+  iki listede birden geçen kavram eksik sayılır, hits ∪ missing her zaman
+  tüm kavramlar, feedback 600 kod noktasında kesilir. Önbellekten dönen
+  sonuç da yeniden doğrulanır (içerik değişmiş olabilir).
+- **Sıra: hız sınırı → soru → önbellek → kota → sağlayıcı.** Önbellekten
+  dönen sonuç kota düşürmez. Kota sağlayıcıdan ÖNCE düşer (koşullu upsert,
+  `AiQuotaService`, transaction'sız — 20 saniyelik çağrı boyunca kilit
+  tutulmasın); sağlayıcı hata verirse aynı HAFTAYA iade edilir.
+- **Kota haftalık, UTC pazartesi.** `ai_usage(user_id, week_start, count)`.
+  Limit `AI_WEEKLY_LIMIT` (varsayılan 20). Eşzamanlılık tek ifadeyle
+  çözülüyor: `ON CONFLICT DO UPDATE ... WHERE count < :limit RETURNING`;
+  satır dönmezse 429 `quota_exceeded`. Limit 0 ise hiç denenmez (INSERT
+  dalı koşulsuz 1 yazardı).
+- **Hız sınırı ve önbellek bellek içi**, çünkü tek instance var. İkinci
+  instance gelirse ikisi de paylaşılan depoya taşınmalı. Dakikada 5 istek;
+  önbellek 7 gün TTL, en fazla 10.000 kayıt.
+- **Hata kodları** (`{ "code": ... }`): 400 `invalid_request`, 404
+  `question_not_found`, 429 `rate_limited` / `quota_exceeded`, 502
+  `ai_bad_response` (JSON okunamadı), 503 `ai_unavailable` (sağlayıcı 429,
+  5xx, 20 sn zaman aşımı) / `ai_disabled`. 502 ve 503'te kota iade edilir.
+- **CI gerçek API'yi ASLA çağırmaz.** Uçlar `FakeAiEvaluator` ile,
+  Gemini istemcisi `MockRestServiceServer` ve dosyadaki örnek yanıtla
+  (`test/resources/ai/`) sınanır.
+- **Frontend.** Durum `ai/aiClient` modülünde (useSyncExternalStore ile
+  okunur), kalan hak sunucudan gelir, diske yazılmaz. Misafirde düğme
+  görünür ama giriş ipucu verir; ilk kullanımda bir kez onay istenir ve
+  `settings.aiConsent`'e yazılır. Sonuç `Evaluation { source: "ai" }`
+  olarak yalnızca gösterilir: çipler güncellenir, RATE ona bakmaz — kutuyu
+  yine öz-değerlendirme belirler. Takip sorusuna cevap turu henüz yok.
 
 ## Çalışma bölümü
 

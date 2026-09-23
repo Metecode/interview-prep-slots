@@ -9,8 +9,9 @@ import styles from "./ScoreCard.module.css";
 /* ------------------------------------------------------------------ */
 /* Skor ve kavram eşleşmesi                                            */
 /*                                                                     */
-/* Çalışan katman kelime (alias) eşleşmesi; semantik değerlendirme      */
-/* projeden çıkarıldı. Başlık bu yüzden "Kavram eşleşmesi".            */
+/* Varsayılan katman kelime (alias) eşleşmesi. Kullanıcı yapay zekâya  */
+/* sorduysa çipler onun kararına göre güncellenir ve "yapay zekâ"       */
+/* etiketi çıkar; kutuyu yine öz-değerlendirme belirler.               */
 /* ------------------------------------------------------------------ */
 
 /** Uçlar ayrı yazıldı: "0 tanesi" kulağı tırmalıyor. */
@@ -20,15 +21,27 @@ function scoreCaption(hitCount: number, total: number): string {
   return `${total} kavramdan ${hitCount} tanesi cevabında geçti.`;
 }
 
+/**
+ * Yapay zekâ kelimeye değil anlama bakıyor; "geçti" yerine "karşıladın"
+ * diyor. Puan değil sayım: kaç kavramın karşılandığı.
+ */
+function aiScoreCaption(hitCount: number, total: number): string {
+  if (hitCount === 0) return `Yapay zekâya göre ${total} kavramdan hiçbirini karşılamadın.`;
+  if (hitCount === total) return `Yapay zekâya göre ${total} kavramın tamamını karşıladın.`;
+  return `Yapay zekâya göre ${total} kavramdan ${hitCount} tanesini karşıladın.`;
+}
+
 export type ScoreCardProps = {
   question: Question;
   /** null ise soru pas geçilmiş demektir. */
   evaluation: Evaluation | null;
+  /** Yapay zekâ sonucu; varsa çipler ve sayım bundan okunur. */
+  aiEvaluation: Evaluation | null;
   className: string;
   style: CSSProperties;
 };
 
-export function ScoreCard({ question, evaluation, className, style }: ScoreCardProps) {
+export function ScoreCard({ question, evaluation, aiEvaluation, className, style }: ScoreCardProps) {
   /*
     Başlık id'si useId ile üretilir, sabit yazılmaz: sahne geçişi sırasında
     çıkan ve giren panel bir an birlikte DOM'da duruyor (bkz. Stage.tsx) ve
@@ -38,7 +51,9 @@ export function ScoreCard({ question, evaluation, className, style }: ScoreCardP
   const titleId = useId();
 
   const passed = evaluation === null;
-  const hits = evaluation?.hits ?? [];
+  // Pas geçilen soruya yapay zekâ sorulamıyor; ai yalnızca cevap varken dolar.
+  const shownEvaluation = aiEvaluation ?? evaluation;
+  const hits = shownEvaluation?.hits ?? [];
   const total = question.keyConcepts.length;
 
   // Pas geçilen soruda sayılacak bir şey yok; sayaç 0'da kalır.
@@ -58,11 +73,18 @@ export function ScoreCard({ question, evaluation, className, style }: ScoreCardP
           {!passed && <span className={styles.scoreTotal}>/{total}</span>}
         </span>
         <span className={styles.scoreCaption}>
-          {passed ? "Pas geçtin, soru kutu 1'e düştü." : scoreCaption(hits.length, total)}
+          {passed
+            ? "Pas geçtin, soru kutu 1'e düştü."
+            : aiEvaluation
+              ? aiScoreCaption(hits.length, total)
+              : scoreCaption(hits.length, total)}
         </span>
       </div>
 
-      <p className={styles.conceptsLabel}>KAVRAM EŞLEŞMESİ</p>
+      <p className={styles.conceptsLabel}>
+        KAVRAM EŞLEŞMESİ
+        {aiEvaluation && <span className={styles.aiTag}>yapay zekâ</span>}
+      </p>
 
       <ul className={styles.chips}>
         {question.keyConcepts.map((concept, index) => {
@@ -93,6 +115,19 @@ export function ScoreCard({ question, evaluation, className, style }: ScoreCardP
           );
         })}
       </ul>
+
+      {aiEvaluation && (aiEvaluation.feedback || aiEvaluation.followUp) && (
+        <div className={styles.aiFeedback}>
+          {aiEvaluation.feedback && <p className={styles.aiFeedbackText}>{aiEvaluation.feedback}</p>}
+          {/* Yalnızca gösterilir; takip sorusuna cevap verme turu henüz yok. */}
+          {aiEvaluation.followUp && (
+            <p className={styles.aiFollowUp}>
+              <span className={styles.aiFollowUpLabel}>Devam sorusu</span>
+              {aiEvaluation.followUp}
+            </p>
+          )}
+        </div>
+      )}
     </section>
   );
 }

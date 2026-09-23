@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 
 import styles from "./App.module.css";
+import { useAiStatusSync } from "./ai/useAi";
 import { unlockAudio } from "./audio/audioContext";
 import { useAuth } from "./auth/useAuth";
 import { CategoryPicker } from "./components/CategoryPicker";
@@ -32,14 +33,7 @@ import type { Category } from "./domain/question";
  * reducer kendisi karar veriyor — bkz. session.ts HYDRATE dalı.
  */
 function initState(store: Store): SessionState {
-  const base: SessionState = {
-    ...initialSessionState(),
-    // GEÇİCİ: kota gerçekte dışarıdan yüklenecek. Sıfır kalırsa yapay zekâ
-    // düğmesinin açık hali denenemiyor.
-    quotaRemaining: 3,
-  };
-
-  return sessionReducer(base, {
+  return sessionReducer(initialSessionState(), {
     type: "HYDRATE",
     progress: store.progress,
     settings: store.settings,
@@ -78,6 +72,7 @@ function Session({ store, recovered, save }: SessionProps) {
   const [spinKey, setSpinKey] = useState(0);
   const [fastMode, setFastMode] = useState(store.settings.fastMode);
   const [soundEnabled, setSoundEnabled] = useState(store.settings.soundEnabled);
+  const [aiConsent, setAiConsent] = useState(store.settings.aiConsent);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [lastAnswer, setLastAnswer] = useState("");
   const [warningDismissed, setWarningDismissed] = useState(false);
@@ -87,22 +82,25 @@ function Session({ store, recovered, save }: SessionProps) {
   // yapıyoruz: hangi eylemin yazdırdığını bilmek gerekmiyor.
   const { progress, activeCategories } = state;
   useEffect(() => {
-    save(toStore({ progress, activeCategories }, { fastMode, soundEnabled }));
-  }, [progress, activeCategories, fastMode, soundEnabled, save]);
+    save(toStore({ progress, activeCategories }, { fastMode, soundEnabled, aiConsent }));
+  }, [progress, activeCategories, fastMode, soundEnabled, aiConsent, save]);
 
   // Sunucu ikinci kopya: senkron oturuma yazar, diske yazmayı yukarıdaki
   // efekt zaten üstleniyor. Doğrudan IndexedDB'ye yazsaydı bu efekt bir
   // sonraki render'da onu bellekteki eski haliyle ezerdi.
   const { status, user } = useAuth();
+  const userId = status === "authenticated" && user ? user.id : null;
   const handleMerged = useCallback((merged: ProgressMap) => {
     dispatch({ type: "SYNC_PROGRESS", progress: merged });
   }, []);
   const { pushQuestion } = useProgressSync({
     progress,
     // Misafirde null: senkron modülü hiç istek atmaz.
-    userId: status === "authenticated" && user ? user.id : null,
+    userId,
     onMerged: handleMerged,
   });
+  // Yapay zekâ durumu (açık mı, kalan hak) sunucudan; misafirde istenmez.
+  useAiStatusSync(userId);
 
   // TopBar'daki havuz bilgisi: aktif kategorilerdeki soru sayısı.
   const activeQuestionCount = useMemo(
@@ -156,8 +154,8 @@ function Session({ store, recovered, save }: SessionProps) {
     setSoundEnabled(enabled);
   }
 
-  function handleAskAi() {
-    dispatch({ type: "SPEND_QUOTA" });
+  function handleAiConsent() {
+    setAiConsent(true);
   }
 
   function handleToggleCategory(category: Category) {
@@ -182,7 +180,7 @@ function Session({ store, recovered, save }: SessionProps) {
 
   return (
     <div className={styles.root}>
-      <TopBar questionCount={activeQuestionCount} quotaRemaining={state.quotaRemaining} />
+      <TopBar questionCount={activeQuestionCount} />
       {/* Adım göstergesi üst çubuğun altında, ince bir ayırıcıyla. */}
       <StepIndicator phase={state.phase} />
 
@@ -260,7 +258,9 @@ function Session({ store, recovered, save }: SessionProps) {
           onSubmit={handleSubmit}
           onPass={handlePass}
           onRate={handleRate}
-          onAskAi={handleAskAi}
+          lastAnswer={lastAnswer}
+          aiConsent={aiConsent}
+          onAiConsent={handleAiConsent}
         />
       </main>
 

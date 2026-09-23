@@ -333,21 +333,6 @@ describe("RATE", () => {
     expect(next.recentIds).toEqual(["q1"]);
   });
 
-  it("temizlik sonrası kota tekrar harcanabilir", () => {
-    // passed sıfırlanmazsa bir sonraki turda SPEND_QUOTA sessizce engellenirdi.
-    const rated = sessionReducer(
-      makeState({
-        phase: "evaluated",
-        current: makeQuestion("q1"),
-        passed: true,
-        quotaRemaining: 2,
-      }),
-      { type: "RATE", rating: 0, answer: "", now: NOW },
-    );
-
-    expect(sessionReducer(rated, { type: "SPEND_QUOTA" }).quotaRemaining).toBe(1);
-  });
-
   it("recentIds 10'da sabitlenir ve en eskisi düşer", () => {
     const seeded = Array.from({ length: MAX_RECENT_IDS }, (_, i) => `q${i}`);
     const state = makeState({
@@ -388,43 +373,6 @@ describe("RATE", () => {
     });
 
     expect(next.recentIds).toEqual(["q1", "q2", "q-yeni"]);
-  });
-});
-
-describe("SPEND_QUOTA", () => {
-  it("pas geçilen soruda hak düşürmez", () => {
-    const state = makeState({
-      phase: "evaluated",
-      current: makeQuestion("q1"),
-      passed: true,
-      quotaRemaining: 5,
-    });
-
-    const next = sessionReducer(state, { type: "SPEND_QUOTA" });
-
-    expect(next).toBe(state);
-    expect(next.quotaRemaining).toBe(5);
-  });
-
-  it("kota bittiyse eksiye düşmez", () => {
-    const state = makeState({ quotaRemaining: 0 });
-    const next = sessionReducer(state, { type: "SPEND_QUOTA" });
-
-    expect(next).toBe(state);
-    expect(next.quotaRemaining).toBe(0);
-  });
-
-  it("hak varsa bir azaltır", () => {
-    const state = makeState({
-      phase: "evaluated",
-      current: makeQuestion("q1"),
-      quotaRemaining: 3,
-    });
-
-    const next = sessionReducer(state, { type: "SPEND_QUOTA" });
-
-    expect(next.quotaRemaining).toBe(2);
-    expect(state.quotaRemaining).toBe(3);
   });
 });
 
@@ -528,6 +476,7 @@ describe("HYDRATE", () => {
     return {
       fastMode: false,
       soundEnabled: false,
+      aiConsent: false,
       lang: "tr",
       activeCategories: ["sql"],
       initialized: true,
@@ -578,27 +527,6 @@ describe("HYDRATE", () => {
     expect(next.activeCategories).toEqual([]);
   });
 
-  it("kota verilmezse mevcut kotaya dokunmaz", () => {
-    const next = sessionReducer(makeState({ quotaRemaining: 5 }), {
-      type: "HYDRATE",
-      progress: {},
-      settings: makeSettings(),
-    });
-
-    expect(next.quotaRemaining).toBe(5);
-  });
-
-  it("kota verilirse onu yazar", () => {
-    const next = sessionReducer(makeState({ quotaRemaining: 5 }), {
-      type: "HYDRATE",
-      progress: {},
-      settings: makeSettings(),
-      quotaRemaining: 2,
-    });
-
-    expect(next.quotaRemaining).toBe(2);
-  });
-
   it("idle dışında state'i değiştirmez", () => {
     // Cevap yazılırken diskten gelen veri ekrandakini ezmemeli.
     const state = makeState({ phase: "answering", current: makeQuestion("q1") });
@@ -624,12 +552,11 @@ describe("toStore", () => {
       evaluation: makeEvaluation(),
       passed: true,
       recentIds: ["q1"],
-      quotaRemaining: 7,
       activeCategories: ["sql"],
       progress,
     });
 
-    const store = toStore(state, { fastMode: true, soundEnabled: true });
+    const store = toStore(state, { fastMode: true, soundEnabled: true, aiConsent: true });
 
     expect(store).toEqual({
       schemaVersion: SCHEMA_VERSION,
@@ -637,6 +564,7 @@ describe("toStore", () => {
       settings: {
         fastMode: true,
         soundEnabled: true,
+        aiConsent: true,
         lang: "tr",
         activeCategories: ["sql"],
         initialized: true,
@@ -646,18 +574,13 @@ describe("toStore", () => {
 
   it("initialized'ı her zaman true yazar", () => {
     // toStore'a giren state bir oturumdan geldiği için "ilk açılış" artık geçmişte.
-    const store = toStore(makeState(), { fastMode: false, soundEnabled: false });
+    const store = toStore(makeState(), {
+      fastMode: false,
+      soundEnabled: false,
+      aiConsent: false,
+    });
 
     expect(store.settings.initialized).toBe(true);
   });
 
-  it("kotayı diske yazmaz", () => {
-    const store = toStore(makeState({ quotaRemaining: 9 }), {
-      fastMode: false,
-      soundEnabled: false,
-    });
-
-    // Kota hesaba bağlı; diskte tutulsa kullanıcı elle artırabilirdi.
-    expect(JSON.stringify(store)).not.toContain("9");
-  });
 });

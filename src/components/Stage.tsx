@@ -63,10 +63,21 @@ export type StageProps = {
   onSubmit: (answer: string) => void;
   onPass: () => void;
   onRate: (rating: SelfRating) => void;
-  onAskAi: () => void;
+  /** Son gönderilen cevap; sonuç ekranı yapay zekâya bunu yollar. */
+  lastAnswer: string;
+  aiConsent: boolean;
+  onAiConsent: () => void;
 };
 
-export function Stage({ state, onSubmit, onPass, onRate, onAskAi }: StageProps) {
+export function Stage({
+  state,
+  onSubmit,
+  onPass,
+  onRate,
+  lastAnswer,
+  aiConsent,
+  onAiConsent,
+}: StageProps) {
   const stage = stageOf(state);
   const key = stageKey(stage);
   const exiting = useExitTransition(key, stage, EXIT_MS);
@@ -89,9 +100,10 @@ export function Stage({ state, onSubmit, onPass, onRate, onAskAi }: StageProps) 
         question={item.question}
         evaluation={item.evaluation}
         progress={item.progress}
-        quotaRemaining={state.quotaRemaining}
+        answer={lastAnswer}
+        aiConsent={aiConsent}
+        onAiConsent={onAiConsent}
         onRate={onRate}
-        onAskAi={onAskAi}
       />
     );
   }
