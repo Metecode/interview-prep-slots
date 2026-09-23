@@ -3,11 +3,13 @@ import { describe, expect, it } from "vitest";
 import {
   BOX_INTERVALS_DAYS,
   MAX_ATTEMPTS,
+  STAGE_COUNT,
   applyAttempt,
-  boxCadenceLabel,
   nextBox,
+  nextReviewInLabel,
   nextReviewLabel,
   reviewIntervalDays,
+  stageOf,
 } from "./leitner";
 import type { Attempt, Box, QuestionProgress, SelfRating } from "./progress";
 
@@ -48,16 +50,43 @@ describe("BOX_INTERVALS_DAYS", () => {
   });
 });
 
-describe("boxCadenceLabel", () => {
-  it("kutu 1 için 'her gün' der, gün sayısını tekrarlamaz", () => {
-    expect(boxCadenceLabel(1)).toBe("Her gün tekrar");
+describe("stageOf", () => {
+  it("kutu 1'de hiç denenmemiş soru 'Yeni'dir", () => {
+    expect(stageOf(1, 0)).toEqual({ level: 1, name: "Yeni" });
   });
 
-  it("diğer kutularda gün sayısını yazar", () => {
-    expect(boxCadenceLabel(2)).toBe("2 günde bir tekrar");
-    expect(boxCadenceLabel(3)).toBe("4 günde bir tekrar");
-    expect(boxCadenceLabel(4)).toBe("8 günde bir tekrar");
-    expect(boxCadenceLabel(5)).toBe("16 günde bir tekrar");
+  it("kutu 1'de denenmiş soru 'Öğreniliyor'dur", () => {
+    expect(stageOf(1, 1)).toEqual({ level: 1, name: "Öğreniliyor" });
+    expect(stageOf(1, 7)).toEqual({ level: 1, name: "Öğreniliyor" });
+  });
+
+  it("kutu 2..5 aşama adını deneme sayısından bağımsız verir", () => {
+    for (const attempts of [0, 1, 10]) {
+      expect(stageOf(2, attempts)).toEqual({ level: 2, name: "Öğreniliyor" });
+      expect(stageOf(3, attempts)).toEqual({ level: 3, name: "Pekişiyor" });
+      expect(stageOf(4, attempts)).toEqual({ level: 4, name: "İyi biliniyor" });
+      expect(stageOf(5, attempts)).toEqual({ level: 5, name: "Oturdu" });
+    }
+  });
+
+  it("dolu nokta sayısı kutuyla aynıdır ve toplamı aşmaz", () => {
+    for (const box of ALL_BOXES) {
+      expect(stageOf(box, 1).level).toBe(box);
+      expect(stageOf(box, 1).level).toBeLessThanOrEqual(STAGE_COUNT);
+    }
+  });
+});
+
+describe("nextReviewInLabel", () => {
+  it("kutu 1'de 'yarın' der", () => {
+    expect(nextReviewInLabel(1)).toBe("Sonraki tekrar: yarın");
+  });
+
+  it("diğer kutularda kutunun aralığını gün olarak yazar", () => {
+    expect(nextReviewInLabel(2)).toBe("Sonraki tekrar: 2 gün sonra");
+    expect(nextReviewInLabel(3)).toBe("Sonraki tekrar: 4 gün sonra");
+    expect(nextReviewInLabel(4)).toBe("Sonraki tekrar: 8 gün sonra");
+    expect(nextReviewInLabel(5)).toBe("Sonraki tekrar: 16 gün sonra");
   });
 });
 
@@ -198,31 +227,37 @@ describe("reviewIntervalDays", () => {
 });
 
 describe("nextReviewLabel", () => {
-  it("hedef kutuyu ve aralığı birlikte yazar", () => {
-    expect(nextReviewLabel(3, 2)).toBe("Kutu 4 · 8 gün sonra");
-    expect(nextReviewLabel(3, 1)).toBe("Kutu 3 · 4 gün sonra");
+  it("kutu 2'deki soru için düğme etiketleri", () => {
+    expect(nextReviewLabel(2, 2)).toBe("Pekişiyor · 4 gün sonra");
+    expect(nextReviewLabel(2, 1)).toBe("Öğreniliyor · 2 gün sonra");
+    expect(nextReviewLabel(2, 0)).toBe("Öğreniliyor · yarın");
   });
 
-  it("tek günü 'yarın' diye yazar", () => {
-    expect(nextReviewLabel(3, 0)).toBe("Kutu 1 · yarın");
-    expect(nextReviewLabel(1, 1)).toBe("Kutu 1 · yarın");
+  it("hedef aşamayı ve aralığı birlikte yazar", () => {
+    expect(nextReviewLabel(3, 2)).toBe("İyi biliniyor · 8 gün sonra");
+    expect(nextReviewLabel(4, 2)).toBe("Oturdu · 16 gün sonra");
+    expect(nextReviewLabel(5, 2)).toBe("Oturdu · 16 gün sonra");
   });
 
-  it("pas geçilen soruda not ne olursa olsun kutu 1'i gösterir", () => {
+  it("kutu 1'e düşen ya da orada kalan soru 'Yeni' değil 'Öğreniliyor'dur", () => {
+    // Değerlendirme kaydedildiği anda soru denenmiş sayılır.
+    expect(nextReviewLabel(1, 1)).toBe("Öğreniliyor · yarın");
+    expect(nextReviewLabel(1, 0)).toBe("Öğreniliyor · yarın");
+  });
+
+  it("pas geçilen soruda not ne olursa olsun ilk aşamaya döner", () => {
     for (const rating of [0, 1, 2] as const) {
-      expect(nextReviewLabel(4, rating, true)).toBe("Kutu 1 · yarın");
+      expect(nextReviewLabel(4, rating, true)).toBe("Öğreniliyor · yarın");
     }
   });
 
-  it("yazdığı kutu ve gün nextBox ile reviewIntervalDays'in söylediğidir", () => {
-    for (const box of [1, 2, 3, 4, 5] as const) {
+  it("yazdığı aşama ve gün stageOf, nextBox ve reviewIntervalDays'in söylediğidir", () => {
+    for (const box of ALL_BOXES) {
       for (const rating of [0, 1, 2] as const) {
+        const stage = stageOf(nextBox(box, rating, false), 1);
         const days = reviewIntervalDays(box, rating);
-        const expected =
-          days === 1
-            ? `Kutu ${nextBox(box, rating, false)} · yarın`
-            : `Kutu ${nextBox(box, rating, false)} · ${days} gün sonra`;
-        expect(nextReviewLabel(box, rating)).toBe(expected);
+        const when = days === 1 ? "yarın" : `${days} gün sonra`;
+        expect(nextReviewLabel(box, rating)).toBe(`${stage.name} · ${when}`);
       }
     }
   });
