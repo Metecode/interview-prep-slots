@@ -6,8 +6,6 @@
 
 .footer {
   border-top: 1px solid var(--line);
-  /* Ev göstergesi son satırın üstüne binmesin; bkz. TopBar.module.css. */
-  padding-bottom: var(--safe-bottom);
 }
 
 .inner {
@@ -15,6 +13,10 @@
   max-width: var(--shell-bar);
   margin: 0 auto;
   padding: var(--space-4) var(--gutter);
+  /* Ev göstergesi son satırın üstüne binmesin. Toplam değil en büyüğü:
+     gösterge bölgesi zaten boş, kendi boşluğumuzu üstüne eklersek alt
+     kenar gereğinden kalın kalıyor. Masaüstünde max(0, 16px) = 16px. */
+  padding-bottom: max(var(--safe-bottom), var(--space-4));
   display: flex;
   align-items: center;
   justify-content: space-between;
