@@ -18,6 +18,7 @@ import { AVAILABLE_CATEGORIES, QUESTIONS } from "./content";
 import { evaluateLexical } from "./domain/evaluate";
 import { initialSessionState, sessionReducer, toStore } from "./domain/session";
 import type { SessionState } from "./domain/session";
+import { loadWarning } from "./storage/loadWarning";
 import { useStore } from "./storage/useStore";
 import { useProgressSync } from "./sync/useProgressSync";
 import type { ProgressMap } from "./sync/progressSync";
@@ -59,16 +60,17 @@ export default function App() {
     );
   }
 
-  return <Session store={loaded.store} recovered={loaded.status === "recovered"} save={save} />;
+  return <Session store={loaded.store} warning={loadWarning(loaded)} save={save} />;
 }
 
 type SessionProps = {
   store: Store;
-  recovered: boolean;
+  /** Açılışta okumanın sonucuyla ilgili uyarı; her şey yolundaysa null. */
+  warning: string | null;
   save: (store: Store) => void;
 };
 
-function Session({ store, recovered, save }: SessionProps) {
+function Session({ store, warning, save }: SessionProps) {
   const [state, dispatch] = useReducer(sessionReducer, store, initState);
   const [spinKey, setSpinKey] = useState(0);
   const [fastMode, setFastMode] = useState(store.settings.fastMode);
@@ -81,7 +83,9 @@ function Session({ store, recovered, save }: SessionProps) {
   const prevPhaseRef = useRef(state.phase);
 
   // Kaydı RATE'i kovalayarak değil, ilerleme ve ayar değişimini izleyerek
-  // yapıyoruz: hangi eylemin yazdırdığını bilmek gerekmiyor.
+  // yapıyoruz: hangi eylemin yazdırdığını bilmek gerekmiyor. Efekt ilk
+  // render'da da çalışır ama yazmaz: yazıcı ilk değeri yalnızca
+  // karşılaştırma noktası yapar (bkz. storage/storeWriter.ts).
   const { progress, activeCategories } = state;
   useEffect(() => {
     save(toStore({ progress, activeCategories }, { fastMode, soundEnabled, soundHintShown }));
@@ -260,9 +264,9 @@ function Session({ store, recovered, save }: SessionProps) {
             </Collapse>
           </div>
 
-          {recovered && !warningDismissed && (
+          {warning && !warningDismissed && (
             <div className={styles.warning} role="alert">
-              <span>Kayıtlı ilerlemen okunamadı, sıfırdan başlıyorsun.</span>
+              <span>{warning}</span>
               <button
                 type="button"
                 className={styles.warningClose}
