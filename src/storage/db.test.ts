@@ -1,13 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { emptyStore, SCHEMA_VERSION } from "../domain/progress";
+import { emptyStore } from "../domain/progress";
 import type { Store } from "../domain/progress";
 import type { Question } from "../domain/question";
 import { initialSessionState, sessionReducer, toStore } from "../domain/session";
 import type { SessionState } from "../domain/session";
 import { createMemoryAdapter } from "../platform/storage/memoryAdapter";
 import type { StorageAdapter } from "../platform";
-import { STORE_KEY, STORE_NS, loadStore, saveStore } from "./db";
+import { loadStore, saveStore } from "./db";
+import { STORE_KEY, STORE_NS } from "./storeKeys";
 
 /* ------------------------------------------------------------------ */
 /* Depo — bellek adapter'ı ile okuma/yazma                             */
@@ -70,7 +71,7 @@ describe("Leitner ilerlemesi depoda kalıcı", () => {
 
     // İlk açılış: depo boş.
     const first = await loadStore(storage);
-    expect(first.recovered).toBe(false);
+    expect(first.status).toBe("empty");
     const afterFirst = rate(hydrate(first.store), new Date("2026-04-01T10:00:00.000Z"));
     await saveStore(storage, persisted(afterFirst));
 
@@ -101,28 +102,28 @@ describe("loadStore", () => {
 
     expect(STORE_NS).toBe("mulakat-slot");
     expect(STORE_KEY).toBe("store");
-    const { store, recovered } = await loadStore(storage);
-    expect(recovered).toBe(false);
+    const { store, status } = await loadStore(storage);
+    expect(status).toBe("ok");
     expect(store.progress.q1.box).toBe(4);
   });
 
-  it("bozuk kayıtta boş store ve recovered döner", async () => {
+  it("geçerli kayıtta depoya yazmaz", async () => {
     const storage = createMemoryAdapter();
-    await storage.set(STORE_NS, STORE_KEY, { schemaVersion: SCHEMA_VERSION, progress: "bozuk" });
+    await storage.set(STORE_NS, STORE_KEY, emptyStore());
+    const set = vi.spyOn(storage, "set");
 
-    const { store, recovered } = await loadStore(storage);
-    expect(recovered).toBe(true);
-    expect(store).toEqual(emptyStore());
+    await loadStore(storage);
+    expect(set).not.toHaveBeenCalled();
   });
 
-  it("depo okunamazsa fırlatmaz, boş store döner ve recovered false kalır", async () => {
+  it("depo okunamazsa fırlatmaz, boş store ve failed döner", async () => {
     const storage: StorageAdapter = {
       ...createMemoryAdapter(),
       get: () => Promise.reject(new Error("IndexedDB kapalı")),
     };
 
-    const { store, recovered } = await loadStore(storage);
-    expect(recovered).toBe(false);
+    const { store, status } = await loadStore(storage);
+    expect(status).toBe("failed");
     expect(store).toEqual(emptyStore());
   });
 });

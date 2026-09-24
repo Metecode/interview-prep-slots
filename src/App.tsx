@@ -42,12 +42,12 @@ function initState(store: Store): SessionState {
 }
 
 export default function App() {
-  const { hydrated, recovered, save } = useStore();
+  const { loaded, save } = useStore();
 
   // Depo okunmadan oturum kurulmuyor; okuma IndexedDB'den, göz kırpması kadar.
   // O aralıkta boş bir kabuk duruyor: yarım bir arayüz çizip hemen
   // değiştirmektense hiç çizmemek daha sakin.
-  if (!hydrated) {
+  if (!loaded) {
     return (
       <div className={styles.root}>
         <main className={styles.app}>
@@ -59,7 +59,7 @@ export default function App() {
     );
   }
 
-  return <Session store={hydrated} recovered={recovered} save={save} />;
+  return <Session store={loaded.store} recovered={loaded.status === "recovered"} save={save} />;
 }
 
 type SessionProps = {
