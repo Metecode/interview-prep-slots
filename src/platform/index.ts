@@ -13,3 +13,4 @@ import type { StorageAdapter } from "./storage/StorageAdapter";
 export const storage: StorageAdapter = indexedDbAdapter;
 
 export type { StorageAdapter } from "./storage/StorageAdapter";
+export { requestPersistentStorage } from "./storage/persist";

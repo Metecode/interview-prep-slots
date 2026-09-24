@@ -3,7 +3,20 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- viewport-fit=cover: sayfa çentiğin ve ev göstergesinin altına uzanır;
+         kenar boşlukları CSS'te env(safe-area-inset-*) ile veriliyor. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0b0f14" />
+    <meta name="description" content="Teknik mülakatlar için teorik soru pratiği." />
+
+    <!-- iOS ana ekran: manifest'i tam okumadığı için ayrıca söylemek gerekiyor.
+         black-translucent: durum çubuğu sayfanın üstünde, zemin koyu. -->
+    <link rel="apple-touch-icon" href="/apple-touch-icon-180x180.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Slot" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
     <title>Slot — Teorik soru pratiği</title>
   </head>
   <body>
