@@ -15,6 +15,10 @@
   flex-direction: column;
   min-height: 100vh;
   min-height: 100dvh;
+  /* Yatay tutuşta çentik ve yuvarlak köşeler iki yandan içeri giriyor.
+     Zemin gövdeyle aynı renk, kenara kadar dolu görünmeye devam eder. */
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
 
 .shell {

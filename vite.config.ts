@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
+import { VitePWA } from "vite-plugin-pwa";
 
 // Alt bilgideki sürüm package.json'dan okunur, elle tekrar yazılmaz.
 const pkg = JSON.parse(
@@ -25,8 +26,62 @@ const backendProxy = {
 };
 
 // https://vite.dev/config/
+// Yalnızca sunucunun cevaplayabileceği yollar: bu yollara giden sayfa
+// geçişleri service worker'ın SPA yedeğine (önbellekteki index.html)
+// düşmemeli. /oauth2 ve /login GitHub girişinin gidiş ve dönüşü; önbellekten
+// index.html verilseydi giriş sunucuya hiç ulaşmazdı.
+const serverOnlyPaths = [/^\/api\//, /^\/oauth2\//, /^\/login\//];
+
+const pwa = VitePWA({
+  /*
+    Güncelleme: yeni sürüm arka planda iner ve BEKLER; açık sekmelerin
+    hepsi kapanınca, yani bir sonraki açılışta devreye girer. "prompt"
+    tipi skipWaiting/clientsClaim'i kapalı tutuyor, onay isteyen bir
+    arayüz de bilerek yok — oturum ortasında sayfa asla yenilenmez.
+  */
+  registerType: "prompt",
+  // Kayıt betiği index.html'e eklenir; uygulama kodu service worker bilmez.
+  injectRegister: "script",
+  // İkonlar zaten globPatterns'te; eklenti ayrıca eklerse listede iki kez çıkıyor.
+  includeManifestIcons: false,
+  manifest: {
+    name: "Slot",
+    short_name: "Slot",
+    description: "Teknik mülakatlar için teorik soru pratiği.",
+    lang: "tr",
+    start_url: "/",
+    scope: "/",
+    display: "standalone",
+    // tokens.css --bg: üst çubuk ve açılış ekranı aynı zeminde.
+    theme_color: "#0b0f14",
+    background_color: "#0b0f14",
+    icons: [
+      { src: "pwa-192x192.png", sizes: "192x192", type: "image/png" },
+      { src: "pwa-512x512.png", sizes: "512x512", type: "image/png" },
+      { src: "maskable-icon-512x512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+    ],
+  },
+  workbox: {
+    // Uygulama kabuğu, JS/CSS (soru içeriği JS'e gömülü), fontlar, ikonlar.
+    // Sesler dosya değil, Web Audio ile üretiliyor.
+    globPatterns: ["**/*.{html,js,css,woff2,svg,png}"],
+    navigateFallback: "/index.html",
+    navigateFallbackDenylist: serverOnlyPaths,
+    runtimeCaching: [
+      {
+        // API hiçbir zaman önbellekten cevaplanmaz: çevrimdışıyken istek
+        // bugünkü gibi ağ hatasıyla düşer, auth ve senkron sessiz kalır.
+        // GET dışındaki istekleri (POST/PUT) service worker zaten
+        // önbelleğe almıyor, doğrudan ağa gidiyorlar.
+        urlPattern: ({ url }) => url.pathname.startsWith("/api/"),
+        handler: "NetworkOnly",
+      },
+    ],
+  },
+});
+
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), pwa],
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
     __COMMIT_SHA__: JSON.stringify(commitSha),
