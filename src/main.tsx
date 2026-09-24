@@ -18,6 +18,12 @@ void bootstrap();
 // silmesin. Sonuç yalnızca loglanır, render beklemez.
 void requestPersistentStorage();
 
+// ?safe=iphone: çentik ve ev göstergesini masaüstünde taklit eder.
+// Koşul derleme anında sabit; üretim paketine modül hiç girmiyor.
+if (import.meta.env.DEV) {
+  void import("./dev/safeAreaSimulation").then((m) => m.applySafeAreaSimulation());
+}
+
 const root = document.getElementById("root");
 if (!root) throw new Error("#root bulunamadı");
 
