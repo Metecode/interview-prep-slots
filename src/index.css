@@ -13,6 +13,17 @@
   --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   /* Panel etiketleri, rozetler, sayaçlar, tambur yüzleri, kod. */
   --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", monospace;
+
+  /*
+    Çentik, durum çubuğu ve ev göstergesinin kapladığı kenarlar
+    (viewport-fit=cover). Bileşenler env()'i doğrudan değil bunları okur:
+    geliştirmede ?safe=iphone bunları ezip masaüstünde iPhone'u taklit
+    ediyor (bkz. src/dev/safeAreaSimulation.ts). Tarayıcıda hepsi 0.
+  */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
 }
 
 * {

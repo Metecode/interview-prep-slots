@@ -7,7 +7,7 @@
 .footer {
   border-top: 1px solid var(--line);
   /* Ev göstergesi son satırın üstüne binmesin; bkz. TopBar.module.css. */
-  padding-bottom: env(safe-area-inset-bottom);
+  padding-bottom: var(--safe-bottom);
 }
 
 .inner {
