@@ -15,7 +15,7 @@ dist-ssr
 .env
 .env.local
 coverage
-
+src/content/raw/*
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
