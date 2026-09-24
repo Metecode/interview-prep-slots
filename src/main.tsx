@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 import App from "./App";
 import { bootstrap } from "./auth/authClient";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { isSafeDebugRequested } from "./debug/isSafeDebugRequested";
 import { requestPersistentStorage } from "./platform";
 import "./index.css";
 
@@ -22,6 +23,13 @@ void requestPersistentStorage();
 // Koşul derleme anında sabit; üretim paketine modül hiç girmiyor.
 if (import.meta.env.DEV) {
   void import("./dev/safeAreaSimulation").then((m) => m.applySafeAreaSimulation());
+}
+
+// ?debug=safe: telefondan gerçek safe-area ve viewport değerlerini okumak
+// için teşhis kutusu. Üretimde de çalışır; kod ayrı parçada, yalnızca bu
+// parametreyle iner.
+if (isSafeDebugRequested(window.location.search)) {
+  void import("./debug/safeAreaDebug").then((m) => m.showSafeAreaDebug());
 }
 
 const root = document.getElementById("root");
