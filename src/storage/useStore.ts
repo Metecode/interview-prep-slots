@@ -1,34 +1,17 @@
 import { useCallback, useEffect, useState } from "react";
 
-import { loadStore } from "./db";
-import type { LoadResult } from "./db";
-import { createStoreWriter } from "./storeWriter";
-import type { StoreWriter } from "./storeWriter";
+import { createStoreStartup } from "./storeStartup";
+import type { StoreStartup } from "./storeStartup";
 import type { Store } from "../domain/progress";
 import { storage } from "../platform";
 
 /*
-  Açılış okuması modül seviyesinde tek söz. React StrictMode okuma efektini
-  iki kez çalıştırıyor; loadStore yan etkili (bozuk kaydı yedekliyor,
-  kurtarılanı yazıyor), iki kez çalışsaydı iki yedek ve iki yazma olurdu.
-  authClient'taki bootstrap sözü de aynı sebeple modül seviyesinde.
-
-  Yazıcı da okumanın sonucuyla birlikte bir kez kurulur: yazmanın açık
-  olup olmadığı ve "son yazılan" karşılaştırması oturum boyunca tek.
+  Uygulamanın tek açılışı. Modül seviyesinde çünkü StrictMode efekti iki
+  kez çalıştırıyor ve bileşen yeniden bağlanabiliyor; tek sefer güvencesi
+  hook'un ömrüne bağlı kalmamalı (authClient.bootstrap ile aynı sebep).
+  Mantık storeStartup.ts'te; burası yalnızca platformun adapter'ını verir.
 */
-type Startup = { result: LoadResult; writer: StoreWriter };
-
-let startup: Promise<Startup> | null = null;
-
-function startOnce(): Promise<Startup> {
-  if (startup === null) {
-    startup = loadStore(storage).then((result) => ({
-      result,
-      writer: createStoreWriter(storage, { enabled: result.status !== "failed" }),
-    }));
-  }
-  return startup;
-}
+const startOnce = createStoreStartup(storage);
 
 /**
  * Açılışta depoyu okur.
@@ -38,7 +21,7 @@ function startOnce(): Promise<Startup> {
  * değil. Değişmeyen store'u ve yazmanın kapalı olduğu oturumu yazıcı eler.
  */
 export function useStore() {
-  const [started, setStarted] = useState<Startup | null>(null);
+  const [started, setStarted] = useState<StoreStartup | null>(null);
 
   useEffect(() => {
     let cancelled = false;
