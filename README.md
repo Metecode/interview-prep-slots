@@ -2,9 +2,9 @@
 
 # 🎰 Slot
 
-**Teknik mülakat sorularını slot makinesiyle çalış.**
+**Teknik mülakat sorularına slot makinesini kullanarak hazırlan.**
 
-Kategorini seç, kolu çek, gelen soruyu kendi cümlelerinle cevapla.
+Kategorini seç, kolu çek, ekrana düşen soruyu kendi cümlelerinle yanıtla. 
 
 [**Canlı Demo**](https://slot.meteucar.com/) · [Hata Bildir](https://github.com/Metecode/slot-study/issues/new) · [Soru Öner](https://github.com/Metecode/slot-study/issues/new)
 
@@ -15,54 +15,51 @@ Kategorini seç, kolu çek, gelen soruyu kendi cümlelerinle cevapla.
 ![License: MIT](https://img.shields.io/badge/Kod-MIT-green)
 ![License: CC BY-SA 4.0](https://img.shields.io/badge/İçerik-CC%20BY--SA%204.0-lightgrey)
 
-<!-- Ekran görüntüsü / GIF: docs/demo.gif -->
 <img src="docs/demo.gif" alt="Slot demo" width="720" />
 
 </div>
 
 ---
 
-## Neden?
+## Neden Yaptım?
 
-Teknik mülakatların önemli bir kısmı kısa, kavramsal sorulardan oluşur: *"Virtual DOM nedir?"*, *"Transaction propagation türleri neler?"*, *"Hangi index türlerini biliyorsun?"* Bu soruları okuyarak ezberlemek kolay; sesli ya da yazılı olarak **kendi cümlelerinle** anlatmak ise ayrı bir beceri.
+Mülakatlara hazırlanırken hepimizin yaşadığı klasik bir sorun var: "Virtual DOM nedir?" veya "Transaction propagation türleri nelerdir?" gibi soruları ekrandan okuyup *“Ha tamam bunu biliyorum”* diyip geçmek çok kolay. Ama iş sesli olarak ya da yazıyla **kendi cümlelerinle** anlatmaya geldiğinde bazen tıkanabiliyoruz.
 
-Slot, bu pratiği hızlı ve eğlenceli hale getirmek için yapıldı: rastgele bir soru gelir, sen cevaplarsın, sonra örnek cevapla karşılaştırırsın.
+Konseptleri sadece ezberlemek yerine ifade etme pratiği yapabilmek için bu süreci biraz oyunlaştırmak istedim. Slot'un mantığı basit: Sana rastgele bir soru fırlatır, sen aklındakini dökersin, sonra örnek cevapla kendi yazdığını kıyaslarsın.
 
-## Nasıl Çalışır?
+## Nasıl Kullanırsın?
 
-1. **Kategori seç** — Java/Spring, SQL, frontend, algoritmalar… birden fazlasını birlikte seçebilirsin.
-2. **Kolu çek** — Makaralar döner ve bir soru belirir.
-3. **Cevabını yaz** — Aklındakini kendi cümlelerinle anlat.
-4. **Değerlendir** — Cevabın anahtar kavramlarla eşleştirilir, örnek cevabı görür ve kendini puanlarsın.
-5. **Kutunu belirle** — Öz-değerlendirmene göre soru Leitner kutusunda ilerler; zorlandığın sorular daha sık gelir.
-6. **İstersen AI'a sor** — *"Kendi yapay zekâna sor"* butonu, soru ve cevabını içeren hazır bir prompt'u panoya kopyalar; dilediğin asistana yapıştırırsın.
+1. **Kategorini seç** — Frontend, SQL, Algoritmalar veya hepsi karışık.
+2. **Kolu çek** — Makaralar dönsün ve şansına bir soru gelsin.
+3. **Cevabını yaz** — Konuyu kendi anladığın şekilde, kendi cümlelerinle özetle.
+4. **Kendini değerlendir** — Uygulama cevabındaki kritik terimleri yakalar. Örnek cevabı okuyup kendine dürüstçe bir puan ver.
+5. **Kutunu belirle** — İşin içine Leitner sistemi giriyor; zorlandığın soruları ilgili kutuya atarsan karşına daha sık çıkarlar.
+6. **Yapay zekaya danış** — "Ben bunu pek anlamadım" dersen, soru ve senin cevabını içeren hazır bir prompt panoya kopyalanır. Gidip istediğin AI aracına (ChatGPT, Claude vb.) yapıştırıp detay isteyebilirsin.
 
-## Özellikler
+## Öne Çıkanlar
 
-- 🎰 **Slot makinesi animasyonu** — Makaralar ve çekilebilir kol ile soru seçimi
-- 🗂️ **Çoklu kategori** — Birden fazla konudan karışık soru
-- ✅ **Anahtar kavram eşleşmesi** — Cevabındaki kritik terimleri yakalar
-- 🪞 **Öz-değerlendirme** — Örnek cevapla karşılaştırıp kendini puanla
-- 📦 **Leitner sistemi** — Aralıklı tekrar; kutuyu otomatik skor değil, sen belirlersin
-- 🔒 **Local-first** — Hesap gerekmez, ilerlemen tarayıcında (IndexedDB) tutulur
-- 🔄 **İsteğe bağlı senkron** — GitHub ile giriş yaparsan ilerlemen cihazlar arasında senkronlanır
-- 🤖 **AI'a bağımlı değil** — Uygulamanın değeri sorular ve örnek cevaplarda; AI değerlendirmesi isteğe bağlı ve senin tercih ettiğin araçla
+- 🎰 **Slot Animasyonu:** Soru seçmeyi biraz daha keyifli hale getiren makara ve kol mekaniği.
+- ✅ **Anahtar Kelime Avcısı:** Cevabındaki kritik kavramları yakalayıp sana ipucu verir.
+- 📦 **Leitner Sistemi (Aralıklı Tekrar):** Neyi ne kadar iyi bildiğine sen karar verirsin, sistem de zorlandıklarını sana daha sık hatırlatır.
+- 🔒 **Local-first (Önce Yerel):** Kullanmak için hesap açmana gerek yok. Tüm ilerlemen doğrudan tarayıcında (IndexedDB) tutulur.
+- 🔄 **Cihazlar Arası Senkron:** Eğer GitHub ile giriş yaparsan, ilerlemen arka planda sunucuyla eşitlenir. Telefondan devam edebilirsin.
+- 🤖 **Yapay Zekaya Bağımlı Değil:** Uygulamanın asıl değeri kaliteli soru-cevap havuzunda. AI sadece işin opsiyonel destek kısmı.
 
-## Mimari
+## Mimari Nasıl Çalışıyor?
 
-Slot **local-first** çalışır: uygulama hesapsız ve backend'siz eksiksiz kullanılabilir. Backend yalnızca giriş yapan kullanıcılar için ilerlemenin ikinci bir kopyasını tutar.
+Slot **local-first** bir mimariyle geliştirildi. Yani uygulamayı indirip backend olmadan, tamamen hesapsız bir şekilde eksiksiz kullanabilirsin. Backend, sadece giriş yapan kullanıcıların cihazlar arası senkronizasyonunu sağlamak için ikinci bir kopya tutar.
 
-```
-Tarayıcı (IndexedDB)  ── birincil kopya, her zaman yazılır
+```text
+Tarayıcı (IndexedDB)  ── Birincil kopya (Her zaman önce buraya yazılır)
         │
-        │  senkron: giriş · soru puanlama · sekme kapanışı
+        │  Senkron tetikleyiciler: giriş yapma, soru puanlama, sekme kapatma
         ▼
-Spring Boot API  ──►  PostgreSQL  ── ikinci kopya, yalnızca giriş yapanlar
+Spring Boot API  ──►  PostgreSQL  ── İkinci kopya (Sadece giriş yapanlar için)
 ```
 
-- **Çevrimdışı dayanıklılık** — Backend'e ulaşılamazsa senkron sessizce başarısız olur; yerel veri zaten yazılmıştır.
-- **Kayıpsız birleştirme** — İki cihazda çalışıldığında kutu ve son görülme için yeni olan kazanır, yazılan cevaplar ise her zaman birleştirilir.
-- **Güvenli oturum** — GitHub OAuth; kısa ömürlü JWT access token bellekte, refresh token HttpOnly cookie'de. Rotasyon ve yeniden kullanım tespiti var.
+- **Çevrimdışı dayanıklılık** — Backend'e ulaşılamazsa senkronizasyon sessizce iptal olur, yereldeki verin güvendedir. İnternet gelince tekrar dener.
+- **Veri Birleştirme (Merge):** — İki farklı cihazda çalışırsan, kutu ve son görülme tarihi için en güncel olanı baz alır, yazdığın cevapları ise kayıpsız birleştirir.
+- **Güvenlik** — GitHub OAuth kullanır. Kısa ömürlü JWT access token bellekte, refresh token ise HttpOnly cookie'de tutulur.
 
 ## Teknoloji
 
@@ -75,11 +72,11 @@ Spring Boot API  ──►  PostgreSQL  ── ikinci kopya, yalnızca giriş ya
 | Test | Vitest, JUnit, Testcontainers |
 | Altyapı | Docker, GitHub Actions |
 
-## Başlarken
+## Projeyi Ayağa Kaldırma
 
-### Yalnızca frontend
+### Sadece Frontend (Backend olmadan)
 
-Backend olmadan da uygulama eksiksiz çalışır.
+Uygulama backend olmadan da gayet güzel çalışıyor.
 
 **Gereksinimler:** Node.js 20+
 
@@ -92,7 +89,7 @@ npm run dev
 
 Uygulama `http://localhost:5173` adresinde açılır.
 
-### Backend ile birlikte
+### Backend ile Birlikte Çalıştırma
 
 **Gereksinimler:** Java 21, Docker
 
@@ -103,7 +100,7 @@ cd backend
 ./mvnw spring-boot:run        # Windows: .\mvnw.cmd spring-boot:run
 ```
 
-Vite, `/api` isteklerini `localhost:8080`'e proxy'ler; frontend'i ayrıca yapılandırmana gerek yok.
+Vite tarafı, `/api` isteklerini otomatik olarak `localhost:8080`'e yönlendirir (proxy). Frontend'de ekstra bir ayar yapmana gerek yok.
 
 ## Yol Haritası
 
@@ -111,9 +108,11 @@ Vite, `/api` isteklerini `localhost:8080`'e proxy'ler; frontend'i ayrıca yapıl
 - [x] **Faz 2** — GitHub ile giriş, cihazlar arası ilerleme senkronu, kendi sunucusunda yayın
 - [ ] Android ve iOS uygulamaları
 
-## Katkıda Bulunma
+## Destek ve Katkı
 
-En değerli katkı **yeni sorular ve daha iyi örnek cevaplar**. Bir soru önermek, hatalı bir cevabı düzeltmek ya da yeni kategori eklemek için issue açabilir veya pull request gönderebilirsin.
+Bu projenin en çok ihtiyaç duyduğu şey **kaliteli yeni sorular ve sağlam örnek cevaplar**.
+
+Yeni bir soru eklemek, hatalı olduğunu düşündüğün bir cevabı düzeltmek ya da yepyeni bir kategori açmak için Issue oluşturabilir veya doğrudan PR gönderebilirsin:
 
 1. Repoyu fork'la
 2. Yeni bir dal aç: `git checkout -b soru/redis-eviction`
@@ -122,12 +121,12 @@ En değerli katkı **yeni sorular ve daha iyi örnek cevaplar**. Bir soru önerm
 
 ## Lisans
 
-Bu proje iki ayrı lisans altındadır:
+Bu repo iki farklı lisansla korunmaktadır:
 
 - **Kaynak kod** — [MIT](LICENSE)
 - **Soru ve cevap içeriği** (`src/content/`) — [CC BY-SA 4.0](src/content/LICENSE)
 
-İçeriği kullanabilir, değiştirebilir ve paylaşabilirsin; kaynak göstermen ve türetilen içeriği aynı lisansla paylaşman yeterli.
+İçerikleri dilediğin gibi kullanabilir, değiştirebilir ve paylaşabilirsin. Sadece kaynağı (bu repoyu) belirtmen ve türettiğin işleri de aynı lisansla paylaşman yeterli.
 
 ---
 
@@ -135,6 +134,6 @@ Bu proje iki ayrı lisans altındadır:
 
 [Mete Uçar](https://meteucar.com) tarafından geliştirildi.
 
-İşine yaradıysa ⭐ vererek destek olabilirsin.
+Projeyi faydalı bulduysan bir ⭐'ını alırım.
 
 </div>
