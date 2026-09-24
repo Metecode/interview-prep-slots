@@ -29,6 +29,16 @@ export const attemptSchema = z.object({
 });
 export type Attempt = z.infer<typeof attemptSchema>;
 
+/**
+ * Cevabın sert sınırı: cevap alanının maxLength'i ve senkron payload'u
+ * bununla kesilir. Backend'de de aynı (ProgressValidator.MAX_ANSWER_LENGTH).
+ *
+ * attemptSchema'ya BİLEREK konmadı: eski kayıtlarda daha uzun cevap olabilir,
+ * şema sıkılaşsaydı o kayıtlar "bozuk" sayılır ve kurtarma akışı tetiklenirdi.
+ * Sınır yalnızca girişte ve senkronda uygulanır.
+ */
+export const MAX_ANSWER_LENGTH = 5000;
+
 export const questionProgressSchema = z.object({
   questionId: z.string(),
   box: boxSchema,

@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -35,18 +34,20 @@ final class ProgressMerger {
         // karşılaştırılsın: ikinci kopya "zaten elimizde" sayılır.
         Map<String, ProgressState> current = new LinkedHashMap<>(stored);
         List<ProgressState> changes = new ArrayList<>();
+        List<ProgressValidator.Rejected> rejections = new ArrayList<>();
         int applied = 0;
         int merged = 0;
         int ignored = 0;
         int unknownQuestions = 0;
 
         for (ProgressRecord record : incoming) {
-            Optional<ProgressState> valid = ProgressValidator.validate(record, now);
-            if (valid.isEmpty()) {
+            ProgressValidator.Result result = ProgressValidator.validate(record, now);
+            if (result instanceof ProgressValidator.Rejected rejected) {
+                rejections.add(rejected);
                 ignored++;
                 continue;
             }
-            ProgressState update = valid.get();
+            ProgressState update = ((ProgressValidator.Valid) result).state();
 
             if (!knownQuestionIds.contains(update.questionId())) {
                 // İçerik sürümleri arasında fark olabilir; hata değil.
@@ -95,7 +96,8 @@ final class ProgressMerger {
             }
         }
 
-        return new MergePlan(changes, new ProgressApplyResult(applied, merged, ignored), unknownQuestions);
+        return new MergePlan(changes, new ProgressApplyResult(applied, merged, ignored), rejections,
+                unknownQuestions);
     }
 
     /**
@@ -103,9 +105,12 @@ final class ProgressMerger {
      * Değişmeyen bir soru burada hiç görünmez, yani çağıran listeyi olduğu
      * gibi uygulayabilir.
      *
+     * @param rejections       doğrulamada atlanan kayıtlar ve nedenleri;
+     *                         loglamayı user_id'yi bilen çağıran yapar
      * @param unknownQuestions loglanmak için ayrı duruyor; sayaçlarda zaten
      *                         ignored içinde.
      */
-    record MergePlan(List<ProgressState> changes, ProgressApplyResult counters, int unknownQuestions) {
+    record MergePlan(List<ProgressState> changes, ProgressApplyResult counters,
+            List<ProgressValidator.Rejected> rejections, int unknownQuestions) {
     }
 }

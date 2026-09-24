@@ -1,7 +1,6 @@
 package com.meteucar.mulakatslot.progress;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Senkron uçlarının hem girdi hem çıktı şekli; frontend'in
@@ -12,12 +11,14 @@ import java.util.Map;
  * box da ilkel değil sarmalayıcı tip — alan hiç gelmediğinde sessizce 0
  * olmasın, null kalıp doğrulamada elensin.
  *
- * <p>attempts JSONB'ye olduğu gibi yazılır; içeriğine SQL sorgusu
- * atılmayacağı için ilişkisel olarak parçalanmadı.
+ * <p>attempts tipli: denemede bilinmeyen alan isteği 400'e düşürür, değer
+ * ihlali yalnızca kaydı atlatır (bkz. {@link ProgressAttempt}). Saklarken
+ * JSONB'ye yazılır; içeriğine SQL sorgusu atılmayacağı için ilişkisel olarak
+ * parçalanmadı.
  */
 public record ProgressRecord(
         String questionId,
         Integer box,
         String lastSeenAt,
-        List<Map<String, Object>> attempts) {
+        List<ProgressAttempt> attempts) {
 }

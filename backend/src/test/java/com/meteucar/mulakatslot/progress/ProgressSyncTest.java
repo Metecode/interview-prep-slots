@@ -16,13 +16,17 @@ import com.meteucar.mulakatslot.user.AppUser;
 import com.meteucar.mulakatslot.user.AppUserRepository;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
@@ -42,6 +46,7 @@ import tools.jackson.databind.json.JsonMapper;
 @Import(TestcontainersConfiguration.class)
 @SpringBootTest
 @AutoConfigureMockMvc
+@ExtendWith(OutputCaptureExtension.class)
 class ProgressSyncTest {
 
     private static final String QUESTION_A = "progress-test-a";
@@ -51,6 +56,9 @@ class ProgressSyncTest {
     private static final String T1 = "2026-01-01T10:00:00Z";
     private static final String T2 = "2026-02-01T10:00:00Z";
     private static final String T3 = "2026-03-01T10:00:00Z";
+
+    /** Cevap metnine konan işaret; hiçbir log satırında görünmemeli. */
+    private static final String SECRET = "GIZLI-CEVAP-METNI";
 
     @Autowired
     private MockMvc mockMvc;
@@ -174,6 +182,76 @@ class ProgressSyncTest {
                 .andExpect(jsonPath("$[0].attempts[0].answer").value("cevabım"));
     }
 
+    /**
+     * Şekil ihlali: denemede bilinmeyen alan tüm isteği 400'e düşürür ve
+     * hiçbir şey yazılmaz. Spring bu hatayı WARN ile logluyor; alanın değeri
+     * ve cevap metni loga girmemeli.
+     */
+    @Test
+    void unknownAttemptFieldRejectsTheWholeRequest(CapturedOutput output) throws Exception {
+        String payload = """
+                [{ "questionId": "%s", "box": 2, "lastSeenAt": "%s",
+                   "attempts": [{ "at": "%s", "answer": "%s", "hitCount": 1, "totalConcepts": 3,
+                                  "selfRating": 1, "passed": false, "extra": "%s" }] },
+                 { "questionId": "%s", "box": 2, "lastSeenAt": "%s", "attempts": [] }]
+                """.formatted(QUESTION_A, T1, T1, SECRET, SECRET, QUESTION_B, T1);
+
+        mockMvc.perform(authed(put("/api/progress"), user).content(payload))
+                .andExpect(status().isBadRequest());
+
+        assertThat(boxOf(user, QUESTION_A)).isEmpty();
+        assertThat(boxOf(user, QUESTION_B)).isEmpty();
+        assertThat(output.getAll()).doesNotContain(SECRET);
+    }
+
+    /**
+     * Değer ihlali: yalnızca o kayıt atlanır. Log satırı user_id, question_id
+     * ve nedeni taşır; cevap metninin hiçbir parçası loga girmez.
+     */
+    @Test
+    void invalidAttemptValueSkipsTheRecordAndLogsWithoutTheAnswer(CapturedOutput output) throws Exception {
+        String tooLong = SECRET + "a".repeat(ProgressValidator.MAX_ANSWER_LENGTH);
+        ProgressRecord bad = new ProgressRecord(QUESTION_A, 2, T1, List.of(attempt(T1, tooLong)));
+
+        mockMvc.perform(authed(put("/api/progress"), user).content(body(bad, progressRecord(QUESTION_B, 3, T1))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.applied").value(1))
+                .andExpect(jsonPath("$.ignored").value(1));
+
+        assertThat(boxOf(user, QUESTION_A)).isEmpty();
+        assertThat(boxOf(user, QUESTION_B)).contains((short) 3);
+        assertThat(output.getAll())
+                .contains("Senkron kaydı atlandı: cevap 5000 karakteri aşıyor (user_id=" + user.getId()
+                        + ", question_id=" + QUESTION_A + ")")
+                .doesNotContain(SECRET);
+    }
+
+    /** Postgres JSONB \u0000'ı reddediyor; doğrulama olmasa yazma 500 verirdi. */
+    @Test
+    void nulCharacterInAnswerIsSkippedInsteadOfFailingTheSync() throws Exception {
+        ProgressRecord bad = new ProgressRecord(QUESTION_A, 2, T1, List.of(attempt(T1, "önce\u0000sonra")));
+
+        mockMvc.perform(authed(put("/api/progress"), user).content(body(bad, progressRecord(QUESTION_B, 3, T1))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.applied").value(1))
+                .andExpect(jsonPath("$.ignored").value(1));
+
+        assertThat(boxOf(user, QUESTION_A)).isEmpty();
+    }
+
+    /** Şemaya uymayan eski bir satır okunurken hata yok; tanınmayan anahtar yanıta taşınmaz. */
+    @Test
+    void legacyStoredKeysAreNotReturned() throws Exception {
+        Map<String, Object> legacy = new LinkedHashMap<>(attempt(T1, "eski cevap").toStored());
+        legacy.put("eskiAlan", "eski değer");
+        saveServerProgress(user, QUESTION_A, 2, T1, List.of(legacy));
+
+        mockMvc.perform(authed(get("/api/progress"), user))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].attempts[0].answer").value("eski cevap"))
+                .andExpect(jsonPath("$[0].attempts[0].eskiAlan").doesNotExist());
+    }
+
     @Test
     void otherUsersProgressIsNotVisibleOrWritable() throws Exception {
         saveServerProgress(user, QUESTION_A, 4, T2);
@@ -220,12 +298,18 @@ class ProgressSyncTest {
 
     /** attemptTimes verilmezse deneme geçmişi boş; verilen her zaman bir deneme. */
     private ProgressRecord progressRecord(String questionId, int box, String lastSeenAt, String... attemptTimes) {
-        return new ProgressRecord(questionId, box, lastSeenAt, attempts(attemptTimes));
+        return new ProgressRecord(questionId, box, lastSeenAt,
+                Arrays.stream(attemptTimes).map(at -> attempt(at, "cevap " + at)).toList());
     }
 
-    private List<Map<String, Object>> attempts(String... attemptTimes) {
+    private ProgressAttempt attempt(String at, String answer) {
+        return new ProgressAttempt(at, answer, 1, 3, 1, false);
+    }
+
+    /** Sunucuda saklanan biçim; gelen denemelerle aynı anahtarlar. */
+    private List<Map<String, Object>> storedAttempts(String... attemptTimes) {
         return Arrays.stream(attemptTimes)
-                .map(at -> Map.<String, Object>of("at", at, "answer", "cevap " + at))
+                .map(at -> attempt(at, "cevap " + at).toStored())
                 .toList();
     }
 
@@ -243,9 +327,14 @@ class ProgressSyncTest {
 
     private void saveServerProgress(AppUser owner, String questionId, int box, String lastSeenAt,
             String... attemptTimes) {
+        saveServerProgress(owner, questionId, box, lastSeenAt, storedAttempts(attemptTimes));
+    }
+
+    private void saveServerProgress(AppUser owner, String questionId, int box, String lastSeenAt,
+            List<Map<String, Object>> attempts) {
         Question question = questionRepository.findById(questionId).orElseThrow();
         QuestionProgress row = new QuestionProgress(owner, question, (short) box, OffsetDateTime.parse(lastSeenAt));
-        row.setAttempts(attempts(attemptTimes));
+        row.setAttempts(attempts);
         questionProgressRepository.save(row);
     }
 

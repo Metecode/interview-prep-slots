@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,6 +97,12 @@ public class ProgressSyncService {
             applyChange(user, questions.get(change.questionId()), rows, change);
         }
 
+        // Yalnızca user_id, question_id ve sabit metinli neden. Kaydın
+        // içeriği, özellikle cevap metni, hiçbir koşulda loga yazılmaz.
+        for (ProgressValidator.Rejected rejected : plan.rejections()) {
+            log.info("Senkron kaydı atlandı: {} (user_id={}, question_id={})",
+                    rejected.reason(), user.getId(), rejected.questionId());
+        }
         if (plan.unknownQuestions() > 0) {
             log.info("Senkronda {} kayıt bilinmeyen soruya ait, atlandı (user_id={})",
                     plan.unknownQuestions(), user.getId());
@@ -184,7 +191,13 @@ public class ProgressSyncService {
                     // döndürdüğü yerel offset'i olduğu gibi yazarsak
                     // "+03:00" biçimi şemadan geçmez.
                     row.getLastSeenAt().toInstant().toString(),
-                    row.getAttempts()));
+                    // Saklanan biçim Map; yanıt tipli. Tanınmayan eski
+                    // anahtarlar burada düşer, yanıta taşınmaz. Boş eleman
+                    // birleştirmede de atlanıyor (ProgressAttempts).
+                    row.getAttempts().stream()
+                            .filter(Objects::nonNull)
+                            .map(ProgressAttempt::fromStored)
+                            .toList()));
         }
         return records;
     }
