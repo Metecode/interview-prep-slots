@@ -1,21 +1,28 @@
-import { get, set } from "idb-keyval";
-
 import { emptyStore, readStore, storeSchema } from "../domain/progress";
 import type { Store } from "../domain/progress";
+import type { StorageAdapter } from "../platform";
 
 /* ------------------------------------------------------------------ */
-/* Depo — idb-keyval üzerine ince bir sarmalayıcı                      */
+/* Depo — StorageAdapter üzerine ince bir sarmalayıcı                  */
 /*                                                                     */
 /* Buradaki hiçbir fonksiyon hata fırlatmaz. Depolama çalışmıyorsa      */
 /* (özel sekme, dolu kota, kapalı IndexedDB) uygulama yine açılmalı:    */
 /* ilerleme kaybolur ama uygulama kaybolmaz.                            */
+/*                                                                     */
+/* Adapter parametre olarak gelir, burada seçilmez: uygulamada          */
+/* platform/index.ts'teki, testlerde bellek gerçeklemesi.              */
 /* ------------------------------------------------------------------ */
 
-export const STORE_KEY = "mulakat-slot/store";
+/*
+  Tüm store tek kayıt. Web'de bu çift IndexedDB'de "mulakat-slot/store"
+  anahtarına düşüyor — mevcut kullanıcıların verisi orada, değiştirme.
+*/
+export const STORE_NS = "mulakat-slot";
+export const STORE_KEY = "store";
 
-export async function loadStore(): Promise<{ store: Store; recovered: boolean }> {
+export async function loadStore(storage: StorageAdapter): Promise<{ store: Store; recovered: boolean }> {
   try {
-    const raw = await get(STORE_KEY);
+    const raw = await storage.get<unknown>(STORE_NS, STORE_KEY);
     // Anahtar yok: ilk açılış. Kayıp bir şey olmadığı için recovered false.
     if (raw === undefined) return { store: emptyStore(), recovered: false };
 
@@ -28,7 +35,7 @@ export async function loadStore(): Promise<{ store: Store; recovered: boolean }>
   }
 }
 
-export async function saveStore(store: Store): Promise<void> {
+export async function saveStore(storage: StorageAdapter, store: Store): Promise<void> {
   const result = storeSchema.safeParse(store);
   if (!result.success) {
     // Bozuk state diske yazılırsa bir sonraki açılışta okunamaz hale gelir;
@@ -39,7 +46,7 @@ export async function saveStore(store: Store): Promise<void> {
 
   try {
     // Ham girdi değil, şemadan geçmiş hali: varsayılanlar uygulanmış olur.
-    await set(STORE_KEY, result.data);
+    await storage.set(STORE_NS, STORE_KEY, result.data);
   } catch (error) {
     console.error("IndexedDB'ye yazılamadı:", error);
   }

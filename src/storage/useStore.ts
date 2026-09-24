@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { loadStore, saveStore } from "./db";
 import type { Store } from "../domain/progress";
+import { storage } from "../platform";
 
 /**
  * Açılışta depoyu okur.
@@ -17,7 +18,7 @@ export function useStore() {
   useEffect(() => {
     let cancelled = false;
 
-    void loadStore().then((result) => {
+    void loadStore(storage).then((result) => {
       // Bileşen sökülmüşse state'e dokunma.
       if (cancelled) return;
       setHydrated(result.store);
@@ -31,7 +32,7 @@ export function useStore() {
 
   // saveStore kendi hatasını yutuyor; burada beklenecek bir şey yok.
   const save = useCallback((store: Store) => {
-    void saveStore(store);
+    void saveStore(storage, store);
   }, []);
 
   return { hydrated, recovered, save };
