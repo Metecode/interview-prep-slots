@@ -119,6 +119,14 @@
   }
 }
 
+/* Geri alınamaz madde ince bir çizgiyle çıkıştan ayrılır; renk ayrışması yok. */
+.item + .item {
+  margin-top: var(--space-1);
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  box-shadow: 0 -1px 0 var(--line);
+}
+
 /* Menü satırı: kayma yerine zemin koyulaşır, satırlar birbirini itmesin. */
 .item:active {
   background: var(--surface-raised);

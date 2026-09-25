@@ -319,6 +319,29 @@ shadcn/ui bileşenleri ihtiyaç oldukça tek tek eklenir, toplu kurulmaz.
   seviyesinde tutulur ve `useSyncStatus` ile okunur — App'ten prop
   olarak inmez. `--warn` kullanılmaz: senkronun düşmesi arıza değil,
   yerel veri zaten yazıldı.
+- **Hesap silinirken senkron askıda.** `suspendSync()` bir bayrak koyar ve
+  uçuştaki istekler (`inFlightRequests`) bitince çözülür; bayrak açıkken
+  `pushChanges` ve `syncAfterLogin` istek atmaz (visibilitychange de
+  `pushChanges`'ten geçtiği için kapanır). `resumeSync()` yalnızca bayrağı
+  kaldırır. Askıdayken `mergedUserId` kilitlenmez; askı kalkınca birleştirme
+  yine çalışabilir.
+- **Silme akışı `account/deleteAccount.ts`'te,** React bilmez; depo ve
+  `reload` dışarıdan gelir. Sıra: askıya al ve bekle → `DELETE /api/me` →
+  başarısızsa askıyı kaldır. Başarılıysa ve "bu cihazdaki verileri de sil"
+  işaretliyse `storage.clear(STORE_NS)` BEKLENİR (store, ayarlar ve bozuk
+  kayıt yedekleri aynı namespace'te), sonra sayfa yenilenir. Clear düşerse
+  yenilenmez: yenilenseydi veri sessizce geri gelir, kullanıcı silindiğini
+  sanırdı; bunun yerine "hesabın silindi ama bu cihazdaki veriler
+  silinemedi" gösterilir. İşaretsizse askı kalkar; oturum anonim olduğu için
+  istek gitmez, tekrar girişte yerel ilerleme yeni hesaba birleşir.
+  Clear ile reload arasında diske yazan bir yol yok: yazma yalnızca store
+  değişince App'teki efektten gidiyor (debounce/flush, pagehide ya da
+  beforeunload yok) ve diyalog modal. Sayfa kapanışında yazan bir yol
+  eklenirse bu akış yeniden düşünülmeli.
+- **Diyalog AuthArea'da, oturum dallarının dışında.** Silme başarılı olunca
+  durum anonime döner ve kullanıcı menüsü DOM'dan kalkar; diyalog onun
+  içinde olsaydı sonucu gösteremeden kaybolurdu. Kapanınca odak
+  "Giriş yap"a taşınır.
 
 ## Yapay zekâ değerlendirmesi — denendi, kaldırıldı
 

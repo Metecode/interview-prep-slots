@@ -62,6 +62,34 @@ function publishSync(): void {
 */
 let mergedUserId: string | null = null;
 
+/* ------------------------------------------------------------------ */
+/* Askıya alma — hesap silinirken hiçbir istek gitmesin                */
+/* ------------------------------------------------------------------ */
+
+/*
+  Sunucu silinmiş kullanıcının senkronuna 401 veriyor ve kullanıcıyı
+  yeniden oluşturmuyor. Yine de silme sürerken ağa kullanıcının
+  cevaplarını taşıyan bir istek çıkmasın diye senkron önce durdurulur.
+  Bayrak yalnızca yeni istekleri keser; uçuştakiler inFlightRequests
+  üzerinden beklenir, silme onlar bitince gönderilir.
+*/
+let suspended = false;
+const inFlightRequests = new Set<Promise<unknown>>();
+
+/**
+ * Yeni senkron isteklerini durdurur. Dönen söz, o an uçuşta olan
+ * isteklerin hepsi (başarılı ya da değil) bitince çözülür.
+ */
+export async function suspendSync(): Promise<void> {
+  suspended = true;
+  await Promise.allSettled([...inFlightRequests]);
+}
+
+/** Askıyı kaldırır. Bekleyen bir şey tutulmadığı için hemen istek atmaz. */
+export function resumeSync(): void {
+  suspended = false;
+}
+
 /**
  * Girişten sonra bir kez: yereldeki her şey gönderilir, sunucu iki yönlü
  * birleştirip tam sonucu döner. Dönen harita çağıranın yerele yazacağı
@@ -71,6 +99,8 @@ export async function syncAfterLogin(local: ProgressMap): Promise<ProgressMap | 
   const { status, user } = getSnapshot();
   // Misafirde hiç istek atılmaz: senkron yalnızca hesabı olanın işi.
   if (status !== "authenticated" || !user) return null;
+  // Askıdayken kapı da kilitlenmez: askı kalkınca bir sonraki tetik birleştirebilsin.
+  if (suspended) return null;
   if (mergedUserId === user.id) return null;
   mergedUserId = user.id;
 
@@ -106,6 +136,8 @@ export function resetSync(): void {
  */
 export async function pushChanges(progress: ProgressMap, questionIds: readonly string[]): Promise<void> {
   if (getSnapshot().status !== "authenticated") return;
+  // visibilitychange de buradan geçiyor; askı o yolu da kapatır.
+  if (suspended) return;
 
   // Henüz hiç cevaplanmamış bir soru istenmiş olabilir; gönderecek kaydı yok.
   const records = questionIds.map((id) => progress[id]).filter((record) => record !== undefined);
@@ -118,8 +150,19 @@ export async function pushChanges(progress: ProgressMap, questionIds: readonly s
 /* İç yardımcılar                                                      */
 /* ------------------------------------------------------------------ */
 
+/**
+ * Her istek uçuştaki istekler kümesine girer ve bitince çıkar;
+ * suspendSync bu kümeyi bekler.
+ */
+function send(method: "PUT" | "POST", url: string, records: QuestionProgress[]): Promise<unknown | null> {
+  const request = sendNow(method, url, records);
+  inFlightRequests.add(request);
+  void request.finally(() => inFlightRequests.delete(request));
+  return request;
+}
+
 /** Başarısızlıkta null döner ve sessiz kalır; çağıranın yapacağı bir şey yok. */
-async function send(
+async function sendNow(
   method: "PUT" | "POST",
   url: string,
   records: QuestionProgress[],

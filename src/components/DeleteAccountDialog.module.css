@@ -1,0 +1,162 @@
+/*
+  Hesabı sil diyaloğu. Panellerle aynı yüzey dili: --surface-raised,
+  ince çizgi, 10px köşe. Giriş hareketi yok; modal zaten dikkat çekiyor
+  ve hareket azaltma tercihine ayrıca bakmaya gerek kalmıyor.
+
+  Kırmızı bir token yok ve eklenmiyor: --warn yalnız gerçek bir durum
+  bildirimi için, --accent olumlu birincil eylem için. Geri alınamaz
+  eylem ters çevrilmiş (açık zemin, koyu yazı) düğmeyle ayrışıyor.
+*/
+
+.dialog {
+  width: min(440px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  padding: var(--space-6);
+  color: var(--text);
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 12px 28px rgba(var(--well-rgb), 0.55);
+}
+
+.dialog::backdrop {
+  background: rgba(var(--well-rgb), 0.7);
+}
+
+.title {
+  margin: 0 0 var(--space-3);
+  font-size: var(--fs-heading);
+  font-weight: var(--fw-semibold);
+}
+
+.text,
+.result {
+  margin: 0 0 var(--space-4);
+  font-size: var(--fs-body-sm);
+  line-height: var(--lh-body);
+}
+
+.text {
+  color: var(--text-dim);
+}
+
+.option {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.checkbox {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  margin: 2px 0 0;
+  accent-color: var(--text);
+}
+
+.checkbox:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+.label {
+  font-size: var(--fs-body-sm);
+  line-height: var(--lh-snug);
+  cursor: pointer;
+}
+
+.hint {
+  margin: var(--space-1) 0 var(--space-4) calc(16px + var(--space-2));
+  font-size: var(--fs-label);
+  line-height: var(--lh-body);
+  color: var(--text-dim);
+}
+
+.note {
+  margin: 0 0 var(--space-4);
+  font-size: var(--fs-label);
+  line-height: var(--lh-body);
+  color: var(--text-faint);
+}
+
+.link {
+  color: var(--text-dim);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  overflow-wrap: anywhere;
+}
+
+.link:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.error {
+  margin: 0 0 var(--space-4);
+  font-size: var(--fs-label);
+  line-height: var(--lh-body);
+  color: var(--text);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.secondary,
+.danger {
+  padding: var(--space-2) var(--space-4);
+  font: inherit;
+  font-size: var(--fs-body-sm);
+  font-weight: var(--fw-semibold);
+  border-radius: 8px;
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.secondary {
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--line);
+}
+
+.danger {
+  color: var(--bg);
+  background: var(--text);
+  border: 1px solid var(--text);
+}
+
+.secondary:focus-visible,
+.danger:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+.secondary:active:not(:disabled),
+.danger:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.secondary:disabled,
+.danger:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+@media (hover: hover) {
+  .secondary:hover:not(:disabled) {
+    background: var(--surface);
+  }
+
+  .danger:hover:not(:disabled) {
+    background: var(--text-dim);
+    border-color: var(--text-dim);
+  }
+}

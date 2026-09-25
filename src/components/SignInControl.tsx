@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from "react";
+import type { RefObject } from "react";
 
 import { SignInPanel } from "./SignInPanel";
 import styles from "./SignInControl.module.css";
@@ -13,13 +14,19 @@ export type SignInControlProps = {
   /** Backend'e ulaşılamıyor: panel giriş yerine sebebi gösterir. */
   offline: boolean;
   onLogin: () => void;
+  /**
+   * Verilirse düğmenin ref'i dışarıdan gelir: hesap silindikten sonra
+   * AuthArea odağı bu düğmeye taşıyor.
+   */
+  buttonRef?: RefObject<HTMLButtonElement | null>;
 };
 
 const PANEL_ID = "sign-in-panel";
 
-export function SignInControl({ offline, onLogin }: SignInControlProps) {
+export function SignInControl({ offline, onLogin, buttonRef: externalButtonRef }: SignInControlProps) {
   const [open, setOpen] = useState(false);
-  const buttonRef = useRef<HTMLButtonElement>(null);
+  const internalButtonRef = useRef<HTMLButtonElement>(null);
+  const buttonRef = externalButtonRef ?? internalButtonRef;
   const panelRef = useRef<HTMLDivElement>(null);
 
   // Escape'te odak düğmeye döner (kullanıcı klavyedeydi, akışı kopmasın);
@@ -27,7 +34,7 @@ export function SignInControl({ offline, onLogin }: SignInControlProps) {
   const close = useCallback((reason: DismissReason) => {
     setOpen(false);
     if (reason === "escape") buttonRef.current?.focus();
-  }, []);
+  }, [buttonRef]);
 
   useDismiss(open, [panelRef, buttonRef], close);
 

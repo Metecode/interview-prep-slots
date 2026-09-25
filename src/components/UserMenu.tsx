@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { KeyboardEvent } from "react";
 
 import styles from "./UserMenu.module.css";
 import { useDismiss } from "../hooks/useDismiss";
@@ -6,12 +7,14 @@ import type { DismissReason } from "../hooks/useDismiss";
 import type { AuthUser } from "../auth/authClient";
 
 /* ------------------------------------------------------------------ */
-/* Girmiş kullanıcı — avatar, kullanıcı adı ve çıkış menüsü            */
+/* Girmiş kullanıcı — avatar, kullanıcı adı, çıkış ve hesap silme      */
 /* ------------------------------------------------------------------ */
 
 export type UserMenuProps = {
   user: AuthUser;
   onLogout: () => void;
+  /** Onay diyaloğunu açar; diyalog AuthArea'da. */
+  onDeleteAccount: () => void;
 };
 
 const MENU_ID = "user-menu";
@@ -25,7 +28,7 @@ function initialOf(username: string): string {
   return (Array.from(username)[0] ?? "?").toUpperCase();
 }
 
-export function UserMenu({ user, onLogout }: UserMenuProps) {
+export function UserMenu({ user, onLogout, onDeleteAccount }: UserMenuProps) {
   const [open, setOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -38,10 +41,31 @@ export function UserMenu({ user, onLogout }: UserMenuProps) {
 
   useDismiss(open, [menuRef, buttonRef], close);
 
-  // Menü tek maddelik; açılınca odak doğrudan o maddeye gider.
+  // Açılınca odak ilk maddeye gider.
   useEffect(() => {
     if (open) logoutRef.current?.focus();
   }, [open]);
+
+  // Maddeler arasında ↑/↓ ile gezilir, uçlarda başa/sona sarar. Tab da
+  // çalışmaya devam ediyor; oklar menü alışkanlığı olanlar için.
+  function handleMenuKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+    const items = [...(menuRef.current?.querySelectorAll<HTMLButtonElement>("button") ?? [])];
+    if (items.length === 0) return;
+    event.preventDefault();
+    const current = items.indexOf(document.activeElement as HTMLButtonElement);
+    const step = event.key === "ArrowDown" ? 1 : -1;
+    items[(current + step + items.length) % items.length].focus();
+  }
+
+  // Menü kapanıp inert olmadan önce odak tetik düğmesine alınır: diyalog
+  // kapanınca tarayıcı odağı açılış anında odaktaki öğeye geri verir,
+  // inert bir menü maddesi o öğe olamaz.
+  function handleDeleteAccount() {
+    setOpen(false);
+    buttonRef.current?.focus();
+    onDeleteAccount();
+  }
 
   return (
     <div className={styles.wrap}>
@@ -63,9 +87,19 @@ export function UserMenu({ user, onLogout }: UserMenuProps) {
       </button>
 
       {/* Panelle aynı kalıp: kapalıyken de DOM'da, inert ve geçişli. */}
-      <div ref={menuRef} id={MENU_ID} className={styles.menu} data-open={open} inert={!open}>
+      <div
+        ref={menuRef}
+        id={MENU_ID}
+        className={styles.menu}
+        data-open={open}
+        inert={!open}
+        onKeyDown={handleMenuKeyDown}
+      >
         <button ref={logoutRef} type="button" className={styles.item} onClick={onLogout}>
           Çıkış yap
+        </button>
+        <button type="button" className={styles.item} onClick={handleDeleteAccount}>
+          Hesabı sil
         </button>
       </div>
     </div>
