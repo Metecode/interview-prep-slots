@@ -1,6 +1,6 @@
 import { AuthArea } from "./AuthArea";
+import { SyncIndicator } from "./SyncIndicator";
 import styles from "./TopBar.module.css";
-import { useSyncStatus } from "../sync/useProgressSync";
 
 /* ------------------------------------------------------------------ */
 /* Üst çubuk — marka, aktif havuz büyüklüğü, senkron ve oturum        */
@@ -30,20 +30,7 @@ function LogoMark() {
   );
 }
 
-/**
- * Senkron göstergesinin metni. Üçüncü durum (idle) hiç yazı üretmez:
- * her şey yolundayken gösterilecek bir şey yok.
- */
-const SYNC_LABELS = {
-  syncing: "senkronlanıyor",
-  error: "senkron bekliyor",
-} as const;
-
 export function TopBar({ questionCount }: TopBarProps) {
-  // Misafirde hiç istek atılmadığı için durum "idle" kalır ve gösterge
-  // hiç çizilmez; giriş yapmamış kullanıcı senkron diye bir şey görmez.
-  const syncStatus = useSyncStatus();
-
   return (
     <header className={styles.bar}>
       <div className={styles.inner}>
@@ -56,17 +43,8 @@ export function TopBar({ questionCount }: TopBarProps) {
         </div>
 
         <div className={styles.meta}>
-          {/*
-            Küçük ve sessiz: yerel veri her hâlükârda yazıldı, senkron
-            ikinci kopya. Canlı bölge değil — başarısız senkron kullanıcıyı
-            kesmeyi hak eden bir olay değil, yalnızca sunucudaki kopyanın
-            geride kaldığını söylüyor.
-          */}
-          {syncStatus !== "idle" && (
-            <span className={styles.sync} data-state={syncStatus}>
-              {SYNC_LABELS[syncStatus]}
-            </span>
-          )}
+          {/* Kendi durumunu kendi okur; misafirde hiç çizilmez. */}
+          <SyncIndicator />
           <span className={styles.pool}>Havuzda {questionCount} soru</span>
 
           {/* Oturum alanı en sağda: kendi durumunu kendi okur, TopBar'a

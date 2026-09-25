@@ -345,3 +345,65 @@ describe("suspendSync / resumeSync", () => {
     expect(mocks.apiFetch.mock.calls.map((call) => (call[1] as RequestInit).method)).toEqual(["POST", "PUT"]);
   });
 });
+
+describe("getSyncSnapshot", () => {
+  it("hızlı yanıtta status önce/sonra aynı olsa da lastSyncedAt değişir ve dinleyici çağrılır", async () => {
+    const sync = await loadSync();
+    signIn();
+    mocks.apiFetch.mockResolvedValue(jsonResponse({ applied: 1, merged: 0, ignored: 0 }));
+    const listener = vi.fn();
+    sync.subscribeSync(listener);
+
+    const before = sync.getSyncSnapshot();
+    await sync.pushChanges({ a: progressOf("a", 2, "2026-01-01T10:00:00Z") }, ["a"]);
+    const after = sync.getSyncSnapshot();
+
+    // Ara durumu (syncing) görmeyen bir okuyucu için: status aynı, başarı yine görünür.
+    expect(before.status).toBe("idle");
+    expect(after.status).toBe("idle");
+    expect(before.lastSyncedAt).toBeNull();
+    expect(after.lastSyncedAt).not.toBeNull();
+    expect(listener).toHaveBeenCalled();
+  });
+
+  it("aynı milisaniyede biten iki başarı da ayrı değer üretir", async () => {
+    const sync = await loadSync();
+    signIn();
+    vi.spyOn(Date, "now").mockReturnValue(1_000);
+    mocks.apiFetch.mockImplementation(() => Promise.resolve(jsonResponse({ applied: 1, merged: 0, ignored: 0 })));
+
+    await sync.pushChanges({ a: progressOf("a", 2, "2026-01-01T10:00:00Z") }, ["a"]);
+    const first = sync.getSyncSnapshot().lastSyncedAt;
+    await sync.pushChanges({ a: progressOf("a", 2, "2026-01-01T10:00:00Z") }, ["a"]);
+    const second = sync.getSyncSnapshot().lastSyncedAt;
+
+    expect(second).not.toBe(first);
+  });
+
+  it("değişiklik yokken aynı nesneyi döner", async () => {
+    const sync = await loadSync();
+
+    expect(sync.getSyncSnapshot()).toBe(sync.getSyncSnapshot());
+  });
+
+  it("başarısız istek lastSyncedAt'i değiştirmez, status error olur", async () => {
+    const sync = await loadSync();
+    signIn();
+    mocks.apiFetch.mockResolvedValue(new Response(null, { status: 500 }));
+
+    await sync.pushChanges({ a: progressOf("a", 2, "2026-01-01T10:00:00Z") }, ["a"]);
+
+    expect(sync.getSyncSnapshot()).toEqual({ status: "error", lastSyncedAt: null });
+  });
+
+  it("resetSync son başarıyı ve hatayı sıfırlar", async () => {
+    const sync = await loadSync();
+    signIn();
+    mocks.apiFetch.mockResolvedValue(jsonResponse({ applied: 1, merged: 0, ignored: 0 }));
+    await sync.pushChanges({ a: progressOf("a", 2, "2026-01-01T10:00:00Z") }, ["a"]);
+
+    sync.resetSync();
+
+    expect(sync.getSyncSnapshot()).toEqual({ status: "idle", lastSyncedAt: null });
+  });
+});

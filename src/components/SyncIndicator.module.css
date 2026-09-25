@@ -1,0 +1,56 @@
+/*
+  Senkron göstergesi. Bilerek sessiz: mono, en küçük basamak, sönük ton.
+  Yerel veri her hâlükârda yazıldı — bu bir uyarı değil, sunucudaki
+  kopyanın durumu. Bu yüzden --warn değil --text-faint/--text-dim; hata
+  üstü çizili bulutla ayrışıyor.
+*/
+
+.indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-family: var(--mono);
+  font-size: var(--fs-mono-sm);
+  color: var(--text-faint);
+  white-space: nowrap;
+}
+
+.indicator[data-state="syncing"],
+.indicator[data-state="error"] {
+  color: var(--text-dim);
+}
+
+.icon {
+  flex-shrink: 0;
+}
+
+.indicator[data-state="syncing"] .icon {
+  animation: spin 1s linear infinite;
+}
+
+/*
+  tokens.css hareket azaltmada süreleri 1ms'ye indiriyor; sonsuz bir
+  dönmeyi bu durdurmaz, tersine çılgınca hızlandırırdı. Açıkça kapatılır.
+*/
+@media (prefers-reduced-motion: reduce) {
+  .indicator[data-state="syncing"] .icon {
+    animation: none;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
