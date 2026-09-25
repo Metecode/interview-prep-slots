@@ -15,6 +15,7 @@ import { z } from "zod";
 const REFRESH_URL = "/api/auth/refresh";
 const LOGOUT_URL = "/api/auth/logout";
 const LOGIN_URL = "/oauth2/authorization/github";
+const ACCOUNT_URL = "/api/me";
 
 const authUserSchema = z.object({
   id: z.string().min(1),
@@ -245,6 +246,27 @@ export async function logout(): Promise<void> {
   } finally {
     setAnonymous();
   }
+}
+
+/**
+ * Hesabı sunucudan siler (DELETE /api/me). Sunucu refresh cookie'sini de
+ * temizliyor; yalnızca 204'te yerel oturum anonime çekilir. Hata
+ * fırlatmaz: başarısızlıkta oturum olduğu gibi kalır, false döner.
+ */
+export async function deleteAccount(): Promise<boolean> {
+  try {
+    const response = await apiFetch(ACCOUNT_URL, { method: "DELETE" });
+    if (response.status !== 204) {
+      console.warn("Hesap silinemedi:", response.status);
+      return false;
+    }
+  } catch (error) {
+    console.warn("Hesap silme isteği gönderilemedi:", error);
+    return false;
+  }
+
+  setAnonymous();
+  return true;
 }
 
 /* ------------------------------------------------------------------ */

@@ -315,3 +315,42 @@ describe("subscribe", () => {
     expect(listener).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("deleteAccount", () => {
+  it("204'te DELETE /api/me gönderir, oturumu anonime çeker ve true döner", async () => {
+    const auth = await loadClient();
+    fetchMock.mockResolvedValueOnce(jsonResponse(refreshBody()));
+    await auth.refresh();
+
+    fetchMock.mockResolvedValueOnce(new Response(null, { status: 204 }));
+    await expect(auth.deleteAccount()).resolves.toBe(true);
+
+    const [input, init] = fetchMock.mock.calls[1];
+    expect(urlOf(input)).toBe("/api/me");
+    expect(init?.method).toBe("DELETE");
+    expect(authHeaderOf(init)).toBe("Bearer token-1");
+    expect(auth.getSnapshot()).toEqual({ status: "anonymous", user: null, reachable: true });
+  });
+
+  it("sunucu hatasında false döner, oturum açık kalır", async () => {
+    const auth = await loadClient();
+    fetchMock.mockResolvedValueOnce(jsonResponse(refreshBody()));
+    await auth.refresh();
+
+    fetchMock.mockResolvedValueOnce(new Response(null, { status: 500 }));
+    await expect(auth.deleteAccount()).resolves.toBe(false);
+
+    expect(auth.getSnapshot().status).toBe("authenticated");
+  });
+
+  it("ağ hatasında fırlatmaz, false döner", async () => {
+    const auth = await loadClient();
+    fetchMock.mockResolvedValueOnce(jsonResponse(refreshBody()));
+    await auth.refresh();
+
+    fetchMock.mockRejectedValueOnce(new TypeError("offline"));
+    await expect(auth.deleteAccount()).resolves.toBe(false);
+
+    expect(auth.getSnapshot().status).toBe("authenticated");
+  });
+});

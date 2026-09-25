@@ -283,3 +283,65 @@ describe("pushChanges", () => {
     ).resolves.toBeUndefined();
   });
 });
+
+describe("suspendSync / resumeSync", () => {
+  it("askıdayken ne PUT ne merge gider", async () => {
+    const sync = await loadSync();
+    signIn();
+    mocks.apiFetch.mockResolvedValue(jsonResponse([]));
+
+    await sync.suspendSync();
+    await sync.pushChanges({ a: progressOf("a", 2, "2026-01-01T10:00:00Z") }, ["a"]);
+    const merged = await sync.syncAfterLogin({});
+
+    expect(merged).toBeNull();
+    expect(mocks.apiFetch).not.toHaveBeenCalled();
+  });
+
+  it("uçuştaki istek bitene kadar çözülmez", async () => {
+    const sync = await loadSync();
+    signIn();
+    let respond!: (response: Response) => void;
+    mocks.apiFetch.mockReturnValue(
+      new Promise<Response>((resolve) => {
+        respond = resolve;
+      }),
+    );
+
+    const push = sync.pushChanges({ a: progressOf("a", 2, "2026-01-01T10:00:00Z") }, ["a"]);
+    let settled = false;
+    const suspension = sync.suspendSync().then(() => {
+      settled = true;
+    });
+
+    // Mikro görev kuyruğu boşalsın; istek hâlâ elde tutuluyor.
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(settled).toBe(false);
+
+    respond(jsonResponse({ applied: 1, merged: 0, ignored: 0 }));
+    await push;
+    await suspension;
+    expect(settled).toBe(true);
+  });
+
+  it("uçuşta istek yoksa hemen çözülür", async () => {
+    const sync = await loadSync();
+
+    await expect(sync.suspendSync()).resolves.toBeUndefined();
+  });
+
+  it("askı kalkınca istekler yeniden gider, birleştirme kapısı kilitli kalmaz", async () => {
+    const sync = await loadSync();
+    signIn();
+    mocks.apiFetch.mockResolvedValue(jsonResponse([]));
+
+    await sync.suspendSync();
+    await sync.syncAfterLogin({});
+    sync.resumeSync();
+    await sync.syncAfterLogin({});
+    await sync.pushChanges({ a: progressOf("a", 2, "2026-01-01T10:00:00Z") }, ["a"]);
+
+    expect(mocks.apiFetch.mock.calls.map((call) => (call[1] as RequestInit).method)).toEqual(["POST", "PUT"]);
+  });
+});
