@@ -9,6 +9,8 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.DefaultRedirectStrategy;
 import org.springframework.security.web.RedirectStrategy;
@@ -21,6 +23,11 @@ import org.springframework.stereotype.Component;
  *
  * <p>Token URL'e konmaz: URL tarayıcı geçmişine, Referer başlığına ve sunucu
  * günlüklerine yazılır.
+ *
+ * <p>GitHub'ın verdiği access token'a el sıkışmadan sonra ihtiyacımız yok:
+ * kimlik ve kullanıcı adı principal'da geliyor, GitHub API'si bir daha
+ * çağrılmıyor. Spring onu varsayılan olarak bellekte saklıyor; burada
+ * siliniyor ki sunucuda kullanılmayan bir kimlik bilgisi birikmesin.
  */
 @Component
 public class GithubAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
@@ -28,35 +35,55 @@ public class GithubAuthenticationSuccessHandler implements AuthenticationSuccess
     private final AppUserService appUserService;
     private final RefreshTokenService refreshTokenService;
     private final RefreshTokenCookie refreshTokenCookie;
+    private final OAuth2AuthorizedClientService authorizedClientService;
     private final String appBaseUrl;
     private final RedirectStrategy redirectStrategy = new DefaultRedirectStrategy();
 
     public GithubAuthenticationSuccessHandler(AppUserService appUserService,
             RefreshTokenService refreshTokenService, RefreshTokenCookie refreshTokenCookie,
-            AuthProperties properties) {
+            OAuth2AuthorizedClientService authorizedClientService, AuthProperties properties) {
         this.appUserService = appUserService;
         this.refreshTokenService = refreshTokenService;
         this.refreshTokenCookie = refreshTokenCookie;
+        this.authorizedClientService = authorizedClientService;
         this.appBaseUrl = properties.appBaseUrl();
     }
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
             Authentication authentication) throws IOException {
-        OAuth2User principal = (OAuth2User) authentication.getPrincipal();
-        AppUser user = appUserService.upsertFromGithub(githubId(principal), username(principal));
+        try {
+            OAuth2User principal = (OAuth2User) authentication.getPrincipal();
+            AppUser user = appUserService.upsertFromGithub(githubId(principal), username(principal));
 
-        String refreshValue = refreshTokenService.issue(user);
-        response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.build(refreshValue).toString());
+            String refreshValue = refreshTokenService.issue(user);
+            response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.build(refreshValue).toString());
 
-        // Session yalnızca authorization request durumunu taşıyordu; el sıkışma
-        // bitti, oturum artık refresh token'la yürüyor. Bundan sonrası stateless.
-        HttpSession session = request.getSession(false);
-        if (session != null) {
-            session.invalidate();
+            // Session yalnızca authorization request durumunu taşıyordu; el sıkışma
+            // bitti, oturum artık refresh token'la yürüyor. Bundan sonrası stateless.
+            HttpSession session = request.getSession(false);
+            if (session != null) {
+                session.invalidate();
+            }
+
+            redirectStrategy.sendRedirect(request, response, appBaseUrl);
+        } finally {
+            // Kayıt ya da cookie adımı hata verse de GitHub token'ı bellekte kalmaz.
+            removeGithubToken(authentication);
         }
+    }
 
-        redirectStrategy.sendRedirect(request, response, appBaseUrl);
+    /**
+     * Login filtresi token'ı bu handler çağrılmadan önce kaydediyor.
+     * Kimliği doğrulanmış principal için varsayılan repository
+     * ({@code AuthenticatedPrincipalOAuth2AuthorizedClientRepository})
+     * servise yazdığından silme de servisten yapılır.
+     */
+    private void removeGithubToken(Authentication authentication) {
+        if (authentication instanceof OAuth2AuthenticationToken token) {
+            authorizedClientService.removeAuthorizedClient(
+                    token.getAuthorizedClientRegistrationId(), authentication.getName());
+        }
     }
 
     /** GitHub bunu sayı olarak gönderir, biz metin olarak saklıyoruz. */

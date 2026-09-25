@@ -47,9 +47,17 @@ public class ProgressSyncService {
         this.clock = clock;
     }
 
-    /** Kullanıcının tüm ilerlemesi. Başka kullanıcının satırına hiç bakılmaz. */
+    /**
+     * Kullanıcının tüm ilerlemesi. Başka kullanıcının satırına hiç bakılmaz.
+     *
+     * <p>Silinmiş kullanıcının token'ı boş liste değil 401 alır; yazma
+     * uçlarıyla aynı cevap. Okuma serileşmeye ihtiyaç duymadığı için kilit yok.
+     */
     @Transactional(readOnly = true)
     public List<ProgressRecord> findAll(UUID userId) {
+        if (!appUserRepository.existsById(userId)) {
+            throw new UnauthorizedException("token geçerli ama kullanıcı yok: " + userId);
+        }
         return toRecords(progressRepository.findByIdUserId(userId));
     }
 

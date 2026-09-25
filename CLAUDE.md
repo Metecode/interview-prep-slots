@@ -202,6 +202,25 @@ shadcn/ui bileşenleri ihtiyaç oldukça tek tek eklenir, toplu kurulmaz.
   bilinçli: token'sız bir istek olmayan bir uca gittiğinde 404 değil 401
   alır, böylece hangi uçların var olduğu sızmaz. 404'ü görmek için
   geçerli token gerekir.
+- **GitHub token'ı el sıkışmadan sonra silinir.** GitHub API'si girişten
+  sonra hiç çağrılmıyor; kimlik ve kullanıcı adı principal'da geliyor.
+  Varsayılan `AuthenticatedPrincipalOAuth2AuthorizedClientRepository`
+  kimliği doğrulanmış principal için token'ı `OAuth2AuthorizedClientService`'e
+  (bellekte) yazıyor. `GithubAuthenticationSuccessHandler` bu yüzden
+  `finally` içinde `removeAuthorizedClient` çağırıyor, hata olsa da token
+  kalmıyor. Repository'yi değiştiren biri silmenin de nereden yapıldığına
+  bakmalı; `GithubAuthenticationSuccessHandlerTest` bu bağlantıyı doğruluyor.
+- **Hesap silme: `DELETE /api/me`.** Kimlik `jwt.sub`'dan gelir.
+  `AppUserRepository.deleteByIdReturningCount` tek bir JPQL DELETE atar,
+  ilerleme ve refresh token satırlarını DB'deki `ON DELETE CASCADE` siler
+  (JPA cascade'ine güvenilmez). Yanıt her durumda 204 ve Max-Age=0 refresh
+  cookie'si; kullanıcı zaten silinmişse de 204 (idempotent, ağ hatasından
+  sonraki tekrar hata görmesin). Access token 15 dakika daha imza olarak
+  geçerli kalır ama işe yaramaz: PUT ve merge `requireUser` (FOR UPDATE)
+  ile, GET `existsById` ile 401 döner, `/api/auth/me` da 401. Kullanıcı
+  hiçbir uçta yeniden oluşmaz; yalnızca GitHub ile yeniden giriş yeni bir
+  hesap açar. Silme, kullanıcı satırında kilit tutan bir senkron varsa onun
+  bitmesini bekler. Test: `AccountDeletionTest`.
 
 ## İlerleme senkronu
 
