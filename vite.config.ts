@@ -40,8 +40,9 @@ const pwa = VitePWA({
     arayüz de bilerek yok — oturum ortasında sayfa asla yenilenmez.
   */
   registerType: "prompt",
-  // Kayıt betiği index.html'e eklenir; uygulama kodu service worker bilmez.
-  injectRegister: "script",
+  // Kaydı eklenti yapmaz: native'de (Capacitor) service worker kapalı
+  // kalsın diye kayıt src/platform/serviceWorker.ts'te, bayrağa bağlı.
+  injectRegister: false,
   // İkonlar zaten globPatterns'te; eklenti ayrıca eklerse listede iki kez çıkıyor.
   includeManifestIcons: false,
   manifest: {
