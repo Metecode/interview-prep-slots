@@ -14,6 +14,8 @@ export type CategoryPickerProps = {
   /** Gösterilecek kategoriler. İçinde soru olmayan kategori buraya hiç gelmez. */
   categories: Category[];
   active: Category[];
+  /** Seçili kategorilerdeki soru sayısı; çekilişin havuzu. */
+  poolCount: number;
   /** true iken hiçbir çip tıklanamaz (ör. makara dönerken). */
   disabled: boolean;
   onToggle: (category: Category) => void;
@@ -39,6 +41,7 @@ function summarize(active: Category[], categories: Category[]): string {
 export function CategoryPicker({
   categories,
   active,
+  poolCount,
   disabled,
   onToggle,
   onToggleAll,
@@ -77,6 +80,14 @@ export function CategoryPicker({
         >
           {allSelected ? "Tümünü kaldır" : "Tümünü seç"}
         </button>
+
+        {/* Havuz seçime bağlı bilgi; üst çubukta değil seçimin yanında.
+            Canlı bölge değil: çip değiştikçe okunması gereken bir şey yok. */}
+        {/* Dar ekranda "Havuzda" görsel olarak gizlenir ("13 soru");
+            ekran okuyucu her genişlikte tam metni okur. */}
+        <span className={styles.pool}>
+          <span className={styles.poolPrefix}>Havuzda</span> {poolCount} soru
+        </span>
       </div>
 
       <Collapse open={open} id={listId}>

@@ -44,6 +44,25 @@
   }
 }
 
+/*
+  Dar ekranda yalnızca ikon. Görünür metin display:none ile değil görsel
+  olarak kırpılarak gizlenir: bileşen metin görünürken ayrı bir gizli
+  etiket çizmiyor ve ikon aria-hidden, display:none metni ekran
+  okuyucudan da silerdi. title ve canlı bölge olduğu gibi kalıyor.
+*/
+@media (max-width: 560px) {
+  .text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
 .srOnly {
   position: absolute;
   width: 1px;

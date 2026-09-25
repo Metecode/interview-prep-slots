@@ -119,6 +119,33 @@
   }
 }
 
+/* Menünün başlığı: kullanıcı adı. Tıklanmaz; rozet dili, soluk mono. */
+.heading {
+  margin: 0;
+  padding: var(--space-1) var(--space-2) var(--space-2);
+  font-family: var(--mono);
+  font-size: var(--fs-mono-sm);
+  color: var(--text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 200px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: var(--space-1);
+}
+
+/* Dar ekranda tetikte yalnızca avatar; ad menü başlığında duruyor.
+   Dokunma hedefi avatarın 20px'inde kalmasın diye tetik dolgusu eşitlenir. */
+@media (max-width: 560px) {
+  .username {
+    display: none;
+  }
+
+  .trigger {
+    padding: var(--space-2);
+  }
+}
+
 /* Geri alınamaz madde ince bir çizgiyle çıkıştan ayrılır; renk ayrışması yok. */
 .item + .item {
   margin-top: var(--space-1);

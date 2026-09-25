@@ -102,6 +102,35 @@
   cursor: not-allowed;
 }
 
+/* Üst çubuktan taşınan havuz etiketi; eski görünüşüyle aynı (mono, soluk).
+   Satırın sağ ucuna yaslanır, dar ekranda sığmazsa alt satıra iner. */
+.pool {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: var(--fs-mono);
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+/*
+  Dar ekranda etiket "N soru". "Havuzda" display:none ile değil görsel
+  kırpmayla gizlenir: ekran okuyucu tam metni okumaya devam eder. Kırpılan
+  öğe akıştan çıktığı için arkasındaki boşluk satır başında kalır ve
+  kendiliğinden düşer. Sığmazsa etiket alt satıra iner; bu kabul.
+*/
+@media (max-width: 560px) {
+  .poolPrefix {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
 .list {
   display: flex;
   flex-wrap: wrap;
