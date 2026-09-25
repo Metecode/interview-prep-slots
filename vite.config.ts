@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
+import type { Plugin } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 
 // Alt bilgideki sürüm package.json'dan okunur, elle tekrar yazılmaz.
@@ -31,6 +32,11 @@ const backendProxy = {
 // düşmemeli. /oauth2 ve /login GitHub girişinin gidiş ve dönüşü; önbellekten
 // index.html verilseydi giriş sunucuya hiç ulaşmazdı.
 const serverOnlyPaths = [/^\/api\//, /^\/oauth2\//, /^\/login\//];
+
+// Gizlilik sayfaları React uygulamasının parçası değil, kendi HTML'leri var
+// (privacy/). Sayfa geçişi SPA yedeğine düşseydi politikanın yerine
+// uygulama açılırdı. Sondaki / ile ve onsuz: /privacy, /privacy/, /privacy/en…
+const staticPagePaths = [/^\/privacy(\/|$)/];
 
 const pwa = VitePWA({
   /*
@@ -66,7 +72,7 @@ const pwa = VitePWA({
     // Sesler dosya değil, Web Audio ile üretiliyor.
     globPatterns: ["**/*.{html,js,css,woff2,svg,png}"],
     navigateFallback: "/index.html",
-    navigateFallbackDenylist: serverOnlyPaths,
+    navigateFallbackDenylist: [...serverOnlyPaths, ...staticPagePaths],
     runtimeCaching: [
       {
         // API hiçbir zaman önbellekten cevaplanmaz: çevrimdışıyken istek
@@ -80,11 +86,45 @@ const pwa = VitePWA({
   },
 });
 
+/*
+  PWA eklentisi kayıt betiğini ve manifest bağlantısını derlenen HTML'lerin
+  hepsine ekliyor. Gizlilik sayfaları JS'siz kalmalı ve kurulabilir bir
+  uygulama değil: ikisi yalnızca o sayfalardan çıkarılır. Eklentinin build
+  parçası enforce: "post" ile en sona sıralanıyor; bu eklenti de "post"
+  ve listede ondan sonra, böylece onun eklediğini görür.
+*/
+const staticPagesWithoutPwa: Plugin = {
+  name: "static-pages-without-pwa",
+  enforce: "post",
+  apply: "build",
+  transformIndexHtml: {
+    order: "post",
+    handler(html, ctx) {
+      if (!ctx.path.startsWith("/privacy/")) return html;
+      return html
+        .replace(/<script id="vite-plugin-pwa:register-sw"[^>]*><\/script>/, "")
+        .replace(/<link rel="manifest"[^>]*>/, "");
+    },
+  },
+};
+
 export default defineConfig({
-  plugins: [react(), pwa],
+  plugins: [react(), pwa, staticPagesWithoutPwa],
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
     __COMMIT_SHA__: JSON.stringify(commitSha),
+  },
+  build: {
+    rollupOptions: {
+      // Çok sayfalı: uygulama ve iki statik gizlilik sayfası. Gizlilik
+      // sayfaları JS içermez; Vite yalnızca CSS'lerini (uygulamayla ortak
+      // font ve token'lar) özetli adla /assets'e koyar.
+      input: {
+        main: fileURLToPath(new URL("./index.html", import.meta.url)),
+        privacy: fileURLToPath(new URL("./privacy/index.html", import.meta.url)),
+        privacyEn: fileURLToPath(new URL("./privacy/en/index.html", import.meta.url)),
+      },
+    },
   },
   server: {
     proxy: {
