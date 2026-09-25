@@ -95,22 +95,6 @@
   white-space: nowrap;
 }
 
-/*
-  Senkron göstergesi. Bilerek sessiz: mono, en küçük basamak, sönük ton.
-  Yerel veri her hâlükârda yazıldı — bu satır bir uyarı değil, sunucudaki
-  kopyanın durumu. Bu yüzden --warn değil --text-faint/--text-dim.
-*/
-.sync {
-  font-family: var(--mono);
-  font-size: var(--fs-mono-sm);
-  color: var(--text-faint);
-  white-space: nowrap;
-}
-
-.sync[data-state="error"] {
-  color: var(--text-dim);
-}
-
 @media (max-width: 560px) {
   .tagline {
     display: none;

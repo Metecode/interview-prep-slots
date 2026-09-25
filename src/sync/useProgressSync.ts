@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useRef, useSyncExternalStore } from "react";
 
 import {
-  getSyncStatus,
+  getSyncSnapshot,
   pushChanges,
   resetSync,
   subscribeSync,
   syncAfterLogin,
 } from "./progressSync";
-import type { ProgressMap, SyncStatus } from "./progressSync";
+import type { ProgressMap, SyncSnapshot } from "./progressSync";
 
 /* ------------------------------------------------------------------ */
 /* Senkronun tetiklendiği yer — zamanlayıcı yok, üç olay var           */
@@ -100,11 +100,11 @@ export function useProgressSync({ progress, userId, onMerged }: UseProgressSyncO
 }
 
 /**
- * Senkronun o anki durumu. Üst çubuktaki küçük gösterge bunu okur;
- * ilerlemeyi senkrona bağlayan hook'tan ayrı tutulmasının sebebi
- * göstergenin App'ten prop olarak inmesine gerek olmaması — durum
+ * Senkronun o anki durumu ve son başarı zamanı. Üst çubuktaki gösterge
+ * bunu okur; ilerlemeyi senkrona bağlayan hook'tan ayrı tutulmasının
+ * sebebi göstergenin App'ten prop olarak inmesine gerek olmaması — durum
  * modül seviyesinde, okuyan bileşen kendi okur.
  */
-export function useSyncStatus(): SyncStatus {
-  return useSyncExternalStore(subscribeSync, getSyncStatus, getSyncStatus);
+export function useSyncSnapshot(): SyncSnapshot {
+  return useSyncExternalStore(subscribeSync, getSyncSnapshot, getSyncSnapshot);
 }

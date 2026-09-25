@@ -33,9 +33,23 @@ export type ProgressMap = Record<string, QuestionProgress>;
  */
 export type SyncStatus = "idle" | "syncing" | "error";
 
+/**
+ * lastSyncedAt: son başarılı isteğin zamanı (ms), hiç yoksa null.
+ * Durumun parçası olmasının sebebi: hızlı bir yanıtta syncing → idle
+ * geçişi tek render'da birleşebilir ve status önce/sonra aynı ("idle")
+ * görünür. Yeni bir başarı olduğunu yalnızca bu değer değiştiği için
+ * bilebiliyoruz.
+ */
+export type SyncSnapshot = {
+  status: SyncStatus;
+  lastSyncedAt: number | null;
+};
+
 const syncListeners = new Set<() => void>();
 let pendingRequests = 0;
 let lastFailed = false;
+let lastSyncedAt: number | null = null;
+let snapshot: SyncSnapshot = { status: "idle", lastSyncedAt: null };
 
 export function subscribeSync(listener: () => void): () => void {
   syncListeners.add(listener);
@@ -44,13 +58,18 @@ export function subscribeSync(listener: () => void): () => void {
   };
 }
 
-/** Değer ilkel; useSyncExternalStore için kimlik derdi yok. */
-export function getSyncStatus(): SyncStatus {
-  if (pendingRequests > 0) return "syncing";
-  return lastFailed ? "error" : "idle";
+/**
+ * Aynı durum için hep aynı nesne döner: useSyncExternalStore kimliğe
+ * bakıyor, her çağrıda yeni nesne sonsuz render döngüsü olurdu.
+ */
+export function getSyncSnapshot(): SyncSnapshot {
+  return snapshot;
 }
 
 function publishSync(): void {
+  const status: SyncStatus = pendingRequests > 0 ? "syncing" : lastFailed ? "error" : "idle";
+  if (status === snapshot.status && lastSyncedAt === snapshot.lastSyncedAt) return;
+  snapshot = { status, lastSyncedAt };
   for (const listener of syncListeners) listener();
 }
 
@@ -125,8 +144,9 @@ export async function syncAfterLogin(local: ProgressMap): Promise<ProgressMap | 
 /** Çıkışta çağrılır: bir sonraki giriş yeniden birleştirmeli. */
 export function resetSync(): void {
   mergedUserId = null;
-  // Çıkan kullanıcının başarısız senkronu yeni oturumda asılı kalmasın.
+  // Çıkan kullanıcının başarısız ya da başarılı senkronu yeni oturumda asılı kalmasın.
   lastFailed = false;
+  lastSyncedAt = null;
   publishSync();
 }
 
@@ -187,6 +207,9 @@ async function sendNow(
 
     const body = await response.json();
     lastFailed = false;
+    // Aynı milisaniyede biten iki başarı aynı değeri üretip ikincisini
+    // görünmez kılmasın: değer her başarıda kesin artar.
+    lastSyncedAt = Math.max(Date.now(), (lastSyncedAt ?? 0) + 1);
     return body;
   } catch (error) {
     console.warn(`İlerleme senkronu gönderilemedi (${url}):`, error);

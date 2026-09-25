@@ -312,13 +312,30 @@ shadcn/ui bileşenleri ihtiyaç oldukça tek tek eklenir, toplu kurulmaz.
   reducer eylemiyle; IndexedDB'ye yazmayı App'teki mevcut efekt zaten
   üstleniyor, doğrudan yazsaydı bir sonraki render onu bellekteki eski
   haliyle ezerdi.
-- **Senkron göstergesi üst çubukta, sessiz.** Yalnızca istek uçarken
-  ("senkronlanıyor") ve son istek düştüğünde ("senkron bekliyor")
-  görünür; her şey yolundayken hiçbir şey yazmaz. Misafirde hiç istek
-  atılmadığı için hiç çıkmaz. Durum `progressSync` içinde modül
-  seviyesinde tutulur ve `useSyncStatus` ile okunur — App'ten prop
-  olarak inmez. `--warn` kullanılmaz: senkronun düşmesi arıza değil,
-  yerel veri zaten yazıldı.
+- **Senkron göstergesi üst çubukta, sessiz.** `SyncIndicator`; kurallar
+  saf durum makinesinde (`sync/syncIndicator.ts`, testli). Girişliyken
+  hep soluk bir ikon (`--text-faint`), misafirde hiç çizilmez. Metin
+  yalnızca gerektiğinde:
+  - "Senkronlanıyor" (dönen ok): senkron 300 ms'yi aşarsa. Daha kısası
+    hiç gösterilmez, her RATE'te titreme olmasın.
+  - "Senkronlandı" (bulut-tik, 3 sn): YALNIZCA kullanıcı "Senkronlanıyor"u
+    gördüyse ya da hatadan kurtulunduysa. Rutin hızlı senkronda metin çıkmaz,
+    yalnızca ikon tike döner.
+  - "Senkronlanamadı" (üstü çizili bulut): kalıcı, bir sonraki başarıda kalkar.
+    Kısa bir yeniden deneme hata ikonunu titretmez.
+  `--warn` kullanılmaz; hata ikonla ve `--text-dim` ile ayrışır — senkronun
+  düşmesi arıza değil, yerel veri zaten yazıldı. Dönme animasyonu hareket
+  azaltmada açıkça `animation: none`: tokens.css süreleri 1ms'ye indiriyor,
+  sonsuz dönmeyi durdurmaz, hızlandırırdı. Canlı bölge (`aria-live="polite"`)
+  görünür metinden ayrı ve yalnızca hataya girişte ve kurtuluşta değişir;
+  "Senkronlanıyor" ve rutin başarılar okunmaz.
+- **Senkron durumu snapshot, `lastSyncedAt` dahil.** `getSyncSnapshot()`
+  `{ status, lastSyncedAt }` döner (aynı durum için aynı nesne),
+  `useSyncSnapshot` ile okunur — App'ten prop olarak inmez. `lastSyncedAt`
+  durumun parçası çünkü hızlı yanıtta syncing → idle tek render'da
+  birleşebiliyor ve status önce/sonra aynı görünüyor; yeni başarı yalnızca
+  bu değerin değişmesinden anlaşılıyor. Her başarıda kesin artar (aynı
+  milisaniyedeki iki başarı da ayrı değer). `resetSync` onu da sıfırlar.
 - **Hesap silinirken senkron askıda.** `suspendSync()` bir bayrak koyar ve
   uçuştaki istekler (`inFlightRequests`) bitince çözülür; bayrak açıkken
   `pushChanges` ve `syncAfterLogin` istek atmaz (visibilitychange de
