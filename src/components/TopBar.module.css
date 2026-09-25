@@ -88,15 +88,22 @@
   justify-content: flex-end;
 }
 
-.pool {
-  font-family: var(--mono);
-  font-size: var(--fs-mono);
-  color: var(--text-dim);
-  white-space: nowrap;
-}
-
+/*
+  Dar ekranda tek satır: [logo] Slot ...... [senkron] [avatar]. Kırılma
+  kapalı; sağ grup daralmaz, marka gerekirse kısalır. Kullanıcı adı ve
+  senkron metni bu genişlikte kendi modüllerinde gizleniyor.
+*/
 @media (max-width: 560px) {
   .tagline {
     display: none;
+  }
+
+  .inner,
+  .meta {
+    flex-wrap: nowrap;
+  }
+
+  .meta {
+    flex-shrink: 0;
   }
 }

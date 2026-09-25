@@ -3,14 +3,9 @@ import { SyncIndicator } from "./SyncIndicator";
 import styles from "./TopBar.module.css";
 
 /* ------------------------------------------------------------------ */
-/* Üst çubuk — marka, aktif havuz büyüklüğü, senkron ve oturum        */
-/* Sürüm alt bilgide (bkz. Footer).                                     */
+/* Üst çubuk — marka, senkron ve oturum                                */
+/* Sürüm alt bilgide (bkz. Footer); havuz büyüklüğü kategori seçicide. */
 /* ------------------------------------------------------------------ */
-
-export type TopBarProps = {
-  /** Aktif kategorilerdeki soru sayısı. */
-  questionCount: number;
-};
 
 /** Basit bir işaret: kare çerçeve + kol topuzunu andıran nokta. */
 function LogoMark() {
@@ -30,7 +25,7 @@ function LogoMark() {
   );
 }
 
-export function TopBar({ questionCount }: TopBarProps) {
+export function TopBar() {
   return (
     <header className={styles.bar}>
       <div className={styles.inner}>
@@ -45,7 +40,6 @@ export function TopBar({ questionCount }: TopBarProps) {
         <div className={styles.meta}>
           {/* Kendi durumunu kendi okur; misafirde hiç çizilmez. */}
           <SyncIndicator />
-          <span className={styles.pool}>Havuzda {questionCount} soru</span>
 
           {/* Oturum alanı en sağda: kendi durumunu kendi okur, TopBar'a
               prop olarak geçirilmiyor — üst çubuğun geri kalanı oturumla

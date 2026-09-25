@@ -75,11 +75,14 @@ export function UserMenu({ user, onLogout, onDeleteAccount }: UserMenuProps) {
         className={styles.trigger}
         aria-expanded={open}
         aria-controls={MENU_ID}
+        // Dar ekranda görünür kullanıcı adı gizleniyor ve avatar aria-hidden;
+        // ad buradan gelir. Görünür metni içerdiği için geniş ekranda da
+        // etiket ile görünen ad çelişmez (WCAG 2.5.3).
+        aria-label={`Hesap menüsü: ${user.username}`}
         onClick={() => setOpen((value) => !value)}
       >
-        {/* Avatar süs: kullanıcı adı zaten yanında yazıyor, ekran okuyucudan
-            gizli. GitHub'dan resim çekilmiyor — o istek kullanıcının IP'sini
-            GitHub'a taşırdı; baş harf yetiyor. */}
+        {/* Avatar süs, ekran okuyucudan gizli. GitHub'dan resim çekilmiyor —
+            o istek kullanıcının IP'sini GitHub'a taşırdı; baş harf yetiyor. */}
         <span className={styles.avatar} aria-hidden="true">
           {initialOf(user.username)}
         </span>
@@ -95,6 +98,11 @@ export function UserMenu({ user, onLogout, onDeleteAccount }: UserMenuProps) {
         inert={!open}
         onKeyDown={handleMenuKeyDown}
       >
+        {/* Kimin hesabı: dar ekranda tetikte ad görünmüyor, burada her
+            genişlikte duruyor. Menü role="menu" değil (düz düğmeler), bu
+            yüzden tıklanmayan bir başlık satırı ARIA'ya aykırı değil; ok
+            tuşu gezinmesi yalnızca düğmeleri seçtiği için buraya uğramaz. */}
+        <p className={styles.heading}>{user.username}</p>
         <button ref={logoutRef} type="button" className={styles.item} onClick={onLogout}>
           Çıkış yap
         </button>

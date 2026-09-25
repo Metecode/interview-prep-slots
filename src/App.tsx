@@ -105,7 +105,7 @@ function Session({ store, warning, save }: SessionProps) {
     onMerged: handleMerged,
   });
 
-  // TopBar'daki havuz bilgisi: aktif kategorilerdeki soru sayısı.
+  // Kategori seçicisinin yanındaki havuz bilgisi: aktif kategorilerdeki soru sayısı.
   const activeQuestionCount = useMemo(
     () => QUESTIONS.filter((q) => activeCategories.includes(q.category)).length,
     [activeCategories],
@@ -193,7 +193,7 @@ function Session({ store, warning, save }: SessionProps) {
 
   return (
     <div className={styles.root}>
-      <TopBar questionCount={activeQuestionCount} />
+      <TopBar />
       {/* Adım göstergesi üst çubuğun altında, ince bir ayırıcıyla. */}
       <StepIndicator phase={state.phase} />
 
@@ -202,6 +202,7 @@ function Session({ store, warning, save }: SessionProps) {
           <CategoryPicker
             categories={AVAILABLE_CATEGORIES}
             active={state.activeCategories}
+            poolCount={activeQuestionCount}
             disabled={state.phase === "spinning"}
             onToggle={handleToggleCategory}
             onToggleAll={handleToggleAllCategories}
