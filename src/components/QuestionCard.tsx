@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { KeyboardEvent as ReactKeyboardEvent } from "react";
 
 import { evaluateLexical } from "../domain/evaluate";
+import { MAX_ANSWER_LENGTH } from "../domain/progress";
 import type { QuestionProgress } from "../domain/progress";
 import type { Question } from "../domain/question";
 import { StageBadge } from "./StageBadge";
@@ -17,7 +18,10 @@ const DIFFICULTY_LABELS: Record<Question["difficulty"], string> = {
   3: "Zor",
 };
 
-/** Sınırlayıcı değil, yalnızca gösterge: 1200'ü aşınca sayaç --warn'a döner. */
+/**
+ * Sınırlayıcı değil, yalnızca gösterge: 1200'ü aşınca sayaç --warn'a döner.
+ * Sert sınır MAX_ANSWER_LENGTH, cevap alanının maxLength'inde.
+ */
 const ANSWER_LENGTH_WARN_AT = 1200;
 
 export type QuestionCardProps = {
@@ -85,6 +89,7 @@ export function QuestionCard({ question, progress, onSubmit, onPass }: QuestionC
           value={answer}
           onChange={(event) => setAnswer(event.target.value)}
           onKeyDown={handleKeyDown}
+          maxLength={MAX_ANSWER_LENGTH}
           placeholder="Cevabını yaz…"
           aria-label="Cevabın"
         />

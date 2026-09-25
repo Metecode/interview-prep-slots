@@ -123,7 +123,7 @@ class ProgressSyncRaceTest {
     }
 
     private Callable<ProgressApplyResult> syncOf(int box, String timestamp) {
-        List<Map<String, Object>> attempts = List.of(Map.of("at", timestamp, "answer", "cevap " + timestamp));
+        List<ProgressAttempt> attempts = List.of(new ProgressAttempt(timestamp, "cevap " + timestamp, 1, 3, 1, false));
         ProgressRecord record = new ProgressRecord(QUESTION_ID, box, timestamp, attempts);
         return () -> progressSyncService.apply(user.getId(), List.of(record));
     }

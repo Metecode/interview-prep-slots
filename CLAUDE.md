@@ -202,6 +202,25 @@ shadcn/ui bileşenleri ihtiyaç oldukça tek tek eklenir, toplu kurulmaz.
   bilinçli: token'sız bir istek olmayan bir uca gittiğinde 404 değil 401
   alır, böylece hangi uçların var olduğu sızmaz. 404'ü görmek için
   geçerli token gerekir.
+- **GitHub token'ı el sıkışmadan sonra silinir.** GitHub API'si girişten
+  sonra hiç çağrılmıyor; kimlik ve kullanıcı adı principal'da geliyor.
+  Varsayılan `AuthenticatedPrincipalOAuth2AuthorizedClientRepository`
+  kimliği doğrulanmış principal için token'ı `OAuth2AuthorizedClientService`'e
+  (bellekte) yazıyor. `GithubAuthenticationSuccessHandler` bu yüzden
+  `finally` içinde `removeAuthorizedClient` çağırıyor, hata olsa da token
+  kalmıyor. Repository'yi değiştiren biri silmenin de nereden yapıldığına
+  bakmalı; `GithubAuthenticationSuccessHandlerTest` bu bağlantıyı doğruluyor.
+- **Hesap silme: `DELETE /api/me`.** Kimlik `jwt.sub`'dan gelir.
+  `AppUserRepository.deleteByIdReturningCount` tek bir JPQL DELETE atar,
+  ilerleme ve refresh token satırlarını DB'deki `ON DELETE CASCADE` siler
+  (JPA cascade'ine güvenilmez). Yanıt her durumda 204 ve Max-Age=0 refresh
+  cookie'si; kullanıcı zaten silinmişse de 204 (idempotent, ağ hatasından
+  sonraki tekrar hata görmesin). Access token 15 dakika daha imza olarak
+  geçerli kalır ama işe yaramaz: PUT ve merge `requireUser` (FOR UPDATE)
+  ile, GET `existsById` ile 401 döner, `/api/auth/me` da 401. Kullanıcı
+  hiçbir uçta yeniden oluşmaz; yalnızca GitHub ile yeniden giriş yeni bir
+  hesap açar. Silme, kullanıcı satırında kilit tutan bir senkron varsa onun
+  bitmesini bekler. Test: `AccountDeletionTest`.
 
 ## İlerleme senkronu
 
@@ -220,12 +239,41 @@ shadcn/ui bileşenleri ihtiyaç oldukça tek tek eklenir, toplu kurulmaz.
 - **Üç sayaç.** `applied` box+lastSeenAt yazıldı, `merged` kayıt eskiydi
   ama geçmiş birleşti, `ignored` hiçbir şey değişmedi. Üçü de normal
   sonuç, hata değil.
-- **Geçersiz kayıt 400 değil, atlanan kayıttır.** Tek bozuk kayıt tüm
-  senkronu düşürmesin. Bilinmeyen `questionId` de atlanır (içerik
-  sürümleri arasında fark olabilir), sayısı loglanır. `lastSeenAt` bu
-  yüzden DTO'da `String`: Jackson ayrıştırsaydı bozuk bir tarih tüm
-  isteği 400'e çevirirdi. Şimdiden 1 günden fazla ileri tarihler
-  reddedilir — istemci saati yanlışsa sunucudaki doğruyu ezmesin.
+- **Değer ihlali kaydı atlatır, şekil ihlali 400 alır.** Tek bozuk kayıt
+  tüm senkronu düşürmesin: aralık dışı `box`, bozuk tarih, 5000'i aşan
+  cevap, eksik deneme alanı yalnızca o kaydı atlatır. Bilinmeyen
+  `questionId` de atlanır (içerik sürümleri arasında fark olabilir), sayısı
+  loglanır. `lastSeenAt` bu yüzden DTO'da `String`: Jackson ayrıştırsaydı
+  bozuk bir tarih tüm isteği 400'e çevirirdi. Şimdiden 1 günden fazla ileri
+  tarihler reddedilir — istemci saati yanlışsa sunucudaki doğruyu ezmesin.
+  Denemede **bilinmeyen alan** ise değer değil sözleşme ihlali: tüm istek
+  400 alır, hiçbir şey yazılmaz. Frontend buna takılmaz, Zod bilinmeyen
+  alanları zaten atıyor.
+- **Deneme tipi yalnızca API sınırında.** `ProgressAttempt` record'u
+  gelen ve giden denemenin şekli; saklama, `ProgressState` ve birleştirme
+  `Map` ile çalışır (`toStored`/`fromStored`). JSONB doğrudan record'a
+  eşlenseydi şemaya uymayan eski bir satır okunurken hata verirdi —
+  migration yapmadan canlı veriyi okunamaz kılmak olurdu. Yanıtta
+  tanınmayan eski anahtarlar düşer.
+- **Bilinmeyen alan `@JsonAnySetter` ile reddedilir,** sınıf seviyesinde
+  `FAIL_ON_UNKNOWN_PROPERTIES` ile değil: Spring Boot bu özelliği global
+  kapatıyor ve `@JsonIgnoreProperties(ignoreUnknown = false)` global ayarı
+  geçersiz kılmıyor, yalnızca ona geri düşüyor. Global açmak katılığı her
+  yere yayardı. `ProgressAttemptTest` bunu gevşek bir mapper'la doğruluyor.
+- **Cevap en fazla 5000 karakter (UTF-16 birimi, JS `length` ile aynı).**
+  Frontend'de cevap alanının `maxLength`'i ve senkron payload'u
+  (`sync/syncPayload.ts`) bu sınırı uygular. `storeSchema`'ya BİLEREK
+  konmadı: eski kayıtlardaki uzun cevaplar "bozuk" sayılır ve kurtarma akışı
+  tetiklenirdi. Payload ayrıca NUL'ları çıkarır ve eşi olmayan
+  surrogate'leri U+FFFD yapar; sunucu bunları içeren kaydı atlar, çünkü
+  Postgres JSONB `\u0000`'ı reddediyor (yazma tüm senkronu 500'e
+  düşürürdü) ve eşsiz surrogate geçerli UTF-8'e çevrilemiyor.
+- **Cevap metni hiçbir koşulda loga yazılmaz.** `ProgressValidator` log
+  yazmaz; atlanan kaydı sabit metinli bir nedenle (`Rejected`) döner,
+  `ProgressSyncService` onu yalnızca `user_id`, `question_id` ve nedenle
+  loglar. Bilinmeyen alan hatasının mesajında da değer yok (Spring onu WARN
+  ile logluyor). `ProgressSyncTest` log çıktısını yakalayıp doğruluyor;
+  yeni bir log satırı eklerken kayıttaki kullanıcı metnini koyma.
 - **Yanıtta `lastSeenAt` UTC.** `toInstant().toString()` ile yazılır;
   sürücünün döndürdüğü yerel offset (`+03:00`) Zod'un `.datetime()`
   şemasından geçmez.

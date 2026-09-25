@@ -1,6 +1,7 @@
 import { apiFetch, getSnapshot } from "../auth/authClient";
 import { questionProgressSchema } from "../domain/progress";
 import type { QuestionProgress } from "../domain/progress";
+import { toSyncRecord } from "./syncPayload";
 
 /* ------------------------------------------------------------------ */
 /* İlerleme senkronu — React bilmez, saf modül                         */
@@ -130,7 +131,9 @@ async function send(
     const response = await apiFetch(url, {
       method,
       headers: { "content-type": "application/json" },
-      body: JSON.stringify(records),
+      // Sunucunun reddedeceği cevaplar yalnızca payload'da temizlenir;
+      // yereldeki kayıt değişmez (bkz. syncPayload.ts).
+      body: JSON.stringify(records.map(toSyncRecord)),
     });
 
     if (!response.ok) {

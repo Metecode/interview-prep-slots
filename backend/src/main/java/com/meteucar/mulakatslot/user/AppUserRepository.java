@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -21,4 +22,13 @@ public interface AppUserRepository extends JpaRepository<AppUser, UUID> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT u FROM AppUser u WHERE u.id = :id")
     Optional<AppUser> findForUpdateById(@Param("id") UUID id);
+
+    /**
+     * Kullanıcı satırını tek DELETE ile siler; ilerleme ve refresh token
+     * satırlarını veritabanındaki ON DELETE CASCADE temizler. Entity
+     * yüklenmez, JPA cascade'ine güvenilmez. Satır yoksa 0 döner, hata değil.
+     */
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("DELETE FROM AppUser u WHERE u.id = :id")
+    int deleteByIdReturningCount(@Param("id") UUID id);
 }

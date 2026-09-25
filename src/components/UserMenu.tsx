@@ -16,6 +16,15 @@ export type UserMenuProps = {
 
 const MENU_ID = "user-menu";
 
+/**
+ * Avatar dairesindeki harf. Array.from kod noktasına göre böler: ilk
+ * karakter iki UTF-16 biriminden oluşsa da yarısı alınmaz. toUpperCase
+ * yerelden bağımsız, "i" Türkçe "İ"ye dönmez.
+ */
+function initialOf(username: string): string {
+  return (Array.from(username)[0] ?? "?").toUpperCase();
+}
+
 export function UserMenu({ user, onLogout }: UserMenuProps) {
   const [open, setOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -44,18 +53,12 @@ export function UserMenu({ user, onLogout }: UserMenuProps) {
         aria-controls={MENU_ID}
         onClick={() => setOpen((value) => !value)}
       >
-        {/* Avatar süs: kullanıcı adı zaten yanında yazıyor, alt boş kalıyor.
-            GitHub'ın .png ucu 20px'i retina ekranda bulanık bırakmasın diye
-            iki katı boyutta isteniyor. */}
-        <img
-          className={styles.avatar}
-          src={`https://github.com/${encodeURIComponent(user.username)}.png?size=40`}
-          alt=""
-          width={20}
-          height={20}
-          loading="lazy"
-          referrerPolicy="no-referrer"
-        />
+        {/* Avatar süs: kullanıcı adı zaten yanında yazıyor, ekran okuyucudan
+            gizli. GitHub'dan resim çekilmiyor — o istek kullanıcının IP'sini
+            GitHub'a taşırdı; baş harf yetiyor. */}
+        <span className={styles.avatar} aria-hidden="true">
+          {initialOf(user.username)}
+        </span>
         <span className={styles.username}>{user.username}</span>
       </button>
 

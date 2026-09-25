@@ -1,5 +1,6 @@
 package com.meteucar.mulakatslot.user;
 
+import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,5 +27,20 @@ public class AppUserService {
                     return existing;
                 })
                 .orElseGet(() -> appUserRepository.save(new AppUser(githubId, username)));
+    }
+
+    /**
+     * Hesabı ve ona bağlı her satırı siler. İdempotent: kullanıcı zaten
+     * yoksa sessizce biter.
+     *
+     * <p>DELETE, kullanıcı satırında FOR UPDATE tutan bir senkron varsa onun
+     * bitmesini bekler. Silmeden sonra gelen senkron kullanıcıyı bulamaz ve
+     * 401 alır; satır yeniden oluşmaz.
+     *
+     * @return kullanıcı gerçekten silindiyse true
+     */
+    @Transactional
+    public boolean delete(UUID userId) {
+        return appUserRepository.deleteByIdReturningCount(userId) > 0;
     }
 }

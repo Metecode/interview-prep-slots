@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { MAX_ANSWER_LENGTH } from "../domain/progress";
 import type { QuestionProgress } from "../domain/progress";
 
 /* ------------------------------------------------------------------ */
@@ -55,6 +56,16 @@ function jsonResponse(body: unknown, status = 200): Response {
 /** Geçerli tek bir ilerleme kaydı; şemadan geçecek kadar eksiksiz. */
 function progressOf(questionId: string, box: 1 | 2 | 3 | 4 | 5, lastSeenAt: string): QuestionProgress {
   return { questionId, box, lastSeenAt, attempts: [] };
+}
+
+/** Kayda verilen cevapla tek bir deneme ekler. */
+function withAnswer(record: QuestionProgress, answer: string): QuestionProgress {
+  return {
+    ...record,
+    attempts: [
+      { at: record.lastSeenAt, answer, hitCount: 1, totalConcepts: 3, selfRating: 1, passed: false },
+    ],
+  };
 }
 
 /** Son isteğin gövdesini kayıt dizisi olarak çözer. */
@@ -119,6 +130,19 @@ describe("syncAfterLogin", () => {
     await sync.syncAfterLogin({});
 
     expect(mocks.apiFetch).toHaveBeenCalledTimes(2);
+  });
+
+  it("birleştirmeye giden cevabı da sınıra keser", async () => {
+    const sync = await loadSync();
+    signIn();
+    mocks.apiFetch.mockResolvedValue(jsonResponse([]));
+
+    await sync.syncAfterLogin({
+      a: withAnswer(progressOf("a", 2, "2026-01-01T10:00:00Z"), "a".repeat(MAX_ANSWER_LENGTH + 10)),
+    });
+
+    const [sent] = sentRecords() as QuestionProgress[];
+    expect(sent.attempts[0].answer).toHaveLength(MAX_ANSWER_LENGTH);
   });
 
   it("yereldeki tüm ilerlemeyi gönderir", async () => {
@@ -224,6 +248,20 @@ describe("pushChanges", () => {
     expect(mocks.apiFetch.mock.calls[0][0]).toBe("/api/progress");
     expect((mocks.apiFetch.mock.calls[0][1] as RequestInit).method).toBe("PUT");
     expect(sentRecords()).toEqual([progressOf("b", 4, "2026-02-01T10:00:00Z")]);
+  });
+
+  it("sunucuya giden cevabı sınıra keser, yerel kayda dokunmaz", async () => {
+    const sync = await loadSync();
+    signIn();
+    mocks.apiFetch.mockResolvedValue(jsonResponse({ applied: 1, merged: 0, ignored: 0 }));
+    const long = "a".repeat(MAX_ANSWER_LENGTH + 10);
+    const local = { a: withAnswer(progressOf("a", 2, "2026-01-01T10:00:00Z"), long) };
+
+    await sync.pushChanges(local, ["a"]);
+
+    const [sent] = sentRecords() as QuestionProgress[];
+    expect(sent.attempts[0].answer).toHaveLength(MAX_ANSWER_LENGTH);
+    expect(local.a.attempts[0].answer).toBe(long);
   });
 
   it("gönderilecek kayıt yoksa istek atmaz", async () => {
